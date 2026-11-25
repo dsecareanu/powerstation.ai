@@ -56,7 +56,7 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`
 - The fixtures have a fixed "now" (2026-11-25T12:00:00Z). Pass `now` to `DataDelayedBanner` in development, or the banner always shows.
 - Session B: import the household table from `@powerstation/ui` (`householdsFor`, `describePowerInHomes(mw, { countryCode, countryName })`) and drop the copy in `apps/calculator`. Show `HOUSEHOLD_SOURCE.attribution` wherever a homes comparison appears.
 - Session A: add the Eurostat entry to `DATA_SOURCES.md` (text in PR #5's description).
-- MapLibre cannot read CSS variables: use `readToken(stateColorVar("measured"))`, and read again when the theme changes.
+- The map is SVG (d3-geo): set colors in CSS with `var(${stateColorVar("measured")})`, so they follow the theme. Use `readToken(...)` only where a plain color string is needed (canvas, d3 color scales, exported images), and read it again when the theme changes.
 - Request new shared components in your PR description.
 
 ## Open questions for Daniel
