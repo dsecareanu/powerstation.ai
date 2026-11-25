@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/news.schema.json",
+  "title": "NewsFile",
+  "description": "v1/meta/news.json. Recent headlines about the European grid, cross-border flows, data centers and AI power demand, taken from public RSS and Atom feeds. Each item has only a title, a link, the publisher name and a date. No article text or images. Since 1.2.0.",
+  "type": "object",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/Envelope" }],
+  "required": ["dataset", "items"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": { "const": "news" },
+    "items": {
+      "description": "Newest first. At most 2 items per publisher and 8 in total. Titles are unique.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/NewsItem" }
+    }
+  },
+  "$defs": {
+    "NewsItem": {
+      "title": "NewsItem",
+      "type": "object",
+      "required": ["title", "url", "source", "published_at"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "description": "Headline as the publisher wrote it, as plain text.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "url": {
+          "description": "Link to the article on the publisher's site.",
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "source": {
+          "description": "Publisher name, e.g. Clean Energy Wire.",
+          "type": "string",
+          "minLength": 1
+        },
+        "published_at": {
+          "description": "Publication time from the feed, in UTC, or null if the feed has no valid date.",
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/UtcTimestamp" }, { "type": "null" }]
+        }
+      }
+    }
+  }
+}

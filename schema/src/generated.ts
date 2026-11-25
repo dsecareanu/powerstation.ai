@@ -15,7 +15,7 @@ export type StatusFile = Envelope & {
 /**
  * Version of the data contract. Bump it on every schema change.
  */
-export type SchemaVersion = "1.1.0";
+export type SchemaVersion = "1.2.0";
 /**
  * UTC time in ISO 8601 with a Z suffix, e.g. 2026-11-25T12:00:00Z.
  */
@@ -119,6 +119,16 @@ export type EmissionFactorsFile = Envelope & {
     other: EmissionFactor;
   };
 };
+/**
+ * v1/meta/news.json. Recent headlines about the European grid, cross-border flows, data centers and AI power demand, taken from public RSS and Atom feeds. Each item has only a title, a link, the publisher name and a date. No article text or images. Since 1.2.0.
+ */
+export type NewsFile = Envelope & {
+  dataset: "news";
+  /**
+   * Newest first. At most 2 items per publisher and 8 in total. Titles are unique.
+   */
+  items: NewsItem[];
+};
 
 export interface AllDataFiles {
   status?: StatusFile;
@@ -129,6 +139,7 @@ export interface AllDataFiles {
   datacenters?: DatacentersFile;
   capacity?: CapacityFile;
   "emission-factors"?: EmissionFactorsFile;
+  news?: NewsFile;
 }
 /**
  * Fields that every data file has.
@@ -146,7 +157,8 @@ export interface Envelope {
     | "forecasts"
     | "datacenters"
     | "capacity"
-    | "emission_factors";
+    | "emission_factors"
+    | "news";
   generated_at: UtcTimestamp;
   /**
    * true for fixtures and demo data. The deploy step refuses files with mock: true.
@@ -369,4 +381,22 @@ export interface EmissionFactor {
    * Plain-English note. Required when match is proxy or none.
    */
   note?: string;
+}
+export interface NewsItem {
+  /**
+   * Headline as the publisher wrote it, as plain text.
+   */
+  title: string;
+  /**
+   * Link to the article on the publisher's site.
+   */
+  url: string;
+  /**
+   * Publisher name, e.g. Clean Energy Wire.
+   */
+  source: string;
+  /**
+   * Publication time from the feed, in UTC, or null if the feed has no valid date.
+   */
+  published_at: UtcTimestamp | null;
 }

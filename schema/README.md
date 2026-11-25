@@ -23,6 +23,7 @@ Paths are relative to the public R2 base URL. Every file has `dataset`, which se
 | `v1/datacenters/datacenters.json` | `datacenters`      | Data center points. Each record has its own source and license.               |
 | `v1/capacity/rolling-30d.json`    | `capacity`         | Day-ahead transfer capacity (NTC) per border and direction. Since 1.1.0.      |
 | `v1/meta/emission-factors.json`   | `emission_factors` | Life-cycle gCO2eq/kWh per fuel type, each with a cited table. Since 1.1.0.    |
+| `v1/meta/news.json`               | `news`             | Up to 8 recent headlines: title, link, publisher, date. Since 1.2.0.          |
 
 ## Rules
 
@@ -61,6 +62,8 @@ Paths are relative to the public R2 base URL. Every file has `dataset`, which se
 **Capacity:** one entry per border **direction** (not netted), values 0 or more. A direction with no published capacity is left out. Show it as "planned capacity".
 
 **Emission factors:** every fuel type in `FUEL_TYPES` has an entry. `match` is `direct` (the cited row is this fuel), `proxy` (a similar technology; `note` says which and why) or `none` (no factor: `value`, `source_id`, `table` and `row` are `null`). The UI must say when a fuel has no factor.
+
+**News:** each item has only `title`, `url` (http or https), `source` (publisher name) and `published_at` (UTC or `null`). No article text or images. At most 8 items, at most 2 per `source`, no duplicate titles (case ignored), newest first, undated items last. The file is not listed in `status.json`.
 
 **Zones:** data is stored per ENTSO-E bidding zone (`DE-LU`, `IT-North`, `NO1`). The UI shows countries. `zones[].countries` and `countries[].zones` give the mapping both ways. `neighbours` lists only zones in the file and must be symmetric.
 

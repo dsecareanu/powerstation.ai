@@ -1,11 +1,12 @@
 // Uploads every v1/**/*.json file under <dir> to R2. status.json goes last.
+// zones.json must be in <dir>, unless every file is zone-free (for example news.json alone).
 // Usage: tsx scripts/upload.ts <dir>
 // Needs the R2 settings. It checks the content first and refuses to upload mock data,
 // invalid files, or restricted ENTSO-E data (unless ENTSOE_RESTRICTED_PUBLISH_OK=yes).
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { DATA_PATHS, type DataFile, type ZonesFile } from "@powerstation/schema";
-import { validateAll } from "../src/build/output";
+import { validateAll, ZONE_FREE } from "../src/build/output";
 import { publishProblems } from "../src/build/publish-check";
 import { loadDotEnv, requireSecrets } from "../src/entsoe/env";
 import { readR2Config, uploadFiles } from "../src/r2";
@@ -40,9 +41,13 @@ async function main(): Promise<void> {
     throw new Error("Refusing to upload. Nothing was uploaded.");
   }
   const zones = parsed.find((f) => f.path === DATA_PATHS.zones)?.data as ZonesFile | undefined;
-  if (!zones) throw new Error(`${DATA_PATHS.zones} is not in ${dir}. Nothing was uploaded.`);
+  // zones.json is needed to check zone references. A folder with only zone-free files
+  // (for example news.json alone) may be uploaded without it.
+  if (!zones && !parsed.every((f) => ZONE_FREE.has(f.data.dataset))) {
+    throw new Error(`${DATA_PATHS.zones} is not in ${dir}. Nothing was uploaded.`);
+  }
   const files = Object.fromEntries(parsed.map((f) => [f.path, f.data]));
-  const errors = validateAll(files, zones);
+  const errors = validateAll(files, zones ?? null);
   if (errors.length > 0) {
     for (const e of errors) console.error(`  ${e}`);
     throw new Error("Validation failed. Nothing was uploaded.");

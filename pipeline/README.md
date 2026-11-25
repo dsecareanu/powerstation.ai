@@ -10,6 +10,7 @@ Scripts that build the data files for powerstation.ai. The files follow the cont
 | `pnpm discover-borders` | Asks ENTSO-E which zone pairs have physical flows. Writes `reference/borders.json`.  |
 | `pnpm backfill`         | Fetches ENTSO-E data, builds the `v1/...` files, checks them. Can upload them to R2. |
 | `pnpm run update`       | Fetches recent ENTSO-E data and merges it into the rolling files from R2. No upload. |
+| `pnpm news --out <dir>` | Reads public news feeds and writes `v1/meta/news.json` (headlines only). No secrets. |
 | `pnpm upload <dir>`     | Checks the files in `<dir>/v1` and uploads them to R2. `status.json` goes last.      |
 | `pnpm test`             | Runs the tests. They use synthetic XML only and need no network.                     |
 
@@ -83,6 +84,15 @@ We wait for written permission from ENTSO-E for the restricted items. So:
 - Without `--include-restricted`, the script does not query them. It writes no generation files. The flows files have only `physical` series. The forecasts file has load only.
 - With `--include-restricted`, the script writes everything locally. This is for tests and for the app work.
 - `--upload` together with `--include-restricted` fails, unless `ENTSOE_RESTRICTED_PUBLISH_OK=yes` is set. Set it only after the permission is recorded.
+
+## News job (GitHub Actions)
+
+The workflow `.github/workflows/data-news.yml` runs every 3 hours at minute 23, and by hand (`workflow_dispatch`). It reads the feeds in `src/news.ts` and uploads only `v1/meta/news.json`. It does not touch `status.json` or the other files.
+
+- It keeps headlines whose title matches the keyword list: at most 2 per publisher and 8 in total, newest first, no duplicate titles, not older than 30 days.
+- It stores only the title, the link, the publisher name and the date. Never article text or images.
+- A feed that fails is skipped. With zero matching headlines, nothing is uploaded and the previous file stays.
+- It uses its own concurrency group (`data-news`), so a queued news run never replaces a queued hourly run.
 
 ## Hourly job (GitHub Actions)
 

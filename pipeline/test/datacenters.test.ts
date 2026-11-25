@@ -6,7 +6,7 @@ import { checkZoneReferences, validateDataFile } from "@powerstation/schema/vali
 import { buildDatacenters, parseCsv } from "../src/datacenters";
 
 const zones = {
-  schema_version: "1.1.0",
+  schema_version: "1.2.0",
   dataset: "zones",
   generated_at: "2026-11-25T12:00:00Z",
   mock: false,

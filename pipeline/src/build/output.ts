@@ -5,8 +5,14 @@ import { gzipSync } from "node:zlib";
 import type { DataFile, ZonesFile } from "@powerstation/schema";
 import { checkZoneReferences, validateDataFile } from "@powerstation/schema/validate";
 
-/** Returns a list of problems. An empty list means all files are valid. */
-export function validateAll(files: Record<string, DataFile>, zones: ZonesFile): string[] {
+/** Datasets that never refer to zones. */
+export const ZONE_FREE: ReadonlySet<string> = new Set(["news", "emission_factors"]);
+
+/**
+ * Returns a list of problems. An empty list means all files are valid.
+ * zones = null skips the zone checks; only allowed when no file refers to zones.
+ */
+export function validateAll(files: Record<string, DataFile>, zones: ZonesFile | null): string[] {
   const errors: string[] = [];
   for (const [path, file] of Object.entries(files)) {
     if ((file as { mock?: unknown }).mock !== false) errors.push(`${path}: mock is not false`);
@@ -15,7 +21,8 @@ export function validateAll(files: Record<string, DataFile>, zones: ZonesFile): 
       errors.push(...result.errors.slice(0, 20).map((e) => `${path}: ${e}`));
       continue;
     }
-    errors.push(...checkZoneReferences(file, zones).map((e) => `${path}: ${e}`));
+    if (zones) errors.push(...checkZoneReferences(file, zones).map((e) => `${path}: ${e}`));
+    else if (!ZONE_FREE.has(file.dataset)) errors.push(`${path}: needs zones.json to check`);
   }
   return errors;
 }
