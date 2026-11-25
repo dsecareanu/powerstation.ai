@@ -4,6 +4,7 @@ import { generationAt, netImportAt, type FlowAt } from "./data/metrics";
 import type { Point } from "./data/series";
 import { FUEL_LABELS, formatHour, formatPercent } from "./format";
 import type { Model } from "./model";
+import { nodeFromSelect } from "./selection";
 import {
   DataStateBadge,
   describePowerInHomes,
@@ -17,7 +18,7 @@ interface Props {
   nodeId: string | null;
   hour: number;
   flows: FlowAt[];
-  onSelectNode: (id: string) => void;
+  onSelectNode: (id: string | null) => void;
 }
 
 export function CountryPanel(props: Props) {
@@ -26,14 +27,12 @@ export function CountryPanel(props: Props) {
 
   const picker = (
     <label class="panel__picker">
-      Country{" "}
+      <span class="panel__label">Country</span>
       <select
         value={nodeId ?? ""}
-        onChange={(e) => props.onSelectNode((e.target as HTMLSelectElement).value)}
+        onChange={(e) => props.onSelectNode(nodeFromSelect((e.target as HTMLSelectElement).value))}
       >
-        <option value="" disabled>
-          Choose a country
-        </option>
+        <option value="">Choose a country</option>
         {model.index.nodes.map((n) => (
           <option key={n.id} value={n.id}>
             {n.name}
@@ -47,6 +46,7 @@ export function CountryPanel(props: Props) {
     return (
       <section class="panel" aria-label="Country details">
         {picker}
+        <p class="panel__lead">What one country uses, makes and trades at the selected hour.</p>
         <p class="panel__hint">Tap a country on the map, or choose one here.</p>
       </section>
     );
@@ -68,6 +68,7 @@ export function CountryPanel(props: Props) {
     <section class="panel" aria-label={`${node.name} details`}>
       {picker}
       <h2 class="panel__title">{node.name}</h2>
+      <p class="panel__lead">What one country uses, makes and trades at the selected hour.</p>
       {node.countries.length > 1 ? (
         <p class="panel__note">
           These countries share one bidding zone ({node.zones.join(", ")}), so the data covers them

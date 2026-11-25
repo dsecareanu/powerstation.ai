@@ -8,6 +8,7 @@ import { Guide } from "./Guide";
 import type { LayerId } from "./layers";
 import { Legend } from "./Legend";
 import { MapView } from "./map/MapView";
+import { toggleNode } from "./selection";
 import { buildModel, flowsAt, mostSurprisingPair, pairKey } from "./model";
 import { AttributionPanel, type AttributionSource, DataDelayedBanner } from "@powerstation/ui";
 import { Timeline } from "./Timeline";
@@ -38,6 +39,14 @@ export function App() {
   const [node, setNode] = useState<string | null>(null);
   const [pair, setPair] = useState<string | null>(null);
   const [tab, setTab] = useState<"country" | "border">("country");
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      setNode(null);
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  }, []);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const now = useMemo(() => clockNow(), []);
 
@@ -121,13 +130,29 @@ export function App() {
             selectedNode={node}
             selectedPair={tab === "border" ? pair : null}
             onSelectNode={(id) => {
-              setNode(id);
+              setNode((cur) => toggleNode(cur, id));
               setTab("country");
             }}
             onSelectPair={(k) => {
               setPair(k);
               setTab("border");
             }}
+          />
+        </div>
+        <div class="app__timeline">
+          <Timeline
+            hours={model.hours}
+            index={index}
+            latestIndex={latestIndex}
+            measuredEnd={model.measuredEnd}
+            now={now}
+            playing={playing}
+            range={range}
+            loading30d={loading30d}
+            reducedMotion={reducedMotion}
+            onIndex={(i) => setHourMs(model.hours[i]!)}
+            onPlaying={setPlaying}
+            onRange={onRange}
           />
         </div>
         <div class="app__legend">
@@ -149,7 +174,7 @@ export function App() {
               aria-selected={tab === "border"}
               onClick={() => setTab("border")}
             >
-              Planned vs measured
+              Border
             </button>
           </div>
           {tab === "country" ? (
@@ -171,20 +196,6 @@ export function App() {
           )}
         </aside>
       </main>
-      <Timeline
-        hours={model.hours}
-        index={index}
-        latestIndex={latestIndex}
-        measuredEnd={model.measuredEnd}
-        now={now}
-        playing={playing}
-        range={range}
-        loading30d={loading30d}
-        reducedMotion={reducedMotion}
-        onIndex={(i) => setHourMs(model.hours[i]!)}
-        onPlaying={setPlaying}
-        onRange={onRange}
-      />
       <footer class="app__footer">
         <Guide />
         <AttributionPanel files={sources} />
