@@ -15,7 +15,7 @@ export type StatusFile = Envelope & {
 /**
  * Version of the data contract. Bump it on every schema change.
  */
-export type SchemaVersion = "1.0.0";
+export type SchemaVersion = "1.1.0";
 /**
  * UTC time in ISO 8601 with a Z suffix, e.g. 2026-11-25T12:00:00Z.
  */
@@ -75,6 +75,50 @@ export type DatacentersFile = Envelope & {
   dataset: "datacenters";
   datacenters: Datacenter[];
 };
+/**
+ * v1/capacity/rolling-30d.json. Hourly day-ahead forecasted transfer capacity (NTC) per border and direction, 30 days back to 24 h ahead. Source: ENTSO-E data item 'Forecasted cross-zonal capacity, day-ahead' (Transparency Regulation article 11.1.a). All values have state planned or missing. Show as 'planned capacity'.
+ */
+export type CapacityFile = Envelope & {
+  dataset: "capacity";
+  window: Window;
+  borders: DirectedCapacity[];
+};
+/**
+ * v1/meta/emission-factors.json. Life-cycle emission factor per fuel type, in gCO2eq per kWh of electricity. Every value cites a document, a table and a row. Used to estimate carbon intensity from generation by fuel.
+ */
+export type EmissionFactorsFile = Envelope & {
+  dataset: "emission_factors";
+  unit: "gCO2eq/kWh";
+  /**
+   * lifecycle = construction, fuel supply, operation and decommissioning, per kWh generated.
+   */
+  basis: "lifecycle";
+  /**
+   * @minItems 1
+   */
+  sources: [FactorSource, ...FactorSource[]];
+  /**
+   * One entry per fuel type in FUEL_TYPES. Every fuel type is present, also when no factor is known.
+   */
+  factors: {
+    nuclear: EmissionFactor;
+    lignite: EmissionFactor;
+    hard_coal: EmissionFactor;
+    gas: EmissionFactor;
+    oil: EmissionFactor;
+    biomass: EmissionFactor;
+    waste: EmissionFactor;
+    geothermal: EmissionFactor;
+    hydro_run_of_river: EmissionFactor;
+    hydro_reservoir: EmissionFactor;
+    hydro_pumped_storage: EmissionFactor;
+    wind_onshore: EmissionFactor;
+    wind_offshore: EmissionFactor;
+    solar: EmissionFactor;
+    other_renewable: EmissionFactor;
+    other: EmissionFactor;
+  };
+};
 
 export interface AllDataFiles {
   status?: StatusFile;
@@ -83,6 +127,8 @@ export interface AllDataFiles {
   generation?: GenerationFile;
   forecasts?: ForecastsFile;
   datacenters?: DatacentersFile;
+  capacity?: CapacityFile;
+  "emission-factors"?: EmissionFactorsFile;
 }
 /**
  * Fields that every data file has.
@@ -92,7 +138,15 @@ export interface Envelope {
   /**
    * Kind of file. Selects the schema.
    */
-  dataset: "status" | "zones" | "flows" | "generation" | "forecasts" | "datacenters";
+  dataset:
+    | "status"
+    | "zones"
+    | "flows"
+    | "generation"
+    | "forecasts"
+    | "datacenters"
+    | "capacity"
+    | "emission_factors";
   generated_at: UtcTimestamp;
   /**
    * true for fixtures and demo data. The deploy step refuses files with mock: true.
@@ -120,7 +174,14 @@ export interface FileStatus {
    * R2 path, e.g. v1/flows/rolling-7d.json.
    */
   path: string;
-  dataset: "zones" | "flows" | "generation" | "forecasts" | "datacenters";
+  dataset:
+    | "zones"
+    | "flows"
+    | "generation"
+    | "forecasts"
+    | "datacenters"
+    | "capacity"
+    | "emission_factors";
   updated_at: UtcTimestamp;
   newest_measured_at: UtcTimestamp | null;
   ok: boolean;
@@ -264,4 +325,48 @@ export interface Datacenter {
    * Date the source data refers to (YYYY-MM-DD).
    */
   as_of: string;
+}
+/**
+ * Capacity for one direction of one border: the most power in MW that can be traded from from_zone to to_zone in each hour. Values are 0 or more. Capacity is not netted: a border has up to two entries, one per direction. A direction with no published capacity is left out.
+ */
+export interface DirectedCapacity {
+  from_zone: ZoneId;
+  to_zone: ZoneId;
+  series: TimeSeries;
+}
+/**
+ * A document that factors cite.
+ */
+export interface FactorSource {
+  id: string;
+  title: string;
+  publisher: string;
+  year: number;
+  url: string;
+}
+/**
+ * match: direct = the cited row is this fuel type. proxy = the cited row is a similar technology; note says why. none = the sources have no factor; value and the citation fields are null, and the UI must say so.
+ */
+export interface EmissionFactor {
+  /**
+   * Median life-cycle emissions in gCO2eq/kWh. null when match is none.
+   */
+  value: number | null;
+  match: "direct" | "proxy" | "none";
+  /**
+   * id of an entry in sources. null when match is none.
+   */
+  source_id: string | null;
+  /**
+   * Table in the source, e.g. 'Table A.III.2'. null when match is none.
+   */
+  table: string | null;
+  /**
+   * Row label in that table, as the source writes it. null when match is none.
+   */
+  row: string | null;
+  /**
+   * Plain-English note. Required when match is proxy or none.
+   */
+  note?: string;
 }
