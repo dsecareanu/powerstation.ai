@@ -27,7 +27,10 @@ export default defineConfig(({ command }) => ({
   plugins: [serveFixtures()],
   define: {
     // Fixtures have a fixed "now" (see briefs/session-0-report.md). Override with ?now=<ISO>.
-    __DEV_NOW__: JSON.stringify(command === "serve" ? "2026-11-25T12:30:00Z" : ""),
+    // The site's demo build (apps/site) sets VITE_FAKE_NOW to fix the clock in a build too.
+    __DEV_NOW__: JSON.stringify(
+      command === "serve" ? "2026-11-25T12:30:00Z" : (process.env.VITE_FAKE_NOW ?? ""),
+    ),
   },
   oxc: { jsx: { runtime: "automatic", importSource: "preact" } },
   build: { target: "es2022", sourcemap: true },

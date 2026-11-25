@@ -12,3 +12,5 @@ coverage/
 HANDOFF.md
 # Playwright MCP snapshots and console logs (local browser checks).
 .playwright-mcp/
+# Wrangler local state (wrangler dev / dry run).
+.wrangler/

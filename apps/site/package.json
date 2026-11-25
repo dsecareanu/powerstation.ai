@@ -1,0 +1,22 @@
+{
+  "name": "@powerstation/site",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "build:demo": "tsx scripts/build.ts --demo",
+    "check:worker": "tsx scripts/check-worker.ts",
+    "deploy:dry-run": "tsx scripts/check-worker.ts && wrangler deploy --dry-run",
+    "preview": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "devDependencies": {
+    "@powerstation/calculator": "workspace:*",
+    "@powerstation/map": "workspace:*",
+    "@powerstation/ui": "workspace:*",
+    "wrangler": "4.164.0"
+  }
+}

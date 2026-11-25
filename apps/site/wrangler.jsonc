@@ -1,0 +1,18 @@
+// Assets-only Worker for the powerstation.ai site preview.
+// Guard (scripts/check-worker.ts): the name must stay "powerstation-site", and this file
+// must have no routes, no custom domains, no "env" blocks and no Worker script.
+// The same Cloudflare account hosts "domain-landers" (13 domains). Never deploy to it.
+// The launch (moving powerstation.ai to this Worker) is Daniel's step, in the dashboard.
+// Comments in this file must be on their own line.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "powerstation-site",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

@@ -1,0 +1,89 @@
+/*
+ * Site shell styles: header, footer, demo banner and the About/404 pages.
+ * Plain layout on @powerstation/ui tokens only. No new colors or type sizes here:
+ * the coming design system replaces this file (and tokens.css) in one pass.
+ * The build writes tokens.css + this file to /site.css; every page links it.
+ */
+.site-header,
+.site-footer,
+.site-demo,
+.site-main {
+  font-family: var(--ps-font-sans);
+  line-height: 1.5;
+}
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ps-space-2) var(--ps-space-4);
+  padding: var(--ps-space-3) var(--ps-space-4);
+  background: var(--ps-color-surface);
+  border-bottom: 1px solid var(--ps-color-border);
+  color: var(--ps-color-text);
+}
+.site-header ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ps-space-1) var(--ps-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-header a,
+.site-footer a,
+.site-main a {
+  color: var(--ps-color-accent);
+}
+.site-header .site-logo {
+  font-weight: var(--ps-font-weight-display);
+  color: var(--ps-color-text);
+  text-decoration: none;
+}
+.site-header nav a {
+  display: inline-block;
+  padding: var(--ps-space-1) 0;
+}
+.site-header nav a[aria-current="page"] {
+  color: var(--ps-color-text);
+  font-weight: var(--ps-font-weight-bold);
+  text-decoration-thickness: 2px;
+}
+.site-header a:focus-visible,
+.site-footer a:focus-visible,
+.site-main a:focus-visible {
+  outline: 3px solid var(--ps-color-focus);
+  outline-offset: 2px;
+}
+.site-demo {
+  padding: var(--ps-space-2) var(--ps-space-4);
+  background: var(--ps-color-warning-bg);
+  color: var(--ps-color-warning-text);
+  border-bottom: 1px solid var(--ps-color-warning-border);
+}
+.site-footer {
+  margin-top: var(--ps-space-6);
+  padding: var(--ps-space-4);
+  border-top: 1px solid var(--ps-color-border);
+  color: var(--ps-color-text-muted);
+}
+.site-footer p {
+  max-width: 64rem;
+  margin: 0 auto var(--ps-space-2);
+}
+body.site-doc {
+  margin: 0;
+  background: var(--ps-color-bg);
+  color: var(--ps-color-text);
+}
+.site-main {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: var(--ps-space-4);
+}
+.site-main dt {
+  font-weight: var(--ps-font-weight-bold);
+}
+.site-main dd {
+  margin: 0 0 var(--ps-space-3);
+}
