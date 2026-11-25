@@ -7,7 +7,9 @@ export function readWorkerConfig(file: string): Record<string, unknown> {
   const json = readFileSync(file, "utf8")
     .split("\n")
     .filter((line) => !line.trimStart().startsWith("//"))
-    .join("\n");
+    .join("\n")
+    // JSONC allows trailing commas (Prettier adds them).
+    .replace(/,(\s*[}\]])/g, "$1");
   return JSON.parse(json) as Record<string, unknown>;
 }
 
@@ -15,7 +17,9 @@ export function readWorkerConfig(file: string): Record<string, unknown> {
 export function checkWorkerConfig(config: Record<string, unknown>): string[] {
   const problems: string[] = [];
   if (config.name !== ALLOWED_WORKER_NAME) {
-    problems.push(`name is ${JSON.stringify(config.name)}; only "${ALLOWED_WORKER_NAME}" is allowed`);
+    problems.push(
+      `name is ${JSON.stringify(config.name)}; only "${ALLOWED_WORKER_NAME}" is allowed`,
+    );
   }
   for (const key of ["routes", "route", "env", "main", "services", "durable_objects"]) {
     if (key in config) problems.push(`"${key}" is not allowed (assets-only preview Worker)`);

@@ -91,7 +91,8 @@ for (const [page, active] of pages) {
   writeFileSync(file, injectShell(readFileSync(file, "utf8"), { demo, active }));
 }
 
-if (demo) cpSync(join(repoDir, "fixtures", "v1"), join(dist, "demo-data", "v1"), { recursive: true });
+if (demo)
+  cpSync(join(repoDir, "fixtures", "v1"), join(dist, "demo-data", "v1"), { recursive: true });
 
 // Checks. Any problem fails the build.
 const sizes = measurePageJs(dist);

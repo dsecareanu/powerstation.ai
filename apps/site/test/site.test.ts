@@ -26,7 +26,10 @@ test("the committed wrangler.jsonc passes the Worker guard", () => {
 
 test("the Worker guard refuses another name, routes and a script", () => {
   const base = { name: "powerstation-site", workers_dev: true, assets: { directory: "./dist" } };
-  assert.match(checkWorkerConfig({ ...base, name: "domain-landers" }).join(), /only "powerstation-site"/);
+  assert.match(
+    checkWorkerConfig({ ...base, name: "domain-landers" }).join(),
+    /only "powerstation-site"/,
+  );
   assert.match(checkWorkerConfig({ ...base, routes: [] }).join(), /"routes" is not allowed/);
   assert.match(checkWorkerConfig({ ...base, env: {} }).join(), /"env" is not allowed/);
   assert.match(checkWorkerConfig({ ...base, main: "x.js" }).join(), /"main" is not allowed/);

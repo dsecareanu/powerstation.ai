@@ -4,12 +4,12 @@ The site shell and the build that puts the apps together into one static site. I
 
 ## Routes
 
-| Path           | Page                     | Source            |
-| -------------- | ------------------------ | ----------------- |
-| `/`            | Map (Step 1: watch)      | `apps/map`        |
-| `/calculator/` | Data center calculator   | `apps/calculator` |
-| `/about/`      | About and sources        | `pages/about.html` |
-| other          | Page not found (`404.html`) | `pages/404.html` |
+| Path           | Page                        | Source             |
+| -------------- | --------------------------- | ------------------ |
+| `/`            | Map (Step 1: watch)         | `apps/map`         |
+| `/calculator/` | Data center calculator      | `apps/calculator`  |
+| `/about/`      | About and sources           | `pages/about.html` |
+| other          | Page not found (`404.html`) | `pages/404.html`   |
 
 The build adds the shell (header, footer, demo banner, `/site.css`) to every page after Vite builds the apps. The apps stay unchanged and still run on their own with `pnpm --filter <app> dev`.
 
@@ -24,10 +24,10 @@ pnpm build:site:demo   # demo: mock fixtures, fixed clock, banner on every page
 
 Output: `apps/site/dist`.
 
-| Mode       | Data URL                                                    | Clock                              | Banner | Fixtures                    |
-| ---------- | ----------------------------------------------------------- | ---------------------------------- | ------ | --------------------------- |
-| Production | `VITE_DATA_BASE_URL`, default `https://data.powerstation.ai/` | real                               | no     | none                        |
-| Demo       | `/demo-data/` (fixtures copied to `/demo-data/v1/`)         | fixed at `2026-11-25T12:30:00Z`    | yes    | `fixtures/v1`, all `mock: true` |
+| Mode       | Data URL                                                      | Clock                           | Banner | Fixtures                        |
+| ---------- | ------------------------------------------------------------- | ------------------------------- | ------ | ------------------------------- |
+| Production | `VITE_DATA_BASE_URL`, default `https://data.powerstation.ai/` | real                            | no     | none                            |
+| Demo       | `/demo-data/` (fixtures copied to `/demo-data/v1/`)           | fixed at `2026-11-25T12:30:00Z` | yes    | `fixtures/v1`, all `mock: true` |
 
 Demo mode: pass `--demo` or set `VITE_DEMO=1`. Demo pages also carry `<meta name="robots" content="noindex">`.
 
