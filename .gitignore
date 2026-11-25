@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
+.tmp/
+# Project plan: kept outside the repo (not public).
+powerstation-ai-plan.md
+coverage/

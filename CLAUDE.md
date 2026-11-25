@@ -1,0 +1,93 @@
+# powerstation.ai — Claude Code rules
+
+Read this file first in every session. Your session brief is in `briefs/`. The full plan (`powerstation-ai-plan.md`) is not in the repo: it stays in Daniel's local project folder. If your brief points to a plan section you cannot read, ask Daniel.
+
+## What this project is
+
+- A free, open-source web tool: **"Play the real grid."**
+- Users explore real European grid data and test questions such as "What happens to the grid if a 1 GW data center goes here?"
+- Audience: general public and journalists. Not energy experts.
+- Language: English.
+
+## v1 scope (Europe only)
+
+1. **Step 1 — Watch:** map with a timeline (7 days back, 30-day toggle, 24 h ahead). Measured flows behind "now", planned trade ahead.
+2. **Step 2 — Place a data center:** zone-level impact calculator. Also ships as a standalone page.
+3. Not in v1: daily predictions (v1.1), balancing lab, US, rest of world, leaderboards, accounts.
+
+Do not add features outside your session brief. Write ideas in `IDEAS.md` instead.
+
+## Stack (default — confirm in session 0)
+
+- TypeScript everywhere. Vite for the apps. MapLibre GL for the map.
+- Static site on Cloudflare (Pages or Workers static assets), deployed from GitHub.
+- Data: JSON files in Cloudflare R2, written by n8n on n8n.appbuilder.ai.
+- **No backend in v1.** The browser reads public JSON files only.
+- Package manager: pnpm workspaces.
+
+## Repo structure
+
+```
+/schema          JSON Schema + generated TypeScript types (the data contract)
+/fixtures        Mock data that follows the schema (never deployed to production)
+/packages/ui     Shared UI: tokens, score bar, attribution panel, data-state styles
+/apps/map        Step 1 — map with timeline
+/apps/calculator Step 2 — data center calculator
+/pipeline        Scripts: backfill, validation, back-tests
+/n8n             Exported n8n workflow JSON (public templates)
+/briefs          One brief per Claude Code session
+```
+
+## Data rules (mandatory)
+
+1. **Every value has exactly one state:** `measured`, `planned`, `modelled` or `missing`.
+   - Never show a `modelled` value without its label and method.
+   - Never fill a gap without marking it `modelled` or `missing`.
+2. **Planned is not forecast.** ENTSO-E day-ahead scheduled exchanges are commercial plans. Label them "planned trade", never "forecast flow".
+3. **Units:** power in MW (hourly average), energy in MWh, time in UTC ISO 8601. Convert to local time only in the UI.
+4. **Everyday units in the UI:** next to MW/GW, show a plain comparison (e.g. "about as much as N homes"). Keep the conversion factor in one place, with its source.
+5. **Freshness:** the UI reads `status.json`. If the newest data is older than 2 hours, show "data delayed".
+6. **Attribution:** every data file carries its source and license. The UI shows them in the attribution panel.
+
+## Schema change rule
+
+- The schema in `/schema` is the contract between all sessions.
+- Only one session at a time may change it. Bump `schema_version`, update fixtures, then tell Daniel. Other sessions rebase.
+- Apps and pipeline must validate against the schema in CI.
+
+## Writing and copy
+
+- Short sentences. Active voice. Plain English for a general audience.
+- No political framing. Describe what the data shows. Do not judge countries or energy sources.
+- Do not use "guarantee", "ensures", "eliminates" or "will never" in copy.
+- Credit sources by name.
+
+## Quality budgets
+
+- Mobile-first. Test at 375 px width.
+- [Estimate] Targets, adjust with measurements: initial JS ≤ 200 KB gzipped; data loaded for the default view ≤ 500 KB gzipped; first useful view ≤ 3 s on a mid-range phone over 4G.
+- Accessibility: keyboard use for all controls, visible focus, color is never the only signal (data states need a pattern or label too), respect `prefers-reduced-motion`.
+- Browser storage (`localStorage`) only for personal settings and scores. Wrap reads and writes in try/catch.
+
+## Secrets and licensing
+
+- No API keys or tokens in the repo. The ENTSO-E token lives in n8n credentials only.
+- Repo: https://github.com/dsecareanu/powerstation.ai (default branch `main`). The root `LICENSE` (AGPL-3.0) already exists. Do not replace it.
+- Code license: AGPL-3.0.
+- Exception: the `/n8n` folder (workflow templates) is MIT, with its own `LICENSE` file in that folder. Never copy AGPL code into `/n8n`.
+- Data from OSM-derived sources stays ODbL. Keep `DATA_SOURCES.md` up to date (source, license, attribution text, date pulled).
+- Do not use: WRI Global Power Plant Database (unmaintained), PeeringDB, Electricity Maps API, any paid dataset.
+
+## Git workflow
+
+- One session = one git worktree = one branch: `ws/<session-letter>-<short-name>` (e.g. `ws/b-calculator`).
+- Small commits with clear messages.
+- Open a pull request to `main`. Daniel merges one branch at a time.
+- Do not edit files owned by another workstream. If you need a change there, write it in your PR description.
+
+## Labels when reporting to Daniel
+
+- `[Inference]` for conclusions not verified.
+- `[Estimate]` for approximate numbers.
+- `[Unverified]` for facts not checked against a primary source.
+- If information is missing, ask. Do not guess.
