@@ -19,12 +19,14 @@ Full text with quotes and links: `DATA_SOURCES.md` → "ENTSO-E terms (checked 2
 
 [Inference] Many public sites republish ENTSO-E generation and load. That does not show that they have TSO agreement. I did not check this, and it is not a legal opinion.
 
-**Decision for Daniel (blocks publishing of 4 datasets):**
+**Options given to Daniel:**
 
 1. Publish only the open-data items in v1, and leave generation, actual load, wind/solar forecasts and planned trade out. This removes the fuel mix from step 1 and carbon intensity from step 2.
 2. Ask ENTSO-E (or the TSOs) for written confirmation that we may republish those 4 items, free and with attribution. Build now, publish those files only after the answer.
 3. Use national open sources where they exist for the same data. [Unverified] Some TSOs publish under open licenses. This adds one parser per country.
 4. Get a legal opinion that hourly aggregates of these items do not harm the owners' rights, then publish with attribution.
+
+**Decision (Daniel, 2026-11-25): option 2.** Ask ENTSO-E for written permission. Build everything now. Publish the 4 restricted items only after a written yes. Option 1 is the fallback.
 
 My recommendation: option 2 now, with option 1 as the fallback. It keeps all options open. Building and testing need no publishing, so the work can continue. I will not write any of the 4 items to the public prefix until Daniel decides.
 
@@ -50,6 +52,8 @@ Decisions:
 - 12 new validator tests (24 in total).
 
 Open decision for the real emission-factor file: IPCC Table A.III.2 has no row for lignite, oil, waste, pumped storage, "other renewable" or "other". The fixture uses: lignite = proxy "Coal — PC" (820); gas = proxy "Gas — Combined Cycle" (490); solar = proxy "Solar PV — utility" (48); oil, waste, other_renewable, other, hydro_pumped_storage = `none`. Lignite is a large share in DE, PL and CZ. A second cited source for lignite and oil would make carbon intensity better. Daniel or session B to decide.
+
+**Decision (Daniel, 2026-11-25):** lignite uses the hard-coal row ("Coal — PC", 820) as a proxy, as in the fixture. Oil stays `none`.
 
 ## What other sessions must know
 
