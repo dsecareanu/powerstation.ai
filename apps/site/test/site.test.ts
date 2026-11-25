@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 import { checkBudget, checkDemo, checkProduction, measurePageJs } from "../src/checks";
-import { DEMO_BANNER_TEXT, injectShell, sitePage } from "../src/shell";
+import { DEMO_BANNER_TEXT, injectShell, NOINDEX_TAG, sitePage } from "../src/shell";
 import { checkWorkerConfig, readWorkerConfig } from "../src/worker-guard";
 
 const APP_HTML = `<!doctype html><html><head><title>x</title></head><body><div id="app"></div><script type="module" src="/assets/a.js"></script></body></html>`;
@@ -51,8 +51,18 @@ test("injectShell adds header, footer and, in demo, the banner", () => {
 
   const demo = injectShell(APP_HTML, { demo: true, active: null });
   assert.match(demo, /<body><div class="site-demo" role="note">/);
-  assert.match(demo, /noindex/);
+  assert.doesNotMatch(demo, /noindex/);
   assert.doesNotMatch(demo, /aria-current/);
+});
+
+test("demo builds set noindex on the map and calculator only; production never", () => {
+  for (const active of ["map", "calculator"] as const) {
+    assert.ok(injectShell(APP_HTML, { demo: true, active }).includes(NOINDEX_TAG), active);
+    assert.ok(!injectShell(APP_HTML, { demo: false, active }).includes(NOINDEX_TAG), active);
+  }
+  for (const active of ["guide", "about", null] as const) {
+    assert.ok(!injectShell(APP_HTML, { demo: true, active }).includes(NOINDEX_TAG), String(active));
+  }
 });
 
 test("checkProduction finds fixtures, mock files, the banner and the demo clock", () => {
@@ -69,6 +79,7 @@ test("checkProduction finds fixtures, mock files, the banner and the demo clock"
   assert.match(problems, /status.json is a mock data file/);
   assert.match(problems, /index.html has the demo banner/);
   assert.match(problems, /a.js has the demo clock/);
+  assert.match(problems, /index.html has a noindex tag/);
 });
 
 test("checkDemo needs the banner on every page and the fixtures", () => {
@@ -86,6 +97,16 @@ test("checkDemo needs the banner on every page and the fixtures", () => {
   const problems = checkDemo(bad).join("\n");
   assert.match(problems, /status.json is missing/);
   assert.match(problems, /index.html has no demo banner/);
+  assert.match(problems, /index.html has no noindex tag/);
+
+  const noindexOnAbout = tempSite({
+    "about/index.html": injectShell(APP_HTML, { demo: true, active: "about" }).replace(
+      "</head>",
+      `${NOINDEX_TAG}</head>`,
+    ),
+    "demo-data/v1/meta/status.json": "{}",
+  });
+  assert.match(checkDemo(noindexOnAbout).join(), /about\/index.html has a noindex tag/);
   assert.ok(DEMO_BANNER_TEXT.startsWith("Demo data:"));
 });
 
