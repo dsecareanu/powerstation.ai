@@ -1,0 +1,170 @@
+/*
+ * Component styles for @powerstation/ui. Import once per app:
+ *   import "@powerstation/ui/styles.css";
+ * It includes the tokens. All classes start with "ps-".
+ */
+@import "./tokens.css";
+
+/* ---------- Data states: color + pattern ----------
+ * Use .ps-state--<state> on any element to set --ps-state-color.
+ * .ps-swatch draws a small sample: measured = solid, planned = dashed outline,
+ * modelled = diagonal hatch, missing = empty with a slash.
+ * On a map or chart, use the same idea: solid line = measured,
+ * dashed line = planned, hatched or dotted = modelled, gap = missing.
+ */
+.ps-state--measured {
+  --ps-state-color: var(--ps-state-measured);
+}
+.ps-state--planned {
+  --ps-state-color: var(--ps-state-planned);
+}
+.ps-state--modelled {
+  --ps-state-color: var(--ps-state-modelled);
+}
+.ps-state--missing {
+  --ps-state-color: var(--ps-state-missing);
+}
+
+.ps-swatch {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  border-radius: var(--ps-radius-sm);
+  box-sizing: border-box;
+  vertical-align: -0.125em;
+}
+.ps-state--measured .ps-swatch,
+.ps-swatch.ps-state--measured {
+  background: var(--ps-state-color);
+}
+.ps-state--planned .ps-swatch,
+.ps-swatch.ps-state--planned {
+  border: 2px dashed var(--ps-state-color);
+}
+.ps-state--modelled .ps-swatch,
+.ps-swatch.ps-state--modelled {
+  border: 2px solid var(--ps-state-color);
+  background: repeating-linear-gradient(45deg, var(--ps-state-color) 0 2px, transparent 2px 5px);
+}
+.ps-state--missing .ps-swatch,
+.ps-swatch.ps-state--missing {
+  border: 2px dotted var(--ps-state-color);
+  background: linear-gradient(
+    135deg,
+    transparent calc(50% - 1px),
+    var(--ps-state-color) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+
+/* ---------- DataStateBadge ---------- */
+.ps-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ps-space-2);
+  padding: var(--ps-space-1) var(--ps-space-3) var(--ps-space-1) var(--ps-space-2);
+  border: 1px solid var(--ps-state-color, var(--ps-color-border));
+  border-radius: var(--ps-radius-pill);
+  background: var(--ps-color-surface);
+  color: var(--ps-color-text);
+  font-family: var(--ps-font-sans);
+  font-size: var(--ps-text-sm);
+  font-weight: var(--ps-font-weight-bold);
+  line-height: var(--ps-line-height-tight);
+  white-space: nowrap;
+}
+.ps-badge--planned {
+  border-style: dashed;
+}
+.ps-badge--missing {
+  border-style: dotted;
+}
+.ps-badge__method {
+  color: var(--ps-color-text-muted);
+  font-weight: var(--ps-font-weight-regular);
+  white-space: normal;
+}
+
+/* ---------- DataDelayedBanner ---------- */
+.ps-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ps-space-3);
+  padding: var(--ps-space-3) var(--ps-space-4);
+  border: 1px solid var(--ps-color-warning-border);
+  border-radius: var(--ps-radius-md);
+  background: var(--ps-color-warning-bg);
+  color: var(--ps-color-warning-text);
+  font-family: var(--ps-font-sans);
+  font-size: var(--ps-text-sm);
+  line-height: var(--ps-line-height-body);
+}
+.ps-banner__icon {
+  flex: none;
+  font-weight: var(--ps-font-weight-display);
+}
+.ps-banner__title {
+  font-weight: var(--ps-font-weight-bold);
+}
+
+/* ---------- AttributionPanel ---------- */
+.ps-attribution {
+  border: 1px solid var(--ps-color-border);
+  border-radius: var(--ps-radius-md);
+  background: var(--ps-color-surface);
+  color: var(--ps-color-text);
+  font-family: var(--ps-font-sans);
+  font-size: var(--ps-text-sm);
+  line-height: var(--ps-line-height-body);
+}
+.ps-attribution > summary {
+  padding: var(--ps-space-3) var(--ps-space-4);
+  font-weight: var(--ps-font-weight-bold);
+  cursor: pointer;
+  border-radius: var(--ps-radius-md);
+}
+.ps-attribution__body {
+  padding: 0 var(--ps-space-4) var(--ps-space-4);
+}
+.ps-attribution__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--ps-space-3);
+}
+.ps-attribution__source {
+  font-weight: var(--ps-font-weight-bold);
+}
+.ps-attribution__meta {
+  color: var(--ps-color-text-muted);
+}
+.ps-attribution__demo {
+  margin: 0 0 var(--ps-space-3);
+  padding: var(--ps-space-2) var(--ps-space-3);
+  border-radius: var(--ps-radius-sm);
+  background: var(--ps-color-warning-bg);
+  color: var(--ps-color-warning-text);
+  font-weight: var(--ps-font-weight-bold);
+}
+
+/* ---------- Shared: links and focus ---------- */
+:where(.ps-attribution, .ps-banner) a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+:where(.ps-attribution, .ps-banner, .ps-badge) :focus-visible,
+.ps-attribution > summary:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--ps-focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class^="ps-"],
+  [class*=" ps-"] {
+    transition: none !important;
+    animation: none !important;
+  }
+}
