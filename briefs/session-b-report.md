@@ -42,6 +42,15 @@ Smaller choices made in the build:
 - `TODO(A)`: `src/calc/types.ts` (`ImportCapacity`, `EmissionFactors` types) and `src/data/loader.ts` (`loadImportCapacities`, `loadEmissionFactors` return `undefined`). The page shows "not available yet" for pressure and carbon. No real numbers are in the code.
 - `TODO(D)`: `src/ui-standins/` (`Banner`, `StateBadge`, `AttributionPanel`, `tokens.css`).
 
+## Daniel's decisions after the PR (2026-11-25)
+
+- **One household figure, in `@powerstation/ui`.** Session D builds it in PR #5 with the method above and the EU aggregate as fallback. `apps/calculator/src/constants/households.ts` is marked `TODO(D)` and is deleted when #5 is on `main`. When the EU fallback is used, the page says "average EU homes", not "homes in <country>".
+- **Merge order:** #3 (D) → #2 (A, schema 1.1.0) → #5 (D, household table) → #4 (this PR).
+- **After #2 merges:** rebase, then read capacity and emission factors from the 1.1.0 files. Capacity is per direction. Emission factors with `match: "none"` show as "no factor", never as 0. Capacity can be missing on flow-based borders, so the page must work without it.
+- **After #5 merges:** rebase again, use the shared household functions and the `@powerstation/ui` components instead of `src/ui-standins/`.
+- **Lockfile conflicts:** take `main`'s `pnpm-lock.yaml`, run `pnpm install`, commit. Never edit it by hand.
+- `.playwright-mcp/` is added to the root `.gitignore` in this PR (Daniel's request).
+
 ## Requests to other sessions
 
 - **Session A (schema 1.1.0):** the calculator needs (1) total import capacity per zone in MW (one number per zone, or per border so the app can sum borders into the zone), with source and date; (2) emission factors in gCO2/kWh per `FuelType`, with source. Factors must cover every fuel that can be > 0, or those hours are left out.

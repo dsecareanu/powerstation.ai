@@ -1,3 +1,4 @@
+// TODO(D): remove when @powerstation/ui has the household table (PR #5).
 // Average yearly electricity use of one household, per country.
 // One place for the conversion factor and its source (CLAUDE.md data rule 4).
 
