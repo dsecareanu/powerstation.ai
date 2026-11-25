@@ -10,11 +10,12 @@ export const FIXTURES_NOW = "2026-11-25T12:30:00Z";
 export const DEMO_BANNER_TEXT =
   "Demo data: these numbers are made up for testing. Real data from ENTSO-E is coming.";
 
-export type NavKey = "map" | "calculator" | "about";
+export type NavKey = "map" | "calculator" | "guide" | "about";
 
 const NAV: { key: NavKey; href: string; label: string }[] = [
   { key: "map", href: "/", label: "Map" },
   { key: "calculator", href: "/calculator/", label: "Calculator" },
+  { key: "guide", href: "/guide/", label: "Guide" },
   { key: "about", href: "/about/", label: "About" },
 ];
 
@@ -55,7 +56,13 @@ export function injectShell(html: string, opts: ShellOptions): string {
 }
 
 /** A full HTML document for one of the site's own pages (About, 404). */
-export function sitePage(opts: { title: string; description: string; body: string }): string {
+export function sitePage(opts: {
+  title: string;
+  description: string;
+  body: string;
+  /** Extra tags for <head> (canonical link, Open Graph, structured data). */
+  head?: string;
+}): string {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -63,7 +70,7 @@ export function sitePage(opts: { title: string; description: string; body: strin
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${opts.title}</title>
     <meta name="description" content="${opts.description}" />
-  </head>
+${opts.head ?? ""}  </head>
   <body class="site-doc">
     <main id="main" class="site-main">
 ${opts.body}

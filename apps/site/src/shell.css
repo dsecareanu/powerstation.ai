@@ -87,3 +87,26 @@ body.site-doc {
 .site-main dd {
   margin: 0 0 var(--ps-space-3);
 }
+.site-table {
+  overflow-x: auto;
+  margin: var(--ps-space-4) 0;
+}
+.site-table table {
+  border-collapse: collapse;
+  min-width: 36rem;
+}
+.site-table caption {
+  text-align: left;
+  font-weight: var(--ps-font-weight-bold);
+  padding-bottom: var(--ps-space-2);
+}
+.site-table th,
+.site-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--ps-space-2);
+  border-bottom: 1px solid var(--ps-color-border);
+}
+.site-note {
+  color: var(--ps-color-text-muted);
+}
