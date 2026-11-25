@@ -155,7 +155,7 @@ test("rejects a proxy factor without a note", () => {
 
 test("rejects match none with a value", () => {
   const f = factors();
-  f.factors.oil.value = 650;
+  f.factors.waste.value = 650;
   assert.match(firstError(f), /match none needs value/);
 });
 

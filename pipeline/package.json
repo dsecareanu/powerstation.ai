@@ -7,9 +7,18 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "fixtures": "tsx scripts/generate-fixtures.ts"
+    "fixtures": "tsx scripts/generate-fixtures.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "backfill": "tsx scripts/backfill.ts",
+    "discover-borders": "tsx scripts/discover-borders.ts",
+    "update": "tsx scripts/update.ts",
+    "upload": "tsx scripts/upload.ts",
+    "datacenters": "tsx scripts/datacenters.ts",
+    "centroids": "tsx scripts/compute-centroids.ts"
   },
   "dependencies": {
-    "@powerstation/schema": "workspace:*"
+    "@powerstation/schema": "workspace:*",
+    "aws4fetch": "1.0.20",
+    "fast-xml-parser": "5.12.0"
   }
 }

@@ -19,16 +19,22 @@ Full text with quotes and links: `DATA_SOURCES.md` → "ENTSO-E terms (checked 2
 
 [Inference] Many public sites republish ENTSO-E generation and load. That does not show that they have TSO agreement. I did not check this, and it is not a legal opinion.
 
-**Decision for Daniel (blocks publishing of 4 datasets):**
+**Options given to Daniel:**
 
 1. Publish only the open-data items in v1, and leave generation, actual load, wind/solar forecasts and planned trade out. This removes the fuel mix from step 1 and carbon intensity from step 2.
 2. Ask ENTSO-E (or the TSOs) for written confirmation that we may republish those 4 items, free and with attribution. Build now, publish those files only after the answer.
 3. Use national open sources where they exist for the same data. [Unverified] Some TSOs publish under open licenses. This adds one parser per country.
 4. Get a legal opinion that hourly aggregates of these items do not harm the owners' rights, then publish with attribution.
 
+**Decision (Daniel, 2026-11-25): option 2.** Ask ENTSO-E for written permission. Build everything now. Publish the 4 restricted items only after a written yes. Option 1 is the fallback.
+
 My recommendation: option 2 now, with option 1 as the fallback. It keeps all options open. Building and testing need no publishing, so the work can continue. I will not write any of the 4 items to the public prefix until Daniel decides.
 
 **Attribution text proposal** (to confirm): "Source: ENTSO-E Transparency Platform (transparency.entsoe.eu). Hourly averages and netted border flows computed by powerstation.ai. Licensed CC BY 4.0 where ENTSO-E lists the data as open data." No ENTSO-E logo, and no wording that suggests endorsement (Terms of Use 3.1).
+
+**Standing rule (Daniel, via the orchestrator, 2026-11-25):** until ENTSO-E answers the permission request, publish none of the 4 non-open datasets (generation per fuel, actual load, wind/solar forecasts, planned trade). Publish means: no upload to R2, no committed real-data files, no public URL. Code for them may be built and tested with fixtures or local, uncommitted runs only. The backfill has a gate for this (`--include-restricted` off by default; upload of restricted data also needs `ENTSOE_RESTRICTED_PUBLISH_OK=yes`).
+
+**Eurostat check (requested by session D):** the Eurostat copyright notice allows non-commercial reuse without restriction. The commercial-use limit covers data for countries outside the EU, EFTA and official candidate countries. BA, MK, RS and TR are candidates and NO is EFTA. [Inference] powerstation.ai is free and non-commercial, so the household table is fine.
 
 ## Task 2 — Schema 1.1.0
 
@@ -51,6 +57,15 @@ Decisions:
 
 Open decision for the real emission-factor file: IPCC Table A.III.2 has no row for lignite, oil, waste, pumped storage, "other renewable" or "other". The fixture uses: lignite = proxy "Coal — PC" (820); gas = proxy "Gas — Combined Cycle" (490); solar = proxy "Solar PV — utility" (48); oil, waste, other_renewable, other, hydro_pumped_storage = `none`. Lignite is a large share in DE, PL and CZ. A second cited source for lignite and oil would make carbon intensity better. Daniel or session B to decide.
 
+**Decision (Daniel, 2026-11-25):** lignite uses the hard-coal row ("Coal — PC", 820) as a proxy, as in the fixture. Oil stays `none`.
+
+**Update (Daniel, 2026-11-25, via the orchestrator): second source for lignite and oil, and a license field.**
+
+- Oil: 840 gCO2eq/kWh, IPCC SRREN (2011) Annex II, Table A.II.4, 50th percentile, life cycle. Read from the IPCC PDF. NREL's fact sheet NREL/FS-6A50-80580 (2021), Table 1, gives the same value and cites this table. Oil is now `direct`.
+- Lignite: no source gives lignite separately (IPCC AR5 Annex III, IPCC SRREN Annex II and the NREL fact sheet all checked). It stays a proxy of "Coal — PC" (820). The UNECE 2021 LCA report could not be read: unece.org and un-ilibrary.org returned HTTP 403 to automated access.
+- License field of the real file: "Values cited from IPCC AR5 WG III Annex III (© IPCC 2014) and IPCC SRREN Annex II (© IPCC 2011) with attribution; no IPCC figure or table is reproduced." This is Daniel's proposed text, extended to the second IPCC report. **[Unverified]** I could not read the IPCC copyright page (HTTP 403), and the PDFs carry no notice, so I cannot quote IPCC's terms. The view that a few cited numbers are facts, not reproduced material, is a legal view I have not checked.
+- The real file is `pipeline/src/emission-factors.ts`. The hourly job writes it on every run. The fixture uses the same table (still `mock: true`).
+
 ## What other sessions must know
 
 - **Session B (calculator):** rebase on this PR. Handle `match: "none"` (no factor: show it, do not count it as 0). Capacity is directional: use the entry whose `from_zone` is the exporting zone.
@@ -60,13 +75,25 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 ## What Daniel must do
 
 1. Decide on task 1 (options 1–4 above).
-2. Register on the ENTSO-E Transparency Platform and request API access. Give me the token for local backfill (I keep it in `.env`, which git ignores). Add it as an n8n credential.
+2. Register on the ENTSO-E Transparency Platform and request API access. Give me the token for local runs (I keep it in `pipeline/.env`, which git ignores). Add it as a secret in the GitHub environment `data-publish`.
 3. Create the R2 bucket, public access on a custom domain (proposal: `data.powerstation.ai`) and CORS for the site domain.
-4. Create an R2 API token and add it as an n8n S3 credential.
-5. Merge the schema 1.1.0 PR (after session D's first PR, as in `briefs/README.md`).
+4. Create an R2 API token and add it as secrets in the GitHub environment `data-publish` (see `pipeline/README.md`, Setup).
+5. ~~Merge the schema 1.1.0 PR~~ Done: PR #2 merged.
+6. ~~Decide whether Epoch AI "AI supercomputers" is the right data-center source~~ Decided (Daniel, 2026-11-25): Epoch AI "AI supercomputers" is the v1 source.
+7. ~~Session C's request: an optional `centroid` on `countries[]` in zones.json~~ Daniel skipped it (2026-11-25). Not built.
 
-## Next (offline, no publishing)
+## Deploy plan (Daniel, 2026-11-25)
 
-- Task 3: check EIC codes and centroids against ENTSO-E reference data; list all bidding zones that publish flows.
-- Task 4: backfill script with throttling (≤ 6 requests per second), netting and hourly aggregation; tests on saved sample XML. No upload until the R2 bucket exists and Daniel decides on task 1.
-- Task 5: draft n8n workflow JSON locally in `/n8n`. I will not create or change workflows on the instance without asking.
+R2 bucket `powerstation-data`, public only through the custom domain `data.powerstation.ai`. CORS: `GET` from `https://powerstation.ai` and the preview `workers.dev` URL. Base URL for the apps: `https://data.powerstation.ai` (paths `v1/...`). R2 is not enabled on the Cloudflare account yet (API 403, code 10042); Daniel enables it. I created nothing. Steps: `pipeline/README.md` → "Setup (Daniel)".
+
+## Status of tasks 3, 4 and 5 (branch `ws/a-zones`)
+
+- **Task 3, zones:** `pipeline/reference/zones.ts` (49 candidate zones; EIC codes from the ENTSO-E area list, updated 2026-09-21). `pipeline/reference/centroids.json` and `zone-shapes.json` (Natural Earth v5.1.2; shapes only for countries with several zones). `pipeline/src/zones.ts` builds zones.json. Neighbours come from `scripts/discover-borders.ts` (real data, not memory). It needs the ENTSO-E token, so `pipeline/reference/borders.json` does not exist yet.
+- **Task 4, backfill:** `scripts/backfill.ts`, ENTSO-E client (≤ 6 requests/s, ≤ 350/min, 429 wait), XML parser (curve types A01 and A03, gaps), hourly averages (an hour needs all sub-steps), netting, fuel mapping, R2 upload. Tests use synthetic XML only.
+- **Task 5, scheduled jobs (replaces n8n, Daniel 2026-11-25):**
+  - `.github/workflows/data-hourly.yml`: minute 17 every hour and manual runs. It fetches the last 48 h plus 24 h ahead, merges them into the rolling files on R2, validates with `--deploy` and uploads. `status.json` goes last. A first run with no files on R2 fetches 30 days.
+  - `.github/workflows/data-monthly.yml`: day 3 of each month at 04:41 UTC and manual runs. It builds `datacenters.json` from Epoch AI "AI supercomputers" (CC BY 4.0). Epoch's "AI data centers" CSV has no coordinates and only about 7 European sites, so it is not used. [Inference] The 53 European sites (local check, not committed) are AI supercomputers of 0.2–23 MW, not 1 GW campuses. Session B must not present them as large data centers.
+  - Both jobs keep each other's entries in `status.json` (`mergeStatus`).
+  - Restricted gate: the workflows never set `ENTSOE_RESTRICTED_PUBLISH_OK`. `upload.ts` checks the content and refuses scheduled flows, generation files, wind/solar forecasts and mock files.
+  - Setup steps for Daniel: `pipeline/README.md` → "Setup (Daniel)". It covers the GitHub facts checked on the live docs: schedules run only on the default branch, delays at the start of the hour, the 60-day stop in public repos and how to re-enable, and who gets failure emails.
+- **Not verified (no secrets yet):** real ENTSO-E responses, R2 upload and download, a GitHub run with the `data-publish` environment.

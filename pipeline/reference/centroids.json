@@ -1,0 +1,202 @@
+{
+  "method": "Area-weighted centroid of the zone's European land parts (local equirectangular projection); if that point is outside the zone, the interior point furthest from the edge of the largest part. Zones in IT, NO, SE and DK are built from admin-1 regions; for NO and SE the regions follow the zone borders only roughly. For map labels and arrows only.",
+  "source": "Natural Earth 1:10m admin-0 countries and admin-1 states/provinces, release v5.1.2 (public domain), https://www.naturalearthdata.com/",
+  "centroids": {
+    "AL": {
+      "lat": 41.14,
+      "lon": 20.05
+    },
+    "AT": {
+      "lat": 47.59,
+      "lon": 14.13
+    },
+    "BA": {
+      "lat": 44.17,
+      "lon": 17.77
+    },
+    "BE": {
+      "lat": 50.64,
+      "lon": 4.64
+    },
+    "BG": {
+      "lat": 42.77,
+      "lon": 25.22
+    },
+    "CH": {
+      "lat": 46.8,
+      "lon": 8.22
+    },
+    "CZ": {
+      "lat": 49.73,
+      "lon": 15.31
+    },
+    "DE-LU": {
+      "lat": 51.1,
+      "lon": 10.35
+    },
+    "DK1": {
+      "lat": 56.13,
+      "lon": 9.48
+    },
+    "DK2": {
+      "lat": 55.39,
+      "lon": 12.02
+    },
+    "EE": {
+      "lat": 58.67,
+      "lon": 25.54
+    },
+    "ES": {
+      "lat": 40.38,
+      "lon": -3.5
+    },
+    "FI": {
+      "lat": 64.5,
+      "lon": 26.27
+    },
+    "FR": {
+      "lat": 46.55,
+      "lon": 2.55
+    },
+    "GB": {
+      "lat": 54.12,
+      "lon": -2.65
+    },
+    "GR": {
+      "lat": 39.05,
+      "lon": 22.97
+    },
+    "HR": {
+      "lat": 45.77,
+      "lon": 16.5
+    },
+    "HU": {
+      "lat": 47.16,
+      "lon": 19.4
+    },
+    "IE-SEM": {
+      "lat": 53.43,
+      "lon": -7.89
+    },
+    "IT-North": {
+      "lat": 45.38,
+      "lon": 10.19
+    },
+    "IT-Centre-North": {
+      "lat": 43.42,
+      "lon": 11.71
+    },
+    "IT-Centre-South": {
+      "lat": 41.91,
+      "lon": 13.5
+    },
+    "IT-South": {
+      "lat": 40.94,
+      "lon": 16.19
+    },
+    "IT-Calabria": {
+      "lat": 39.07,
+      "lon": 16.35
+    },
+    "IT-Sicily": {
+      "lat": 37.59,
+      "lon": 14.15
+    },
+    "IT-Sardinia": {
+      "lat": 40.09,
+      "lon": 9.03
+    },
+    "LT": {
+      "lat": 55.33,
+      "lon": 23.89
+    },
+    "LV": {
+      "lat": 56.85,
+      "lon": 24.91
+    },
+    "ME": {
+      "lat": 42.79,
+      "lon": 19.24
+    },
+    "MK": {
+      "lat": 41.6,
+      "lon": 21.68
+    },
+    "MT": {
+      "lat": 35.92,
+      "lon": 14.4
+    },
+    "NL": {
+      "lat": 52.27,
+      "lon": 5.58
+    },
+    "NO1": {
+      "lat": 60.99,
+      "lon": 10.26
+    },
+    "NO2": {
+      "lat": 59.11,
+      "lon": 7.65
+    },
+    "NO3": {
+      "lat": 64.45,
+      "lon": 12.7
+    },
+    "NO4": {
+      "lat": 69.37,
+      "lon": 24.27
+    },
+    "NO5": {
+      "lat": 60.95,
+      "lon": 6.46
+    },
+    "PL": {
+      "lat": 52.12,
+      "lon": 19.39
+    },
+    "PT": {
+      "lat": 39.68,
+      "lon": -7.97
+    },
+    "RO": {
+      "lat": 45.85,
+      "lon": 24.97
+    },
+    "RS": {
+      "lat": 44.22,
+      "lon": 20.79
+    },
+    "SE1": {
+      "lat": 66.95,
+      "lon": 20.11
+    },
+    "SE2": {
+      "lat": 63.96,
+      "lon": 16.38
+    },
+    "SE3": {
+      "lat": 59.49,
+      "lon": 14.94
+    },
+    "SE4": {
+      "lat": 56.47,
+      "lon": 13.92
+    },
+    "SI": {
+      "lat": 46.12,
+      "lon": 14.81
+    },
+    "SK": {
+      "lat": 48.7,
+      "lon": 19.48
+    },
+    "UA": {
+      "lat": 49.16,
+      "lon": 31.26
+    },
+    "XK": {
+      "lat": 42.57,
+      "lon": 20.87
+    }
+  }
+}

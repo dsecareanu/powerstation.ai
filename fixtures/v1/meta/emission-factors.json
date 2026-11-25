@@ -15,6 +15,13 @@
       "publisher": "Intergovernmental Panel on Climate Change (IPCC)",
       "year": 2014,
       "url": "https://www.ipcc.ch/site/assets/uploads/2018/02/ipcc_wg3_ar5_annex-iii.pdf"
+    },
+    {
+      "id": "ipcc-srren-annex-ii",
+      "title": "IPCC Special Report on Renewable Energy Sources and Climate Change Mitigation. Annex II: Methodology",
+      "publisher": "Intergovernmental Panel on Climate Change (IPCC)",
+      "year": 2011,
+      "url": "https://www.ipcc.ch/site/assets/uploads/2018/03/Annex-II-Methodology-1.pdf"
     }
   ],
   "factors": {
@@ -31,7 +38,7 @@
       "source_id": "ipcc-ar5-wg3-annex-iii",
       "table": "Table A.III.2",
       "row": "Coal — PC",
-      "note": "No lignite row in the source. Uses pulverised hard coal."
+      "note": "No lignite row in the sources. Uses pulverised hard coal."
     },
     "hard_coal": {
       "value": 820,
@@ -49,12 +56,11 @@
       "note": "The source has combined-cycle plants only. Open-cycle plants emit more."
     },
     "oil": {
-      "value": null,
-      "match": "none",
-      "source_id": null,
-      "table": null,
-      "row": null,
-      "note": "The source has no factor for oil-fired power."
+      "value": 840,
+      "match": "direct",
+      "source_id": "ipcc-srren-annex-ii",
+      "table": "Table A.II.4",
+      "row": "Oil"
     },
     "biomass": {
       "value": 230,
@@ -69,7 +75,7 @@
       "source_id": null,
       "table": null,
       "row": null,
-      "note": "The source has no factor for waste incineration."
+      "note": "The sources have no factor for waste incineration."
     },
     "geothermal": {
       "value": 38,
@@ -128,7 +134,7 @@
       "source_id": null,
       "table": null,
       "row": null,
-      "note": "Mixed category. The source has no single factor."
+      "note": "Mixed category. The sources have no single factor."
     },
     "other": {
       "value": null,
@@ -136,7 +142,7 @@
       "source_id": null,
       "table": null,
       "row": null,
-      "note": "Mixed category. The source has no single factor."
+      "note": "Mixed category. The sources have no single factor."
     }
   }
 }
