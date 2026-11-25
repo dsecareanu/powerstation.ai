@@ -180,8 +180,9 @@ Decided by Daniel on 2026-11-25 (direction A "Line diagram", IBM Plex). Proposal
 - **Ink (primary):** text, buttons, links, measured flows on the map. 16.3:1 on paper.
 - **Ink muted:** secondary text, units after numbers. 6.2:1 on paper.
 - **Field:** borders of inputs and selects (3.4:1 on paper).
-- **Signal yellow `#FFD21A`:** the one brand colour. It marks now, the selected country, focus and one highlight per screen. It is never text and never sits alone on paper (1.3:1): it always has an ink outline or ink on top.
-- **Signal tint:** highlight fill behind ink text, notices, the selected country.
+- **Signal yellow `#FFD21A`:** the one brand colour. It marks now, focus and one highlight per screen. It is never text and never sits alone on paper (1.3:1): it always has an ink outline or ink on top.
+- **Signal tint:** highlight fill behind ink text, notices.
+- **Map ramps** (`apps/map/src/layers.ts`): Renewables share runs from pale yellow (low) to brown (high); Imports and exports runs from brown (exports) through a light neutral (about balanced) to slate (imports). No green and no violet on the map: a green "renewables" ramp would judge the energy mix. The ramps are a scale of their own; signal yellow itself is never a data value.
 - **Data states:** Okabe–Ito based, unchanged from the first `@powerstation/ui` release. Planned text uses `state-planned-text` (5.3:1); the brighter `state-planned` is for lines and fills only.
 - **No blue accent.** Blue means measured, so actions are ink.
 - **Fuel colours** (`--ps-fuel-*` in code) are for chart fills only, always with labels or a legend.
@@ -220,7 +221,7 @@ No shadows. Depth comes from surface steps (paper → surface → sunken) and 1 
 - **State badge:** 2 px radius, 1.5 px border in the state colour, a pattern swatch, the label in ink. Planned is dashed, missing is dotted, modelled has a hatch swatch and always a method line.
 - **Notice (data delayed, demo data):** signal tint ground, ink text, ink border with a 6 px left edge. Text first; colour is never the only signal.
 - **Readout:** Plex Mono 600 number, unit in muted Plex Sans, then one plain comparison ("about as much as 1.4 million homes").
-- **Map:** flat land shapes with paper-coloured borders, no basemap and no sea colour. Flow width scales with MW. Measured flows are ink with dots moving in the flow direction. Planned trade is a static dashed orange line. The selected country is signal tint with an ink outline. "No data" is `land-strong` or a hatch, with a label in the legend.
+- **Map:** flat land shapes with paper-coloured borders, no basemap and no sea colour. Flow width scales with MW. Measured flows are ink with dots moving in the flow direction. Planned trade is a static dashed orange line. The selected country keeps its data colour and gets a 2.5 px ink outline. "No data" is `land-strong` or a hatch, with a label in the legend.
 - **Timeline:** solid ink track for the measured past, dashed planned track after now, the yellow now marker with a text label.
 - **Credit line:** under every chart and map, 13–14 px muted: source name, licence.
 - **Focus ring:** 2 px ink ring plus a 3 px signal halo (`--ps-focus-ring`). Visible on both themes.
@@ -259,7 +260,8 @@ The site header uses the same drawing inline (`apps/site/src/logo.ts`), in `curr
 - Do show every value's state with a pattern or label as well as colour.
 - Do label planned values "planned trade", never "forecast".
 - Do put the source and licence on every chart and map.
-- Don't use yellow for data, for text, or alone on paper.
+- Don't use signal yellow `#FFD21A` as a data value, as text, or alone on paper. The map's yellow-to-brown ramp is a separate scale.
+- Don't use green to mean "renewable" or "good". Describe the data; do not judge energy sources.
 - Don't add a second accent colour, gradients, glows, shadows or glass.
 - Don't use violet or lavender in page design.
 - Don't use weights above 600 or uppercase labels.
