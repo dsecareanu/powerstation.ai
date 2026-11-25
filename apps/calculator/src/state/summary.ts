@@ -1,6 +1,15 @@
 // Plain-text summary for the "Copy result" button. Pure function.
+import { formatPower } from "@powerstation/ui";
 import type { CalcResult, ExtraSource } from "../calc/types";
-import { formatHomes, formatInt, formatMw, formatShare, formatUtc, hours } from "../format";
+import {
+  describePeakPressure,
+  directionLabel,
+  formatInt,
+  formatShare,
+  formatUtc,
+  fuelLabel,
+  hours,
+} from "../format";
 
 const SOURCE_LABEL: Record<ExtraSource, string> = {
   gas: "gas",
@@ -15,15 +24,16 @@ export const sourceLabel = (s: ExtraSource): string => SOURCE_LABEL[s];
 export interface SummaryZone {
   name: string;
   result: CalcResult;
-  /** Homes equivalent of the data center size, or null if no sourced figure. */
-  homes: number | null;
+  /** Homes comparison from @powerstation/ui, e.g. "about as much as 2.8 million homes in Germany use on average". */
+  homesText: string;
+  /** Unit of the emission factors, from the factors file. */
+  carbonUnit?: string;
 }
 
 export function summariseZone(z: SummaryZone): string {
   const r = z.result;
   const lines: string[] = [];
-  const homes = z.homes === null ? "" : ` (about ${formatHomes(z.homes)} homes)`;
-  lines.push(`A ${formatMw(r.sizeMw)} data center in ${z.name}${homes}:`);
+  lines.push(`A ${formatPower(r.sizeMw)} data center in ${z.name} (${z.homesText}):`);
   if (r.load) {
     lines.push(
       `- Share of load: ${formatShare(r.load.shareOfMean)} of the average load, ` +
@@ -36,15 +46,24 @@ export function summariseZone(z: SummaryZone): string {
         `${formatInt(r.validHours)} (${hours(r.imports.hoursWithout)} without the data center).`,
     );
   }
-  if (r.pressure && r.pressure.maxPressure !== null) {
+  if (r.pressure?.available && r.pressure.maxPressure !== null) {
     lines.push(
-      `- Interconnectors: above ${Math.round(r.pressure.threshold * 100)}% of capacity in ` +
-        `${hours(r.pressure.hoursAboveThreshold)}, at most ${formatShare(r.pressure.maxPressure)}.`,
+      `- Interconnectors: above ${Math.round(r.pressure.threshold * 100)}% of planned import capacity in ` +
+        `${hours(r.pressure.hoursAboveThreshold)}${describePeakPressure(r.pressure.maxPressure)}.`,
     );
+  } else if (r.pressure && !r.pressure.available) {
+    const list = r.pressure.missingDirections.map(directionLabel).join(", ");
+    lines.push(`- Interconnectors: not calculated. Capacity is not published for ${list}.`);
   }
   if (r.carbon && r.carbon.mean !== null) {
+    const unit = z.carbonUnit ?? "gCO2eq/kWh";
+    const left =
+      r.carbon.noFactor.fuels.length > 0
+        ? ` ${r.carbon.noFactor.fuels.map((f) => fuelLabel(f.fuel).toLowerCase()).join(", ")} ` +
+          `(${formatShare(r.carbon.noFactor.share)} of generation) have no emission factor and are left out.`
+        : "";
     lines.push(
-      `- Carbon intensity of the zone's own power plants: about ${formatInt(r.carbon.mean)} gCO2/kWh on average. Imports are not included.`,
+      `- Carbon intensity of the zone's own power plants: about ${formatInt(r.carbon.mean)} ${unit} on average (life-cycle). Imports are not included.${left}`,
     );
   }
   const top = [...r.extraSource].sort((a, b) => b.hours - a.hours)[0];

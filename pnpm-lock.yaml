@@ -215,6 +215,9 @@ importers:
       '@powerstation/schema':
         specifier: workspace:*
         version: link:../../schema
+      '@powerstation/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       preact:
         specifier: ^11.2.0
         version: 11.2.0(preact-render-to-string@6.8.3)
