@@ -15,7 +15,12 @@ export interface HouseholdFigure {
 export const HOUSEHOLD_SOURCE = {
   name: "Eurostat",
   url: "https://ec.europa.eu/eurostat/databrowser/view/nrg_bal_c/default/table",
-  license: "CC-BY-4.0",
+  /**
+   * Statistical data: Commission reuse Decision of 12 December 2011 (source must be named,
+   * changes stated, Eurostat not responsible). CC BY 4.0 covers Eurostat's editorial content only.
+   * https://ec.europa.eu/eurostat/help/copyright-notice (checked by session A, 2026-11-25)
+   */
+  license: "Eurostat reuse policy (Commission Decision of 12 December 2011), attribution required",
   /** The figure is our ratio of two Eurostat datasets. */
   method:
     "Electricity used by households in a country in one year, divided by the number of private households in that country, both from Eurostat.",
@@ -42,6 +47,10 @@ export const HOUSEHOLD_SOURCE = {
  * kWh = nrg_bal_c (GWh) x 1e6 / lfst_hhnhtych (thousand households) / 1e3, rounded to whole kWh.
  * Eurostat API, data year 2024, retrieved 2026-11-25. Eurostat "EL" (Greece) is stored as "GR".
  * Countries without both figures (e.g. CH) are left out and use the EU value.
+ *
+ * Reuse limit: the Eurostat notice says data for countries outside the EU, EFTA and the official
+ * candidate countries is not for commercial reuse. All entries below are inside (EU27 + NO + BA,
+ * MK, RS, TR). Before adding a country (e.g. UK or CH) from Eurostat, check the notice first.
  */
 export const HOUSEHOLD_MWH_PER_YEAR: Readonly<Record<string, HouseholdFigure>> = {
   AT: { mwhPerYear: 5.219, year: 2024 },
@@ -179,27 +188,38 @@ export interface HomesTextOptions {
   countryName?: string;
 }
 
+function isTiny(n: number): boolean {
+  return n > 0 && n < 1;
+}
+
+/** "2.8 million homes in Germany use", "1 EU home uses", "one home in Germany uses" (tiny case). */
 function homesPhrase(n: number, options: HomesTextOptions): string {
   const { isFallback } = householdsFor(options.countryCode);
-  const singular = n < 1 || roundSignificant(n) === 1;
+  const singular = isTiny(n) || roundSignificant(n) === 1;
   const noun = singular ? "home" : "homes";
   const verb = singular ? "uses" : "use";
   const where = isFallback ? `EU ${noun}` : `${noun} in ${options.countryName ?? "this country"}`;
-  return `${formatCount(n)} ${where} ${verb}`;
+  return `${isTiny(n) ? "one" : formatCount(n)} ${where} ${verb}`;
 }
 
 /**
  * 1000, { countryCode: "DE", countryName: "Germany" } →
  * "about as much as 2.8 million homes in Germany use on average".
- * Unknown country → "... EU homes use on average". Input in MW.
+ * Unknown country → "... EU homes use on average".
+ * Less than one home → "less than one home in Germany uses on average". Input in MW.
  */
 export function describePowerInHomes(mw: number, options: HomesTextOptions = {}): string {
   const n = homesForPower(Math.abs(mw), options.countryCode);
-  return `about as much as ${homesPhrase(n, options)} on average`;
+  const lead = isTiny(n) ? "less than" : "about as much as";
+  return `${lead} ${homesPhrase(n, options)} on average`;
 }
 
-/** 3525 → "about what 1,000 EU homes use in a year". Input in MWh. */
+/**
+ * 3525 → "about what 1,000 EU homes use in a year".
+ * Less than one home → "less than what one EU home uses in a year". Input in MWh.
+ */
 export function describeEnergyInHomes(mwh: number, options: HomesTextOptions = {}): string {
   const n = homesForEnergyPerYear(Math.abs(mwh), options.countryCode);
-  return `about what ${homesPhrase(n, options)} in a year`;
+  const lead = isTiny(n) ? "less than what" : "about what";
+  return `${lead} ${homesPhrase(n, options)} in a year`;
 }
