@@ -1,7 +1,17 @@
 // Legend: layer colours, plus how each data state looks on the map.
 import { LAYERS, type LayerId } from "./layers";
 
-export function Legend(props: { layer: LayerId; future: boolean; onLayer: (l: LayerId) => void }) {
+export function Legend(props: {
+  layer: LayerId;
+  future: boolean;
+  /** False when generation data is not published: the renewables layer has no values. */
+  hasGeneration: boolean;
+  /** False when no planned trade is published: its line is left out of the key. */
+  hasPlanned: boolean;
+  /** True when at least one country has a load forecast for the selected hour. */
+  forecastHere: boolean;
+  onLayer: (l: LayerId) => void;
+}) {
   const L = LAYERS[props.layer];
   return (
     <section class="legend" aria-label="Legend">
@@ -19,10 +29,22 @@ export function Legend(props: { layer: LayerId; future: boolean; onLayer: (l: La
         ))}
       </div>
       <p class="legend__explain">{L.explain}</p>
-      {props.future && props.layer === "renewables" ? (
+      {!props.hasGeneration && props.layer === "renewables" ? (
         <p class="legend__explain">
-          <strong>This hour is not measured yet,</strong> so countries show no data. Choose “Imports
-          and exports” to see planned trade.
+          <strong>Generation data is not published here yet,</strong> so countries show no data.
+        </p>
+      ) : props.future && props.layer === "renewables" ? (
+        <p class="legend__explain">
+          <strong>This hour is not measured yet,</strong> so countries show no data.{" "}
+          {props.hasPlanned
+            ? "Choose “Imports and exports” to see planned trade."
+            : "Choose “Expected demand” to see the forecast."}
+        </p>
+      ) : null}
+      {props.layer === "loadForecast" && !props.forecastHere ? (
+        <p class="legend__explain">
+          <strong>No forecast for this hour,</strong> so countries show no data. Move the timeline
+          to the hours ahead.
         </p>
       ) : null}
       <ul class="legend__bins">
@@ -40,12 +62,14 @@ export function Legend(props: { layer: LayerId; future: boolean; onLayer: (l: La
           </svg>
           Measured flow
         </li>
-        <li>
-          <svg width="44" height="14" aria-hidden="true">
-            <line x1="2" y1="7" x2="42" y2="7" class="key key--planned" />
-          </svg>
-          Planned trade (not measured)
-        </li>
+        {props.hasPlanned ? (
+          <li>
+            <svg width="44" height="14" aria-hidden="true">
+              <line x1="2" y1="7" x2="42" y2="7" class="key key--planned" />
+            </svg>
+            Planned trade (not measured)
+          </li>
+        ) : null}
         <li>
           <svg width="44" height="14" aria-hidden="true">
             <line x1="2" y1="7" x2="42" y2="7" class="key key--modelled" />

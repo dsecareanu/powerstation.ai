@@ -9,6 +9,8 @@ interface Props {
   /** Index of the newest measured hour. */
   latestIndex: number;
   measuredEnd: number;
+  /** False when no planned trade is published: hours ahead are only "ahead of measurements". */
+  hasPlanned: boolean;
   now: number;
   playing: boolean;
   range: "7d" | "30d";
@@ -24,6 +26,7 @@ export function Timeline(props: Props) {
   const last = hours.length - 1;
   const hour = hours[index] ?? hours[0]!;
   const planned = hour >= measuredEnd;
+  const aheadText = props.hasPlanned ? "planned trade" : "ahead of measurements";
   const pct = (ms: number) => ((ms - hours[0]!) / (hours[last]! - hours[0]!)) * 100;
 
   useEffect(() => {
@@ -46,7 +49,11 @@ export function Timeline(props: Props) {
         <p class="timeline__time" aria-live="polite">
           <strong>{formatHour(hour)}</strong>{" "}
           <span class={`timeline__kind timeline__kind--${planned ? "planned" : "measured"}`}>
-            {planned ? "planned trade (ahead of measurements)" : "measured"}
+            {planned
+              ? props.hasPlanned
+                ? "planned trade (ahead of measurements)"
+                : "ahead of measurements"
+              : "measured"}
           </span>
         </p>
         <div class="timeline__range" role="group" aria-label="Time range">
@@ -100,7 +107,7 @@ export function Timeline(props: Props) {
             step={1}
             value={index}
             aria-label="Hour"
-            aria-valuetext={`${formatHour(hour)}, ${planned ? "planned trade" : "measured"}`}
+            aria-valuetext={`${formatHour(hour)}, ${planned ? aheadText : "measured"}`}
             onInput={(e) => props.onIndex(Number((e.target as HTMLInputElement).value))}
           />
           <div class="timeline__marks" aria-hidden="true">

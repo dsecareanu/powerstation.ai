@@ -143,7 +143,7 @@ export function MapView(props: Props) {
             const selected = props.selectedNode === nodeId;
             const label = `${f.properties.name}${node.countries.length > 1 ? ` (one bidding zone: ${node.name})` : ""}. ${L.name}: ${
               p.value === null ? "no data" : bin!.label
-            }, ${stateText(p.state)}.`;
+            }, ${layer === "loadForecast" && p.state === "planned" ? "day-ahead forecast, not measured" : stateText(p.state)}.`;
             return (
               <g key={code}>
                 <path
