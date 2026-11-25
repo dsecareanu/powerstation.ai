@@ -1,41 +1,45 @@
-import type { DatacentersFile, StatusFile, ZonesFile } from "@powerstation/schema";
+import {
+  DATA_PATHS,
+  type CapacityFile,
+  type DatacentersFile,
+  type EmissionFactorsFile,
+  type StatusFile,
+  type ZonesFile,
+} from "@powerstation/schema";
+import { DataDelayedBanner } from "@powerstation/ui";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { calculate } from "./calc/calculate";
-import type { CalcResult, EmissionFactors, ImportCapacity } from "./calc/types";
+import type { CalcResult } from "./calc/types";
 import { CopyButton } from "./components/CopyButton";
 import { Method } from "./components/Method";
 import { PeriodPicker } from "./components/PeriodPicker";
 import { ResultColumn } from "./components/ResultColumn";
 import { SizePicker } from "./components/SizePicker";
 import { ZonePicker, type Place } from "./components/ZonePicker";
-import {
-  HOUSEHOLD_KWH_PER_YEAR,
-  HOUSEHOLD_SOURCE,
-  annualKwhPerHousehold,
-  homesEquivalent,
-} from "./constants/households";
 import { nowMs } from "./data/clock";
-import { isDataDelayed } from "./data/freshness";
 import {
   loadDatacenters,
+  loadCapacity,
   loadEmissionFactors,
-  loadImportCapacities,
   loadPeriod,
   loadStatus,
   loadZones,
   type PeriodData,
 } from "./data/loader";
+import { buildAttribution } from "./state/attribution";
+import { homesInfo } from "./format";
 import { summarise } from "./state/summary";
 import { buildSearch, parseUrlState, type Period, type UrlState } from "./state/url";
-import { AttributionPanel, type Attribution } from "./ui-standins/AttributionPanel";
-import { Banner } from "./ui-standins/Banner";
+import { AttributionPanel } from "@powerstation/ui";
 
 interface Base {
   status: StatusFile;
   zones: ZonesFile;
   datacenters: DatacentersFile;
-  capacities: ImportCapacity[] | undefined;
-  emissionFactors: EmissionFactors | undefined;
+  /** Undefined when the file could not be loaded. */
+  capacity: CapacityFile | undefined;
+  /** Undefined when the file could not be loaded. */
+  emissionFactors: EmissionFactorsFile | undefined;
 }
 
 type Loaded<T> =
@@ -63,14 +67,14 @@ function useLoaded<T>(load: () => Promise<T>, deps: unknown[]): Loaded<T> {
 }
 
 const loadBase = async (): Promise<Base> => {
-  const [status, zones, datacenters, capacities, emissionFactors] = await Promise.all([
+  const [status, zones, datacenters, capacity, emissionFactors] = await Promise.all([
     loadStatus(),
     loadZones(),
     loadDatacenters(),
-    loadImportCapacities(),
+    loadCapacity(),
     loadEmissionFactors(),
   ]);
-  return { status, zones, datacenters, capacities, emissionFactors };
+  return { status, zones, datacenters, capacity, emissionFactors };
 };
 
 export function App() {
@@ -111,60 +115,50 @@ function Calculator({ base }: { base: Base }) {
   const zoneName = (id: string) => zones.zones.find((z) => z.id === id)?.name ?? id;
   const countryName = (code: string) => zones.countries.find((c) => c.code === code)?.name ?? code;
 
-  const delayed = isDataDelayed(status, nowMs());
+  const now = new Date(nowMs());
+  const checkedPaths = [
+    state.period === "7d" ? DATA_PATHS.generation7d : DATA_PATHS.generation30d,
+    state.period === "7d" ? DATA_PATHS.flows7d : DATA_PATHS.flows30d,
+    DATA_PATHS.zones,
+    DATA_PATHS.datacenters,
+    DATA_PATHS.capacity30d,
+    DATA_PATHS.emissionFactors,
+  ];
 
   const columns = useMemo(() => {
     if (period.state !== "ready") return null;
     const places: Place[] = [state, ...(compareOn && state.compare ? [state.compare] : [])];
     return places.map((p) => {
       const result = runZone(p.zone, state.size, period.data, base);
-      const homes = homesEquivalent(state.size, annualKwhPerHousehold(p.country));
-      return { place: p, result, homes };
+      return { place: p, result };
     });
   }, [period, state, compareOn, base]);
 
-  const files =
-    period.state === "ready"
-      ? [status, zones, datacenters, period.data.generation, period.data.flows]
-      : [status, zones, datacenters];
+  const files = [
+    status,
+    zones,
+    datacenters,
+    ...(base.capacity ? [base.capacity] : []),
+    ...(base.emissionFactors ? [base.emissionFactors] : []),
+    ...(period.state === "ready" ? [period.data.generation, period.data.flows] : []),
+  ];
   const mock = files.some((f) => f.mock);
-
-  const attributionAll: Attribution[] = [
-    ...files.map((f) => ({
-      name: f.source,
-      license: f.license,
-      text: f.attribution,
-      url: f.source_url,
-    })),
-    ...datacenters.datacenters.map((d) => ({
-      name: d.source,
-      license: d.license,
-      text: `Data center records (as of ${d.as_of}).`,
-      url: d.source_url,
-    })),
-    ...(Object.keys(HOUSEHOLD_KWH_PER_YEAR).length > 0
-      ? [
-          {
-            name: HOUSEHOLD_SOURCE.name,
-            text: `Household electricity use, ${HOUSEHOLD_SOURCE.dataset}, retrieved ${HOUSEHOLD_SOURCE.retrieved}.`,
-            url: HOUSEHOLD_SOURCE.url,
-          },
-        ]
-      : []),
-  ];
-
-  // The same source can appear many times (for example one per data center): list it once.
-  const attribution = [
-    ...new Map(
-      attributionAll.map((a) => [`${a.name}|${a.license}|${a.text}|${a.url}`, a]),
-    ).values(),
-  ];
-
+  const attribution = buildAttribution(files, datacenters.datacenters, base.emissionFactors);
   const periodLabel = state.period === "7d" ? "last 7 days" : "last 30 days";
   const getSummary = () =>
     summarise(
       (columns ?? []).flatMap((c) =>
-        c.result ? [{ name: zoneName(c.place.zone), result: c.result, homes: c.homes }] : [],
+        c.result
+          ? [
+              {
+                name: zoneName(c.place.zone),
+                result: c.result,
+                homesText: homesInfo(state.size, c.place.country, countryName(c.place.country))
+                  .text,
+                carbonUnit: base.emissionFactors?.unit,
+              },
+            ]
+          : [],
       ),
       location.href,
       periodLabel,
@@ -173,15 +167,15 @@ function Calculator({ base }: { base: Base }) {
 
   return (
     <>
-      {delayed ? (
-        <Banner tone="warn">
-          Data delayed: the newest measured data is more than 2 hours old.
-        </Banner>
+      <DataDelayedBanner status={status} paths={checkedPaths} now={now} />
+      {mock ? (
+        <div class="banner banner-info" role="status">
+          Demo data: these numbers are not real.
+        </div>
       ) : null}
-      {mock ? <Banner tone="info">Demo data: these numbers are not real.</Banner> : null}
 
       <section class="panel" aria-labelledby="inputs-title">
-        <h2 id="inputs-title" class="sr-only">
+        <h2 id="inputs-title" class="ps-visually-hidden">
           Your inputs
         </h2>
         <ol class="steps">
@@ -249,9 +243,10 @@ function Calculator({ base }: { base: Base }) {
                 <ResultColumn
                   key={`${c.place.zone}-${i}`}
                   heading={zoneName(c.place.zone)}
+                  countryCode={c.place.country}
                   countryName={countryName(c.place.country)}
                   result={c.result}
-                  homes={c.homes}
+                  emissionFactors={base.emissionFactors}
                   mock={mock}
                 />
               ))}
@@ -265,8 +260,8 @@ function Calculator({ base }: { base: Base }) {
         </p>
       </section>
 
-      <Method />
-      <AttributionPanel items={attribution} />
+      <Method emissionFactors={base.emissionFactors} />
+      <AttributionPanel files={attribution} title="Data sources and licenses" />
     </>
   );
 }
@@ -280,8 +275,8 @@ function runZone(zone: string, sizeMw: number, data: PeriodData, base: Base): Ca
     generation,
     window: data.generation.window,
     borders: data.flows.borders,
-    capacity: base.capacities?.find((c) => c.zone === zone),
-    emissionFactors: base.emissionFactors,
+    capacity: base.capacity?.borders,
+    emissionFactors: base.emissionFactors?.factors,
     datacenters: base.datacenters.datacenters.filter((d) => d.zone === zone),
   });
 }

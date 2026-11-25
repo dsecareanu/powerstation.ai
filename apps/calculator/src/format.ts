@@ -1,4 +1,6 @@
 // Number and text formatting for the page. Pure functions.
+import type { FuelType } from "@powerstation/schema";
+import { describePowerInHomes, householdsFor } from "@powerstation/ui";
 const nf = new Intl.NumberFormat("en", { maximumFractionDigits: 0 });
 const utc = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
@@ -12,26 +14,11 @@ const utc = new Intl.DateTimeFormat("en-GB", {
 
 export const formatInt = (n: number): string => nf.format(n);
 
-/** MW below 1000, GW from 1000 up. */
-export function formatMw(mw: number): string {
-  if (mw >= 1000) {
-    const gw = Math.round((mw / 1000) * 10) / 10;
-    return `${gw} GW`;
-  }
-  return `${nf.format(mw)} MW`;
-}
-
 /** A ratio (0.05) as a percent text ("5.0%"). */
 export function formatShare(ratio: number): string {
   const pct = ratio * 100;
   if (pct > 0 && pct < 0.1) return "less than 0.1%";
   return pct < 10 ? `${pct.toFixed(1)}%` : `${nf.format(pct)}%`;
-}
-
-/** Rounded to two significant digits so it does not look more exact than it is. */
-export function formatHomes(homes: number): string {
-  if (homes >= 1_000_000) return `${(homes / 1_000_000).toFixed(1)} million`;
-  return nf.format(Number(homes.toPrecision(2)));
 }
 
 export function formatUtc(iso: string): string {
@@ -43,3 +30,38 @@ export const plural = (n: number, word: string): string =>
 
 /** "1 hour", "3 hours". */
 export const hours = (n: number): string => plural(n, "hour");
+
+const FUEL_LABEL: Record<FuelType, string> = {
+  nuclear: "Nuclear",
+  lignite: "Lignite",
+  hard_coal: "Hard coal",
+  gas: "Gas",
+  oil: "Oil",
+  biomass: "Biomass",
+  waste: "Waste",
+  geothermal: "Geothermal",
+  hydro_run_of_river: "Run-of-river hydro",
+  hydro_reservoir: "Reservoir hydro",
+  hydro_pumped_storage: "Pumped storage",
+  wind_onshore: "Onshore wind",
+  wind_offshore: "Offshore wind",
+  solar: "Solar",
+  other_renewable: "Other renewable",
+  other: "Other",
+};
+export const fuelLabel = (f: FuelType): string => FUEL_LABEL[f];
+
+/** "DE-LU → FR" (a border direction). */
+export const directionLabel = (d: { from: string; to: string }): string => `${d.from} → ${d.to}`;
+
+/** Homes comparison for a flat load. Uses the shared household table in @powerstation/ui. */
+export function homesInfo(
+  sizeMw: number,
+  countryCode: string,
+  countryName: string,
+): { text: string; isFallback: boolean } {
+  return {
+    text: describePowerInHomes(sizeMw, { countryCode, countryName }),
+    isFallback: householdsFor(countryCode).isFallback,
+  };
+}
