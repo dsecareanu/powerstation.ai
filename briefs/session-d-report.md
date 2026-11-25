@@ -1,6 +1,6 @@
 # Session D report — Shared UI package
 
-Date: 2026-11-25. Branch: `ws/d-ui`. Status: first PR open (items 1–5). Second PR (items 6–10) not started.
+Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`, PR #3) passed CI. PR 2 (items 6–10, branch `ws/d-game`, stacked on `ws/d-ui`) open.
 
 ## What exists now (first PR)
 
@@ -12,6 +12,15 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: first PR open (items 1–5). Second
 - 15 tests (`pnpm --filter @powerstation/ui test`): units, freshness against the status fixture, WCAG contrast of the tokens in both themes, component rendering.
 - Demo page: `pnpm --filter @powerstation/ui demo`. Checked at 375 px in light and dark.
 
+## What PR 2 adds
+
+- `ScoreBar` + `useScore()` + `getLevel()` + `LEVELS`. Points live in `localStorage` (key `powerstation:score`), through `readStorage`/`writeStorage`, which never throw.
+- `Missions` (check marks, "N of M done", cheer message in a `role="status"` region when all are done).
+- `StepRail` (numbered, `aria-current="step"`, optional buttons with `onSelect`).
+- `Mystery` (native `<details>`, `onToggle`).
+- `AnimatedNumber` (ease-out count, no animation under reduced motion, final value for screen readers).
+- 8 more tests (23 in total). Demo page shows all of them. Checked at 375 px, light and dark, with keyboard focus.
+
 ## Decisions
 
 - **Household figure:** 3.6 MWh per dwelling per year, EU average, all electricity uses. Source: [Odyssee-Mure, "Electricity consumption per dwelling"](https://www.odyssee-mure.eu/publications/efficiency-by-sector/households/electricity-consumption-dwelling.html), page "last update November 2025", accessed 2026-11-25. That gives about 0.41 kW average power per home, so 1 GW ≈ 2.4 million homes. The page does not state the reference year. Per country the figure goes from 1.8 MWh (Romania) to 8.5 MWh (Sweden).
@@ -20,12 +29,15 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: first PR open (items 1–5). Second
 - **Data-state patterns:** measured = solid, planned = dashed, modelled = diagonal hatch, missing = dotted outline with a slash. The map should use the same idea for lines (solid / dashed / dotted / gap).
 - **Default labels:** Measured, Planned, Modelled, No data. Pass `label="Planned trade"` for scheduled flows. `method` on a modelled badge shows the method after the label.
 - **System fonts only.** No web font download. Display weight 800.
-- **Preact peer range `>=10.27.0 <12`.** Dev uses Preact 10.29.8. Preact 11.2.0 exists; B and C can use either.
+- **Preact peer range `>=10.27.0 <12`** (Daniel approved 2026-11-25). Dev uses Preact 10.29.8. B and C can use 10 or 11.
+- **EU-average household figure for every zone in v1** (Daniel approved 2026-11-25). Per-country figures later.
+- **Levels (proposal):** Grid apprentice 0, Grid watcher 100, Grid balancer 300, Grid dispatcher 600, Grid operator 1,000 points. [Estimate] The thresholds are a first guess; tune them when B and C decide how many points each action gives. Apps can pass their own `levels`.
+- **PR 2 is stacked:** `ws/d-game` branches from `ws/d-ui`, because PR #3 was still open. Its PR targets `ws/d-ui`; retarget it to `main` after #3 merges.
 - **No fetching in the package.** The banner takes the parsed `status.json`. The brief allowed a fetch helper; it is not needed.
 
 ## Measurements
 
-- Size added to an app (Preact excluded): JS 2.4 KB gzip, CSS 1.8 KB gzip, total 4.1 KB of the 30 KB budget.
+- Size added to an app (Preact excluded): after PR 1, 4.1 KB gzip. After PR 2: JS 4.1 KB, CSS 2.4 KB, total 6.5 KB of the 30 KB budget.
 - Contrast: text and accent ≥ 4.5:1, data-state colors ≥ 3:1 (most ≥ 4.4:1) on background and surface, both themes. The test fails if a token change breaks this.
 - [Inference] Fuel colors are not contrast-checked. With 16 types, some pairs look alike for color-blind users and solar yellow is weak on the light background. Always show a legend or label with fuel colors.
 
@@ -39,5 +51,5 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: first PR open (items 1–5). Second
 
 ## Open questions for Daniel
 
-1. **Household figure:** OK to use the EU average (3.6 MWh) for every zone? A per-country figure would be fairer for Step 2 (Romania 1.8 MWh vs Sweden 8.5 MWh), but it needs a per-country table with a source. Proposal: EU average in v1, per-country later.
-2. **Worktree path:** this session's folder was on `main`, so the worktree is at `PowerstationAI-worktrees/ws-d-ui` (next to session A's).
+1. Level names and thresholds: OK as a proposal, or do you want other names?
+2. Points per action (for example a mission, a mystery opened): B and C decide, or one shared table in this package?
