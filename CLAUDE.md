@@ -98,7 +98,10 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 
 - One session = one git worktree = one branch: `ws/<session-letter>-<short-name>` (e.g. `ws/b-calculator`).
 - Small commits with clear messages.
-- Open a pull request to `main`. The orchestrator thread merges each PR, one at a time, after it verifies the PR (Daniel's instruction, 2026-11-25). Sessions do not merge their own PRs.
+- Open a pull request to `main`. The orchestrator thread merges each PR, one at a time, after it verifies the PR (Daniel's instruction, 2026-11-25). Sessions do not merge their own PRs, except the design session (below).
+- **Design merges (Daniel, 2026-11-25):** the design session merges its own PRs when every changed file is design-only: `DESIGN.md`; `packages/ui/src/tokens.css`, `styles.css` and `fonts/`; `apps/site/src/shell.css` and `apps/site/public/brand/`; app CSS that only switches to tokens; and the tests for these files. Any other file (app `.ts`/`.tsx` logic, `schema/`, `pipeline/`, build scripts, CLAUDE.md) goes to the orchestrator.
+  - Before the merge: `check` passes on an up-to-date branch, the local checks and `pnpm build:site:demo` pass, and the result is checked at 375 px and desktop in light and dark.
+  - One PR at a time, never `--admin`. After the merge: confirm the preview shows the change, and tell Daniel so the orchestrator knows that open PRs need "Update branch".
 - Do not edit files owned by another workstream. If you need a change there, write it in your PR description.
 - `main` is protected (ruleset "Protect main"): PR only, CI check `check` must pass on an up-to-date branch, no force push. Never merge with `--admin` or another bypass.
 - Never edit, commit or switch branches in the main checkout (`~/RevTechAgency/PowerstationAI`). If your session starts there, first run `git worktree add -b ws/<letter>-<name> ../PowerstationAI-worktrees/ws-<letter>-<name> main` and work only in that folder.
