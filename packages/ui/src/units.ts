@@ -179,27 +179,38 @@ export interface HomesTextOptions {
   countryName?: string;
 }
 
+function isTiny(n: number): boolean {
+  return n > 0 && n < 1;
+}
+
+/** "2.8 million homes in Germany use", "1 EU home uses", "one home in Germany uses" (tiny case). */
 function homesPhrase(n: number, options: HomesTextOptions): string {
   const { isFallback } = householdsFor(options.countryCode);
-  const singular = n < 1 || roundSignificant(n) === 1;
+  const singular = isTiny(n) || roundSignificant(n) === 1;
   const noun = singular ? "home" : "homes";
   const verb = singular ? "uses" : "use";
   const where = isFallback ? `EU ${noun}` : `${noun} in ${options.countryName ?? "this country"}`;
-  return `${formatCount(n)} ${where} ${verb}`;
+  return `${isTiny(n) ? "one" : formatCount(n)} ${where} ${verb}`;
 }
 
 /**
  * 1000, { countryCode: "DE", countryName: "Germany" } →
  * "about as much as 2.8 million homes in Germany use on average".
- * Unknown country → "... EU homes use on average". Input in MW.
+ * Unknown country → "... EU homes use on average".
+ * Less than one home → "less than one home in Germany uses on average". Input in MW.
  */
 export function describePowerInHomes(mw: number, options: HomesTextOptions = {}): string {
   const n = homesForPower(Math.abs(mw), options.countryCode);
-  return `about as much as ${homesPhrase(n, options)} on average`;
+  const lead = isTiny(n) ? "less than" : "about as much as";
+  return `${lead} ${homesPhrase(n, options)} on average`;
 }
 
-/** 3525 → "about what 1,000 EU homes use in a year". Input in MWh. */
+/**
+ * 3525 → "about what 1,000 EU homes use in a year".
+ * Less than one home → "less than what one EU home uses in a year". Input in MWh.
+ */
 export function describeEnergyInHomes(mwh: number, options: HomesTextOptions = {}): string {
   const n = homesForEnergyPerYear(Math.abs(mwh), options.countryCode);
-  return `about what ${homesPhrase(n, options)} in a year`;
+  const lead = isTiny(n) ? "less than what" : "about what";
+  return `${lead} ${homesPhrase(n, options)} in a year`;
 }

@@ -88,8 +88,13 @@ test("homes comparison text, country and fallback", () => {
 test("tiny values never show 0 homes", () => {
   assert.equal(formatCount(0.3), "less than 1");
   assert.equal(formatCount(-0.3), "less than 1");
-  assert.equal(describeEnergyInHomes(1), "about what less than 1 EU home uses in a year");
-  assert.doesNotMatch(describePowerInHomes(0.0001), /\b0 /);
+  assert.equal(describeEnergyInHomes(1), "less than what one EU home uses in a year");
+  assert.equal(
+    describePowerInHomes(0.0001, { countryCode: "DE", countryName: "Germany" }),
+    "less than one home in Germany uses on average",
+  );
+  assert.equal(describePowerInHomes(0.0001), "less than one EU home uses on average");
+  assert.doesNotMatch(describePowerInHomes(0.0001), /\b0 |less than 1/);
 });
 
 test("formatCount rounds to two significant figures", () => {

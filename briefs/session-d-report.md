@@ -21,7 +21,11 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`
 - `AnimatedNumber` (ease-out count, no animation under reduced motion, final value for screen readers).
 - **One household table** (decision by Daniel, relayed by the orchestrator, 2026-11-25): Eurostat electricity use per household for 32 countries, 2024, with the EU27 value as fallback. Replaces the Odyssee-Mure 3.6 MWh figure. Exports: `householdsFor`, `HOUSEHOLD_MWH_PER_YEAR`, `HOUSEHOLD_EU`, `HOUSEHOLD_SOURCE`, types `HouseholdFigure`, `HouseholdLookup`, `HomesTextOptions`. `homesForPower`, `homesForEnergyPerYear`, `describePowerInHomes`, `describeEnergyInHomes` take an optional country.
 - Review fixes: banner no longer says "We update the page when new data arrives"; `formatPower(999.6)` = "1 GW" (rounding moves up a unit); `formatCount` shows "less than 1", never "0 homes", for values between 0 and 1; the "all uses" claim is gone with the old source.
-- 13 more tests (28 in total). Demo page shows all of them. Checked at 375 px, light and dark, with keyboard focus.
+- 13 more tests (28 in total).
+
+## Follow-up PR (`ws/d-fixes`)
+
+- Copy fix: less than one home now reads "less than one home in Germany uses on average" and "less than what one EU home uses in a year" (was "about as much as less than 1 home ..."). Demo page shows all of them. Checked at 375 px, light and dark, with keyboard focus.
 
 ## Decisions
 
