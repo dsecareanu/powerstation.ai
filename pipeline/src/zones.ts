@@ -35,7 +35,7 @@ function readJson<T>(name: string): T {
     throw new Error(
       `Cannot read ${path}: ${(err as Error).message}. ` +
         (name === "borders.json"
-          ? "Run scripts/discover-borders.ts first (needs ENTSOE_TOKEN)."
+          ? 'Run the GitHub Actions workflow "Discover borders" (Actions > Discover borders > Run workflow) and merge its pull request first.'
           : "Run scripts/compute-centroids.ts first."),
       { cause: err },
     );
