@@ -11,7 +11,9 @@ import { join } from "node:path";
 // Pinned to a commit so the output is reproducible. Natural Earth version 5.1.x.
 const COMMIT = "9380cca83db5f9aef52d5e762765100745f84b27";
 const URL = `https://raw.githubusercontent.com/nvkelso/natural-earth-vector/${COMMIT}/geojson/ne_50m_admin_0_countries.geojson`;
-const BBOX = "-25,34,45,72"; // lon/lat: Iceland to the Urals' west, North Africa coast to North Cape
+// East edge at 70°E: the cut through Russia, Turkey and the Caucasus then falls far off-screen.
+// At 45°E it showed as a long straight diagonal edge (the projection is centred on 10°E).
+const BBOX = "-25,34,70,72"; // lon/lat: Iceland to past the Urals, North Africa coast to North Cape
 const app = join(import.meta.dirname, "..");
 const out = join(app, "public", "countries.geojson");
 
