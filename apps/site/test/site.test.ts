@@ -25,7 +25,7 @@ test("the committed wrangler.jsonc passes the Worker guard", () => {
 });
 
 test("the Worker guard refuses another name, routes and a script", () => {
-  const base = { name: "powerstation-site", workers_dev: true, assets: { directory: "./dist" } };
+  const base = { name: "powerstation-site", workers_dev: false, assets: { directory: "./dist" } };
   assert.match(
     checkWorkerConfig({ ...base, name: "domain-landers" }).join(),
     /only "powerstation-site"/,
@@ -33,7 +33,12 @@ test("the Worker guard refuses another name, routes and a script", () => {
   assert.match(checkWorkerConfig({ ...base, routes: [] }).join(), /"routes" is not allowed/);
   assert.match(checkWorkerConfig({ ...base, env: {} }).join(), /"env" is not allowed/);
   assert.match(checkWorkerConfig({ ...base, main: "x.js" }).join(), /"main" is not allowed/);
-  assert.match(checkWorkerConfig({ ...base, workers_dev: false }).join(), /workers_dev/);
+  assert.match(
+    checkWorkerConfig({ ...base, workers_dev: true }).join(),
+    /"workers_dev" must be false/,
+  );
+  const noWorkersDev = { name: base.name, assets: base.assets };
+  assert.match(checkWorkerConfig(noWorkersDev).join(), /"workers_dev" must be false/);
 });
 
 test("injectShell adds header, footer and, in demo, the banner", () => {

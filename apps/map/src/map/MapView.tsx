@@ -1,12 +1,13 @@
-// SVG map: countries shaded by the chosen layer, arrows for flows between countries.
+// SVG map: countries shaded by the chosen layer, moving dots for flows between countries.
 import type { DataState } from "@powerstation/schema";
 import { geoAzimuthalEqualArea, geoPath } from "d3-geo";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
-import { useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { FlowAt } from "../data/metrics";
 import { binFor, LAYERS, type LayerId } from "../layers";
 import { layerValue, type Model, pairKey } from "../model";
 import { formatPower } from "@powerstation/ui";
+import { DOT_SPEED, dotGap, dotRadius, flowEnds } from "./flowDots";
 import { flowLabel, stateText } from "./labels";
 
 export type CountryFeature = Feature<Geometry, { code: string; name: string }>;
@@ -38,6 +39,18 @@ export function MapView(props: Props) {
   const [view, setView] = useState<View>(HOME);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ x: number; y: number; view: View; moved: boolean } | null>(null);
+  // viewBox units per CSS pixel, so flow dots keep their CSS size at any map width.
+  const [px, setPx] = useState(1);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      const w = svg.getBoundingClientRect().width;
+      if (w > 0) setPx(W / w);
+    });
+    ro.observe(svg);
+    return () => ro.disconnect();
+  }, []);
 
   // Projection: Lambert azimuthal equal-area centred on Europe (as EPSG:3035), fitted to the
   // countries that have data. Equal-area keeps shaded areas comparable.
@@ -121,7 +134,7 @@ export function MapView(props: Props) {
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
         role="group"
-        aria-label={`Map of European countries. Shading: ${L.name}. Arrows: power flows between countries.`}
+        aria-label={`Map of European countries. Shading: ${L.name}. Moving dots: power flows between countries; bigger dots, more power.`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -175,12 +188,12 @@ export function MapView(props: Props) {
             const b = model.index.byId.get(f.to)!.centroid;
             const key = pairKey(f);
             return (
-              <Arrow
+              <Flow
                 key={key}
                 flow={f}
                 a={toScreen(project(a.lon, a.lat) as [number, number])}
                 b={toScreen(project(b.lon, b.lat) as [number, number])}
-                maxAbs={model.maxAbsFlow}
+                px={px}
                 selected={props.selectedPair === key}
                 label={flowLabel(model, f)}
                 {...activate(() => props.onSelectPair(key))}
@@ -214,21 +227,28 @@ export function MapView(props: Props) {
   );
 }
 
-function Arrow(props: {
+/**
+ * One border flow: round dots that move from the exporting to the importing side. Dot size shows
+ * MW (area-true). The dots are a round-capped dash pattern on one path, animated with CSS
+ * (stroke-dashoffset), so ~100 flows need no JavaScript per frame. The faint guide line carries
+ * the data state as a line style too (solid, dashed, short dash, dotted), so colour is never the
+ * only signal; planned trade also has hollow dots.
+ */
+function Flow(props: {
   flow: FlowAt;
   a: [number, number];
   b: [number, number];
-  maxAbs: number;
+  /** viewBox units per CSS px. */
+  px: number;
   selected: boolean;
   label: string;
   onClick: () => void;
   onKeyDown: (e: KeyboardEvent) => void;
 }) {
-  const { flow, maxAbs } = props;
+  const { flow, px } = props;
   const v = flow.point.value;
   const state: DataState = flow.point.state;
-  // Draw in the direction of the flow.
-  const [p, q] = v !== null && v < 0 ? [props.b, props.a] : [props.a, props.b];
+  const [p, q] = flowEnds(props.a, props.b, v);
   const t0 = 0.2;
   const t1 = 0.8;
   const x1 = p[0] + (q[0] - p[0]) * t0;
@@ -237,10 +257,20 @@ function Arrow(props: {
   const y2 = p[1] + (q[1] - p[1]) * t1;
   const mx = (x1 + x2) / 2;
   const my = (y1 + y2) / 2;
-  const width = v === null ? 2 : 1.5 + 6.5 * Math.sqrt(Math.abs(v) / maxAbs);
   const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-  const head = width * 1.6 + 8;
-  const line = `M${x1},${y1}L${x2},${y2}`;
+  const line = `M${x1.toFixed(1)},${y1.toFixed(1)}L${x2.toFixed(1)},${y2.toFixed(1)}`;
+
+  const rPx = dotRadius(v ?? 0);
+  const r = rPx * px;
+  const gap = dotGap(rPx) * px;
+  const dots = (width: number) => ({
+    strokeWidth: width,
+    strokeDasharray: `0.01 ${(gap - 0.01).toFixed(2)}`,
+    "--gap": `${gap.toFixed(2)}px`,
+    animationDuration: `${(dotGap(rPx) / DOT_SPEED).toFixed(2)}s`,
+  });
+  const ring = Math.min(1.5, rPx * 0.4) * px;
+  const dir = 3.5 * px; // direction mark size (reduced motion), drawn past the last dot
   return (
     <g
       class={`flow flow--${state}${props.selected ? " flow--selected" : ""}`}
@@ -250,30 +280,46 @@ function Arrow(props: {
       aria-label={props.label}
       onClick={props.onClick}
       onKeyDown={props.onKeyDown}
+      style={{ "--px": px }}
     >
       <title>{props.label}</title>
       <path d={line} class="flow__hit" />
-      <path d={line} class="flow__halo" style={{ strokeWidth: width + 4 }} />
-      <path d={line} class="flow__line" style={{ strokeWidth: width }} />
-      {state === "measured" ? (
-        <path d={line} class="flow__pulse" style={{ strokeWidth: Math.max(1.5, width / 3) }} />
-      ) : null}
+      <path d={line} class="flow__guide" />
       {v === null ? (
-        <g transform={`translate(${mx} ${my})`} class="flow__nodata">
+        <g transform={`translate(${mx} ${my}) scale(${px})`} class="flow__nodata">
           <circle r="8" />
           <text dy="4" text-anchor="middle" aria-hidden="true">
             ?
           </text>
         </g>
       ) : (
-        <path
-          class="flow__head"
-          d={`M0,0L${-head},${-head * 0.6}L${-head},${head * 0.6}Z`}
-          transform={`translate(${x2} ${y2}) rotate(${angle})`}
-        />
+        <>
+          <path d={line} class="flow__dots flow__dots--halo" style={dots(2 * r + 2.5 * px)} />
+          <path d={line} class="flow__dots flow__dots--fill" style={dots(2 * r)} />
+          {state === "planned" ? (
+            <path
+              d={line}
+              class="flow__dots flow__dots--hole"
+              style={dots(Math.max(0, 2 * r - 2 * ring))}
+            />
+          ) : null}
+          <g
+            class="flow__dir"
+            transform={`translate(${x2 + (r + 5 * px) * Math.cos((angle * Math.PI) / 180)} ${y2 + (r + 5 * px) * Math.sin((angle * Math.PI) / 180)}) rotate(${angle})`}
+          >
+            <path class="flow__dir-halo" d={`M${-dir},${-dir}L0,0L${-dir},${dir}`} />
+            <path d={`M${-dir},${-dir}L0,0L${-dir},${dir}`} />
+          </g>
+        </>
       )}
       {props.selected && v !== null ? (
-        <text x={mx} y={my - width - 6} class="flow__value" text-anchor="middle">
+        <text
+          x={mx}
+          y={my - r - 8 * px}
+          class="flow__value"
+          text-anchor="middle"
+          style={{ fontSize: `${15 * px}px`, strokeWidth: `${4 * px}px` }}
+        >
           {formatPower(Math.abs(v))}
           {state === "planned" ? " planned" : ""}
         </text>
