@@ -10,6 +10,8 @@
     "fixtures": "tsx scripts/generate-fixtures.ts"
   },
   "dependencies": {
-    "@powerstation/schema": "workspace:*"
+    "@powerstation/schema": "workspace:*",
+    "aws4fetch": "1.0.20",
+    "fast-xml-parser": "5.12.0"
   }
 }
