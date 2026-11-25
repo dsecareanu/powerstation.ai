@@ -17,7 +17,7 @@ Run the scripts from `/pipeline`, or with `pnpm --filter @powerstation/pipeline 
 
 ## Environment variables
 
-Put them in `pipeline/.env` (git-ignored) or export them. Never commit them.
+The secrets (`ENTSOE_TOKEN` and the R2 variables) live only in the GitHub environment `data-publish` (see `CLAUDE.md`). The scripts read them there, in GitHub Actions. Do not keep these tokens on a laptop. The scripts can also read `pipeline/.env` (git-ignored); that is only for tests without real tokens.
 
 | Variable                       | Needed for                                           |
 | ------------------------------ | ---------------------------------------------------- |
@@ -30,9 +30,13 @@ Put them in `pipeline/.env` (git-ignored) or export them. Never commit them.
 
 ## Discover borders
 
-1. Run `pnpm discover-borders`.
-2. Wait about 7 minutes. It sends about 2,350 requests.
-3. Check `reference/borders.json` and the list of zones without flows.
+Run it in GitHub Actions, not on a laptop (the token lives only in GitHub):
+
+1. Go to **Actions** > **Discover borders** > **Run workflow**.
+2. Wait about 7 to 20 minutes. It sends about 2,350 requests. The log lists the zones without flows.
+3. The workflow commits `pipeline/reference/borders.json` to a branch `data/borders-<run id>` and opens a pull request to `main`. If `borders.json` did not change, it stops without a branch.
+4. Review the pull request. GitHub does not start CI by itself on a pull request that a workflow opened: select **Approve workflows to run** in the pull request. Then merge it as usual.
+5. If the run summary says it could not open the pull request, turn on **Settings** > **Actions** > **General** > **Allow GitHub Actions to create and approve pull requests**, or open the pull request with the link in the summary.
 
 The script is resumable. It saves each finished pair in `out/discover-cache.json`. After a crash or a 429, run it again. A cache older than 24 hours is ignored. Use `--fresh` to ignore the cache at once.
 
@@ -128,11 +132,15 @@ Do these steps once, in this order. Sources: ENTSO-E help page "How to get secur
 5. Sign in, open **My Account** and select **Generate a new token**.
 6. Keep the token secret. Do not put it in the repo.
 
-### 2. Find the borders (once, on your machine)
+### 2. Find the borders (once, in GitHub Actions)
 
-1. Put the token in `pipeline/.env` as `ENTSOE_TOKEN=...`. Git ignores this file.
-2. Run `pnpm --filter @powerstation/pipeline run discover-borders`. It takes about 7 minutes.
-3. Check `pipeline/reference/borders.json`, then commit it in a pull request. It holds only zone pairs and hour counts of open data (physical flows).
+Do this after step 5 (the environment and its secrets exist).
+
+1. Go to **Actions** > **Discover borders** > **Run workflow**.
+2. Review the pull request it opens. It holds only zone pairs and hour counts of open data (physical flows). Select **Approve workflows to run** so that CI runs, then merge it.
+3. Details and the fallback if no pull request opens: see "Discover borders" above.
+
+The hourly job stops with a clear error until `borders.json` is on `main`.
 
 ### 3. R2 bucket
 
@@ -142,7 +150,7 @@ Deploy plan (Daniel, 2026-11-25):
 | --------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Bucket                | `powerstation-data`                                                                                             |
 | Public access         | custom domain `data.powerstation.ai` only                                                                       |
-| CORS                  | `GET` (and `HEAD`) from `https://powerstation.ai` and the preview `workers.dev` URL                             |
+| CORS                  | `GET` (and `HEAD`) from `https://powerstation.ai` and `https://powerstation-site.danielsecareanu.workers.dev`   |
 | Base URL for the apps | `https://data.powerstation.ai` (paths `v1/...`, for example `https://data.powerstation.ai/v1/meta/status.json`) |
 
 R2 is not enabled on the Cloudflare account yet (API error 403, code 10042). Enable R2 first: dashboard > **R2 object storage** > follow the steps to turn it on.
@@ -150,12 +158,15 @@ R2 is not enabled on the Cloudflare account yet (API error 403, code 10042). Ena
 1. In the Cloudflare dashboard, go to **R2 object storage** and select **Create bucket**. Name: `powerstation-data`.
 2. Open the bucket, select **Settings**. Under **Custom Domains**, select **Add**. Enter `data.powerstation.ai`. The domain must be a zone in the same Cloudflare account. Wait until the status is **Active**.
 3. Do not turn on the public development URL (`r2.dev`). It is rate-limited and for tests only.
-4. Under **CORS Policy**, select **Add CORS policy**. On the **JSON** tab, paste this policy. Replace `<preview>` with the real preview URL of the site Worker:
+4. Under **CORS Policy**, select **Add CORS policy**. On the **JSON** tab, paste this policy:
 
    ```json
    [
      {
-       "AllowedOrigins": ["https://powerstation.ai", "https://<preview>.workers.dev"],
+       "AllowedOrigins": [
+         "https://powerstation.ai",
+         "https://powerstation-site.danielsecareanu.workers.dev"
+       ],
        "AllowedMethods": ["GET", "HEAD"],
        "AllowedHeaders": ["*"],
        "MaxAgeSeconds": 3600
