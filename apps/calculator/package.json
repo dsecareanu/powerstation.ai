@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@powerstation/schema": "workspace:*",
+    "@powerstation/ui": "workspace:*",
     "preact": "^11.2.0"
   },
   "devDependencies": {
