@@ -1,8 +1,10 @@
 /*
  * Component styles for @powerstation/ui. Import once per app:
  *   import "@powerstation/ui/styles.css";
- * It includes the tokens. All classes start with "ps-".
+ * It includes the fonts and the tokens. All classes start with "ps-".
+ * Rules and rationale: DESIGN.md at the repo root.
  */
+@import "./fonts.css";
 @import "./tokens.css";
 
 /* ---------- Data states: color + pattern ----------
@@ -63,9 +65,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ps-space-2);
-  padding: var(--ps-space-1) var(--ps-space-3) var(--ps-space-1) var(--ps-space-2);
-  border: 1px solid var(--ps-state-color, var(--ps-color-border));
-  border-radius: var(--ps-radius-pill);
+  padding: 3px var(--ps-space-2) 3px 6px;
+  border: 1.5px solid var(--ps-state-color, var(--ps-color-border));
+  border-radius: var(--ps-radius-sm);
   background: var(--ps-color-surface);
   color: var(--ps-color-text);
   font-family: var(--ps-font-sans);
@@ -92,7 +94,8 @@
   align-items: flex-start;
   gap: var(--ps-space-3);
   padding: var(--ps-space-3) var(--ps-space-4);
-  border: 1px solid var(--ps-color-warning-border);
+  border: 1.5px solid var(--ps-color-warning-border);
+  border-left-width: 6px;
   border-radius: var(--ps-radius-md);
   background: var(--ps-color-warning-bg);
   color: var(--ps-color-warning-text);
@@ -166,6 +169,23 @@
 .ps-number {
   font-variant-numeric: tabular-nums;
 }
+/* Readout: instrument number in Plex Mono; put the unit in .ps-readout__unit. */
+.ps-readout {
+  font-family: var(--ps-font-mono);
+  font-size: var(--ps-text-readout);
+  font-weight: var(--ps-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.ps-readout__unit {
+  margin-left: 0.15em;
+  font-family: var(--ps-font-sans);
+  font-size: 0.4em;
+  font-weight: var(--ps-font-weight-regular);
+  letter-spacing: 0;
+  color: var(--ps-color-text-muted);
+}
 
 /* ---------- ScoreBar ---------- */
 .ps-score {
@@ -192,7 +212,7 @@
 .ps-score__track {
   height: 0.75rem;
   border: 1px solid var(--ps-color-border);
-  border-radius: var(--ps-radius-pill);
+  border-radius: var(--ps-radius-sm);
   background: var(--ps-color-surface-sunken);
   overflow: hidden;
 }
@@ -296,7 +316,7 @@
   min-height: 44px;
   padding: var(--ps-space-1) var(--ps-space-3) var(--ps-space-1) var(--ps-space-1);
   border: 1px solid var(--ps-color-border);
-  border-radius: var(--ps-radius-pill);
+  border-radius: var(--ps-radius-md);
   background: var(--ps-color-surface);
   color: var(--ps-color-text);
   font: inherit;

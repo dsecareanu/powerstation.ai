@@ -1,21 +1,12 @@
-/* Map app layout and map styles. Shared tokens come from @powerstation/ui (stand-in for now). */
+/* Map app layout and map styles. Shared tokens come from @powerstation/ui (see DESIGN.md). */
 :root {
-  --map-sea: #e6eef5;
-  --map-nodata-fill: #ecebe6;
-  --map-missing-fill: #d9d8d3;
-  --map-border: #ffffff;
-  --map-halo: rgba(255, 255, 255, 0.85);
-  --flow-measured: #2b2b29;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --map-sea: #1b2530;
-    --map-nodata-fill: #2a2a28;
-    --map-missing-fill: #4a4945;
-    --map-border: #141413;
-    --map-halo: rgba(20, 20, 19, 0.85);
-    --flow-measured: #f0eee8;
-  }
+  /* Map colors come from the shared tokens, so both themes and data-theme work. */
+  --map-sea: var(--ps-color-bg);
+  --map-nodata-fill: var(--ps-color-land);
+  --map-missing-fill: var(--ps-color-land-strong);
+  --map-border: var(--ps-color-bg);
+  --map-halo: color-mix(in srgb, var(--ps-color-bg) 85%, transparent);
+  --flow-measured: var(--ps-color-text);
 }
 
 * {
@@ -29,8 +20,8 @@ body {
   line-height: 1.45;
 }
 :focus-visible {
-  outline: 3px solid var(--ps-color-focus);
-  outline-offset: 2px;
+  outline: 2px solid transparent;
+  box-shadow: var(--ps-focus-ring);
 }
 button,
 select {
@@ -73,7 +64,7 @@ button:disabled {
 }
 .app__next {
   color: var(--ps-color-accent);
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 .ps-banner {
   margin: 8px 0;
@@ -254,12 +245,12 @@ button:disabled {
 }
 .flow__nodata text {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: var(--ps-font-weight-bold);
   fill: var(--ps-color-text);
 }
 .flow__value {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: var(--ps-font-weight-bold);
   fill: var(--ps-color-text);
   paint-order: stroke;
   stroke: var(--map-halo);
@@ -287,7 +278,7 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 16px;
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 .legend__layers label {
   display: inline-flex;
@@ -382,7 +373,7 @@ button:disabled {
   border-bottom: 1px solid var(--ps-color-border);
 }
 .fact dt {
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 .fact dd {
   margin: 0;
@@ -408,7 +399,7 @@ button:disabled {
 .mix__bar {
   height: 10px;
   background: var(--ps-color-surface-sunken);
-  border-radius: 3px;
+  border-radius: var(--ps-radius-sm);
   overflow: hidden;
 }
 .mix__bar span {
@@ -505,7 +496,7 @@ button:disabled {
 .timeline__kind {
   font-size: 0.8rem;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--ps-radius-sm);
   border: 1px solid currentColor;
 }
 .timeline__kind--planned {
@@ -543,7 +534,7 @@ button:disabled {
   height: 14px;
   background: repeating-linear-gradient(90deg, var(--ps-state-planned) 0 4px, transparent 4px 8px);
   opacity: 0.35;
-  border-radius: 3px;
+  border-radius: var(--ps-radius-sm);
 }
 .timeline__now {
   position: absolute;
@@ -571,7 +562,7 @@ button:disabled {
 }
 .timeline__mark {
   top: -40px;
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
   color: var(--ps-color-text);
 }
 .timeline__day {
@@ -596,6 +587,6 @@ button:disabled {
 }
 .app__footer summary {
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
   min-height: 32px;
 }

@@ -54,10 +54,20 @@ rmSync(dist, { recursive: true, force: true });
 viteBuild("@powerstation/map", "/", dist);
 viteBuild("@powerstation/calculator", "/calculator/", join(dist, "calculator"));
 
-// One stylesheet for the shell: the shared tokens + the shell styles.
+// One stylesheet for the shell: the shared fonts + tokens + the shell styles.
+// Font files go to /fonts/; fonts.css points at them from the site root.
+const fontsCss = readFileSync(
+  fileURLToPath(import.meta.resolve("@powerstation/ui/fonts.css")),
+  "utf8",
+).replaceAll("./fonts/", "/fonts/");
+cpSync(
+  fileURLToPath(new URL("./fonts", import.meta.resolve("@powerstation/ui/fonts.css"))),
+  join(dist, "fonts"),
+  { recursive: true },
+);
 const tokens = readFileSync(fileURLToPath(import.meta.resolve("@powerstation/ui/tokens.css")));
 const shellCss = readFileSync(join(siteDir, "src", "shell.css"));
-writeFileSync(join(dist, "site.css"), `${tokens}\n${shellCss}`);
+writeFileSync(join(dist, "site.css"), `${fontsCss}\n${tokens}\n${shellCss}`);
 
 // The site's own pages.
 mkdirSync(join(dist, "about"), { recursive: true });
