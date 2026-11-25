@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { calculate } from "../src/calc/calculate";
 import { formatPower } from "@powerstation/ui";
-import { formatShare, homesInfo } from "../src/format";
+import { describePeakPressure, formatShare, homesInfo } from "../src/format";
 import { summarise } from "../src/state/summary";
 import { border, factorTable, series, windowOf, zoneGen } from "./helpers";
 
@@ -81,4 +81,10 @@ test("copy summary: pressure not calculated lists the borders; carbon names left
   assert.match(text, /Interconnectors: not calculated\. Capacity is not published for A → XX/);
   assert.match(text, /about 400 gCO2eq\/kWh/);
   assert.match(text, /oil \(10%? of generation\) have no emission factor and are left out/);
+});
+
+test("peak pressure at or below zero says the zone still exports", () => {
+  assert.match(describePeakPressure(-0.057), /still exports in every hour/);
+  assert.equal(describePeakPressure(0.95), ", at most 95%");
+  assert.equal(describePeakPressure(null), "");
 });

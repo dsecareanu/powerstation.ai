@@ -2,6 +2,7 @@ import type { EmissionFactorsFile } from "@powerstation/schema";
 import { AnimatedNumber, DataStateBadge, HOUSEHOLD_SOURCE, formatPower } from "@powerstation/ui";
 import type { CalcResult } from "../calc/types";
 import {
+  describePeakPressure,
   directionLabel,
   formatInt,
   formatShare,
@@ -187,7 +188,7 @@ function PressureNote(props: { pressure: CalcResult["pressure"] }) {
     <p>
       Interconnectors (worst case: all extra load is imported): above{" "}
       {Math.round(pressure.threshold * 100)}% of capacity in {hours(pressure.hoursAboveThreshold)}
-      {pressure.maxPressure !== null ? `, at most ${formatShare(pressure.maxPressure)}` : ""}.{" "}
+      {describePeakPressure(pressure.maxPressure)}.{" "}
       {pressure.meanCapacityMw !== null
         ? `Planned import capacity: about ${formatPower(pressure.meanCapacityMw)} on average. `
         : ""}

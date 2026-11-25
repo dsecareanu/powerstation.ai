@@ -21,6 +21,13 @@ export function formatShare(ratio: number): string {
   return pct < 10 ? `${pct.toFixed(1)}%` : `${nf.format(pct)}%`;
 }
 
+/** Peak pressure text. Zero or less means the zone still exports in every counted hour. */
+export function describePeakPressure(maxPressure: number | null): string {
+  if (maxPressure === null) return "";
+  if (maxPressure <= 0) return ". Even with the data center, the zone still exports in every hour";
+  return `, at most ${formatShare(maxPressure)}`;
+}
+
 export function formatUtc(iso: string): string {
   return `${utc.format(new Date(iso)).replace(",", "")} UTC`;
 }

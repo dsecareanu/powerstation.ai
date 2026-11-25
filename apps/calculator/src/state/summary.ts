@@ -1,7 +1,15 @@
 // Plain-text summary for the "Copy result" button. Pure function.
 import { formatPower } from "@powerstation/ui";
 import type { CalcResult, ExtraSource } from "../calc/types";
-import { directionLabel, formatInt, formatShare, formatUtc, fuelLabel, hours } from "../format";
+import {
+  describePeakPressure,
+  directionLabel,
+  formatInt,
+  formatShare,
+  formatUtc,
+  fuelLabel,
+  hours,
+} from "../format";
 
 const SOURCE_LABEL: Record<ExtraSource, string> = {
   gas: "gas",
@@ -41,7 +49,7 @@ export function summariseZone(z: SummaryZone): string {
   if (r.pressure?.available && r.pressure.maxPressure !== null) {
     lines.push(
       `- Interconnectors: above ${Math.round(r.pressure.threshold * 100)}% of planned import capacity in ` +
-        `${hours(r.pressure.hoursAboveThreshold)}, at most ${formatShare(r.pressure.maxPressure)}.`,
+        `${hours(r.pressure.hoursAboveThreshold)}${describePeakPressure(r.pressure.maxPressure)}.`,
     );
   } else if (r.pressure && !r.pressure.available) {
     const list = r.pressure.missingDirections.map(directionLabel).join(", ");
