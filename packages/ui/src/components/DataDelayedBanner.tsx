@@ -42,7 +42,7 @@ export function DataDelayedBanner({
 
   const detail =
     freshness.newestMeasuredAt && freshness.ageHours !== null
-      ? `The newest measured data is from ${formatLocalTime(freshness.newestMeasuredAt, timeZone)} (${formatAge(freshness.ageHours)}). The data source may be late. We update the page when new data arrives.`
+      ? `The newest measured data is from ${formatLocalTime(freshness.newestMeasuredAt, timeZone)} (${formatAge(freshness.ageHours)}). The data source may be late.`
       : "No measured data is available right now. The data source may be late.";
 
   return (
