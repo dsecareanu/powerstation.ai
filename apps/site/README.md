@@ -39,6 +39,10 @@ The build fails when:
 
 Preview the built site locally: `pnpm --filter @powerstation/site preview` (runs `wrangler dev`, no Cloudflare account needed). Restart it after a new build.
 
+## Latest news (guide)
+
+`/guide/` shows the headlines from `v1/meta/news.json` (written every 3 hours by the news job). `src/news.ts` is plain TypeScript with no framework; the build transpiles it to `/site-news.js` (about 1 KB gzip) and sets the file URL on the `data-news-src` block (demo: `/demo-data/v1/meta/news.json`, production: `VITE_DATA_BASE_URL` + `v1/meta/news.json`). If the fetch fails or the list is empty, the block shows "Headlines are not available right now." and the rest of the page works.
+
 ## Styles
 
 Plain layout on the `@powerstation/ui` tokens. A restyle touches only `src/shell.css` (shell), `packages/ui/src/tokens.css` (tokens) and the markup in `src/shell.ts` and `pages/`. No colors or type sizes are set anywhere else in this package.

@@ -30,8 +30,6 @@ export interface Model {
   hours: number[];
   /** Start of the first hour with no measured flow; planned trade from here on. */
   measuredEnd: number;
-  /** Largest absolute flow in the window, for stable arrow widths. */
-  maxAbsFlow: number;
   /** Day-ahead capacity per node direction. Key "A>B": power from A to B. */
   capacity: Map<string, TimeSeries>;
   /** Day-ahead load forecast per node: one series per zone, only when every zone has one. */
@@ -51,11 +49,6 @@ export function buildModel(
 ): Model {
   const index = buildNodes(zones);
   const pairs = pairBorders(aggregateBorders(flows, index));
-  let maxAbsFlow = 1;
-  for (const p of pairs)
-    for (const b of [p.physical, p.scheduled])
-      for (const v of b?.series.values ?? [])
-        if (v !== null) maxAbsFlow = Math.max(maxAbsFlow, Math.abs(v));
   // The timeline reaches 24 h ahead when the forecast does, even if no planned trade is published.
   const end =
     forecasts && toMs(forecasts.window.end) > toMs(flows.window.end)
@@ -67,7 +60,6 @@ export function buildModel(
     gen: generationIndex(generation ?? { zones: [] }, index),
     hours: timelineHours(flows.window.start, end),
     measuredEnd: measuredEndMs(flows),
-    maxAbsFlow,
     capacity: aggregateCapacity(capacity, index),
     loadForecast: forecastIndex(forecasts, index),
     hasGeneration: (generation?.zones.length ?? 0) > 0,
