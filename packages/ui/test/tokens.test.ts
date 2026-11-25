@@ -41,6 +41,86 @@ test("both dark blocks are identical", () => {
   assert.deepEqual(darkMedia, darkAttr);
 });
 
+// CIELAB lightness, a and b of a #rrggbb colour (D65).
+function lab(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [n >> 16, (n >> 8) & 255, n & 255].map((v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const fx = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047);
+  const fy = f(0.2126 * r + 0.7152 * g + 0.0722 * b);
+  const fz = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+
+test("no fuel color is violet or lavender", () => {
+  for (const theme of [light, dark]) {
+    for (const fuel of FUEL_TYPES) {
+      const [, a, b] = lab(theme[fuelColorVar(fuel)]!);
+      const chroma = Math.hypot(a, b);
+      const hue = ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360;
+      assert.ok(chroma < 15 || hue < 285 || hue > 335, `${fuel}: hue ${hue.toFixed(0)}`);
+    }
+  }
+});
+
+// Machado et al. (2009) colour-vision-deficiency matrices, severity 1.0 (linear RGB).
+const CVD: Record<string, number[][] | null> = {
+  normal: null,
+  protan: [
+    [0.152286, 1.052583, -0.204868],
+    [0.114503, 0.786281, 0.099216],
+    [-0.003882, -0.048116, 1.051998],
+  ],
+  deutan: [
+    [0.367322, 0.860646, -0.227968],
+    [0.280085, 0.672501, 0.047413],
+    [-0.01182, 0.04294, 0.968881],
+  ],
+  tritan: [
+    [1.255528, -0.076749, -0.178779],
+    [-0.078411, 0.930809, 0.147602],
+    [0.004733, 0.691367, 0.3039],
+  ],
+};
+
+function simulate(hex: string, m: number[][] | null): string {
+  if (!m) return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const lin = [n >> 16, (n >> 8) & 255, n & 255].map((v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const out = m.map((row) =>
+    Math.min(1, Math.max(0, row[0]! * lin[0]! + row[1]! * lin[1]! + row[2]! * lin[2]!)),
+  );
+  return (
+    "#" +
+    out
+      .map((c) => Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055) * 255))
+      .map((v) => v.toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+test("nuclear stays apart from every other fuel, also with colour-blind vision", () => {
+  for (const theme of [light, dark]) {
+    const nuclear = theme["--ps-fuel-nuclear"]!;
+    for (const fuel of FUEL_TYPES.filter((f) => f !== "nuclear")) {
+      for (const [kind, m] of Object.entries(CVD)) {
+        const d = Math.hypot(
+          ...lab(simulate(nuclear, m)).map(
+            (v, i) => v - lab(simulate(theme[fuelColorVar(fuel)]!, m))[i]!,
+          ),
+        );
+        assert.ok(d >= 15, `nuclear vs ${fuel} (${kind}): delta E ${d.toFixed(1)}`);
+      }
+    }
+  }
+});
+
 test("every fuel type has a color", () => {
   for (const fuel of FUEL_TYPES) assert.ok(light[fuelColorVar(fuel)], fuelColorVar(fuel));
 });
