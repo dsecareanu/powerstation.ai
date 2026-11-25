@@ -2,8 +2,9 @@
 // Usage: tsx scripts/discover-borders.ts [--now <ISO>] [--fresh] [--concurrency <n>]
 // Needs ENTSOE_TOKEN. One request per ordered pair (about 2,350). It can be resumed:
 // finished pairs are cached in out/discover-cache.json. --fresh ignores the cache.
-// Up to --concurrency requests (default 6) wait for a response at the same time.
-// The client keeps the rate limit (6 per second, 350 per minute; ENTSO-E allows 400 per minute).
+// Up to --concurrency requests (default 3) wait for a response at the same time.
+// The client keeps the rate limit (2 per second, 120 per minute; ENTSO-E allows 400 per minute).
+// After a second HTTP 429 the client stops; the script exits with code 2 and keeps the cache.
 // A progress line is written every 100 pairs, and a heartbeat line after 60 s of silence.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -12,7 +13,7 @@ import { parseArgs } from "node:util";
 import { iso } from "../src/build/files";
 import { toHourly } from "../src/build/hourly";
 import { Warnings } from "../src/build/warnings";
-import { EntsoeClient } from "../src/entsoe/client";
+import { EntsoeClient, RateLimitStop } from "../src/entsoe/client";
 import { loadDotEnv, requireEnv } from "../src/entsoe/env";
 import { HOUR_MS, mergeSeries } from "../src/entsoe/parse";
 import { physicalFlowQuery } from "../src/entsoe/queries";
@@ -26,7 +27,7 @@ const { values: args } = parseArgs({
   options: {
     now: { type: "string" },
     fresh: { type: "boolean", default: false },
-    concurrency: { type: "string", default: "6" },
+    concurrency: { type: "string", default: "3" },
   },
 });
 const concurrency = Number(args.concurrency);
@@ -80,7 +81,7 @@ const progress = new Progress({
   details: () => {
     const avg = client.averageResponseMs();
     return (
-      `${client.requestCount} requests` +
+      `${client.requestCount} requests, ${client.requestsLastMinute()} req/min (last minute)` +
       (avg === null ? "" : `, avg response ${Math.round(avg)} ms`)
     );
   },
@@ -108,6 +109,13 @@ try {
     if (hours > 0) console.log(`${key}: ${hours} hours`);
     progress.tick(hours > 0);
   });
+} catch (err) {
+  if (!(err instanceof RateLimitStop)) throw err;
+  console.error(
+    `\n${err.message}\n${Object.keys(cache.results).length} of ${pairs.length} pairs are in the cache. ` +
+      "borders.json was not written. Run again later; the run resumes from the cache.",
+  );
+  process.exit(2);
 } finally {
   progress.stop();
 }

@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { EntsoeClient, formatPeriod, redact, type FetchFn } from "../src/entsoe/client";
+import {
+  EntsoeClient,
+  formatPeriod,
+  RateLimitStop,
+  redact,
+  type ClientOptions,
+  type FetchFn,
+} from "../src/entsoe/client";
 import { ackXml, docXml, hourlyPeriod } from "./helpers";
 
 const TOKEN = "secret-token-123";
@@ -39,12 +46,16 @@ test("formatPeriod gives yyyyMMddHHmm in UTC", () => {
   assert.equal(formatPeriod(Date.UTC(2026, 10, 25, 7, 5)), "202611250705");
 });
 
-test("429: waits 11 minutes and retries, at most 2 times", async () => {
-  const a = makeClient([status(429), status(429), ok(xml)]);
+test("429: pauses 11 minutes and continues; the second ban stops the client", async () => {
+  const a = makeClient([status(429), ok(xml)]);
   await a.client.get({ documentType: "A11" });
-  assert.deepEqual(a.sleeps, [660_000, 660_000]);
-  const b = makeClient([status(429), status(429), status(429), ok(xml)]);
-  await assert.rejects(b.client.get({}), /429/);
+  assert.deepEqual(a.sleeps, [660_000]);
+  const b = makeClient([status(429), status(429), ok(xml)]);
+  await assert.rejects(b.client.get({}), RateLimitStop);
+  assert.equal(b.client.stopped, true);
+  // No request is sent after the stop.
+  await assert.rejects(b.client.get({}), RateLimitStop);
+  assert.equal(b.client.requestCount, 2);
 });
 
 test("5xx: retries 3 times with backoff 2 s, 8 s, 30 s", async () => {
@@ -84,52 +95,105 @@ test("the token is sent but never appears in an error message", async () => {
   assert.ok(!redact(b.urls[0]!).includes(TOKEN));
 });
 
-test("throttle: no more than 6 requests in one second", async () => {
-  const responses = Array.from({ length: 13 }, () => ok(xml));
-  const a = makeClient(responses);
-  for (let i = 0; i < 13; i++) await a.client.get({});
-  assert.ok(a.now() >= 2_000, `elapsed ${a.now()} ms`);
-});
-
-test("throttle holds when many requests run at the same time", async () => {
-  // Virtual time: parallel sleeps wait side by side, like real timers.
+// Virtual time: parallel sleeps and in-flight requests wait side by side, like real timers.
+function virtualClient(
+  respond: (sentAt: number) => number,
+  opts: { latencyMs?: number } & Partial<ClientOptions> = {},
+) {
   let clock = 0;
   const timers: { at: number; wake: () => void }[] = [];
+  const later = (ms: number) => new Promise<void>((wake) => timers.push({ at: clock + ms, wake }));
   const sentAt: number[] = [];
+  const logs: string[] = [];
+  const { latencyMs = 0, ...extra } = opts;
   const client = new EntsoeClient({
     token: TOKEN,
     fetchFn: async () => {
-      sentAt.push(clock);
-      return ok(xml);
+      const at = clock;
+      sentAt.push(at);
+      if (latencyMs > 0) await later(latencyMs);
+      return status(respond(at), xml);
     },
-    sleep: (ms) => new Promise<void>((wake) => timers.push({ at: clock + ms, wake })),
+    sleep: later,
     clock: () => clock,
-    maxPerMinute: 1_000,
+    log: (m) => logs.push(m),
+    ...extra,
   });
-  let finished = false;
-  const all = Promise.all(Array.from({ length: 30 }, (_, i) => client.get({ i: String(i) }))).then(
-    () => (finished = true),
-  );
-  while (!finished) {
-    await new Promise((r) => setImmediate(r));
-    if (timers.length === 0) continue;
-    clock = Math.min(...timers.map((x) => x.at));
-    for (const x of timers.filter((x) => x.at <= clock)) {
-      timers.splice(timers.indexOf(x), 1);
-      x.wake();
+  async function run(count: number) {
+    let finished = false;
+    const all = Promise.allSettled(
+      Array.from({ length: count }, (_, i) => client.get({ i: String(i) })),
+    ).then((r) => {
+      finished = true;
+      return r;
+    });
+    while (!finished) {
+      await new Promise((r) => setImmediate(r));
+      if (timers.length === 0) continue;
+      clock = Math.min(...timers.map((x) => x.at));
+      for (const x of timers.filter((x) => x.at <= clock)) {
+        timers.splice(timers.indexOf(x), 1);
+        x.wake();
+      }
     }
+    return all;
   }
-  await all;
-  assert.equal(sentAt.length, 30);
-  for (const t of sentAt) {
-    const inWindow = sentAt.filter((s) => s > t - 1_000 && s <= t).length;
-    assert.ok(inWindow <= 6, `${inWindow} requests in one second at ${t} ms`);
-  }
-  // 30 requests at 6 per second need at least 4 seconds.
+  return { client, sentAt, logs, run, now: () => clock };
+}
+
+function maxInWindow(times: number[], windowMs: number): number {
+  return Math.max(...times.map((t) => times.filter((s) => s > t - windowMs && s <= t).length));
+}
+
+test("default caps: 2 requests per second and 120 per minute, also in parallel", async () => {
+  const v = virtualClient(() => 200);
+  const results = await v.run(300);
+  assert.ok(results.every((r) => r.status === "fulfilled"));
+  assert.equal(v.sentAt.length, 300);
+  assert.ok(maxInWindow(v.sentAt, 1_000) <= 2, `${maxInWindow(v.sentAt, 1_000)} in one second`);
+  assert.ok(maxInWindow(v.sentAt, 60_000) <= 120, `${maxInWindow(v.sentAt, 60_000)} in a minute`);
+  // 300 requests at 120 per minute need at least 2 minutes.
+  assert.ok(Math.max(...v.sentAt) >= 120_000, `last at ${Math.max(...v.sentAt)}`);
+});
+
+test("caps can be changed by option", async () => {
+  const v = virtualClient(() => 200, { maxPerSecond: 5, maxPerMinute: 1_000 });
+  await v.run(30);
+  assert.ok(maxInWindow(v.sentAt, 1_000) <= 5);
+  // 30 requests at 5 per second need at least 5 seconds.
+  assert.ok(Math.max(...v.sentAt) >= 5_000 && Math.max(...v.sentAt) < 7_000);
+});
+
+test("429: one shared pause for all requests; in-flight 429s count as the same ban", async () => {
+  // Every request sent in the first 10 minutes gets 429; later ones succeed.
+  const v = virtualClient((at) => (at < 600_000 ? 429 : 200), { latencyMs: 500 });
+  const results = await v.run(3);
+  assert.ok(results.every((r) => r.status === "fulfilled"));
+  assert.equal(v.client.bans, 1);
+  assert.equal(v.logs.filter((l) => l.includes("HTTP 429")).length, 1);
+  // The first 429 arrives at 500 ms. Nothing is sent until 11 minutes after that.
   assert.ok(
-    Math.max(...sentAt) >= 4_000 && Math.max(...sentAt) < 6_000,
-    `last at ${Math.max(...sentAt)}`,
+    v.sentAt.every((t) => t <= 500 || t >= 500 + 660_000),
+    `sent at ${v.sentAt.join(", ")}`,
   );
+  assert.equal(v.sentAt.filter((t) => t >= 660_500).length, 3);
+});
+
+test("429: the second ban stops all requests, waiting ones too", async () => {
+  const v = virtualClient(() => 429, { latencyMs: 500 });
+  const results = await v.run(5);
+  assert.ok(results.every((r) => r.status === "rejected" && r.reason instanceof RateLimitStop));
+  assert.equal(v.client.bans, 2);
+  assert.equal(v.client.stopped, true);
+  // At most 2 requests before the pause and 2 after it (2 per second, 500 ms in flight).
+  assert.ok(v.sentAt.length <= 4, `${v.sentAt.length} requests sent`);
+  assert.ok(v.logs.some((l) => l.includes("Stopping")));
+});
+
+test("requestsLastMinute counts requests sent in the last 60 seconds", async () => {
+  const v = virtualClient(() => 200);
+  await v.run(10);
+  assert.equal(v.client.requestsLastMinute(), 10);
 });
 
 test("averageResponseMs counts finished responses", async () => {
