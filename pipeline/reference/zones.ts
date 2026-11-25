@@ -27,7 +27,7 @@ export interface ZoneReference {
   /** Display name for the UI. */
   name: string;
   /** ISO 3166-1 alpha-2 codes (XK for Kosovo, as ENTSO-E uses). */
-  countries: string[];
+  countries: [string, ...string[]];
   /** Why the zone is here, when that is not obvious. */
   note?: string;
 }

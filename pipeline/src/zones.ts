@@ -37,6 +37,7 @@ function readJson<T>(name: string): T {
         (name === "borders.json"
           ? "Run scripts/discover-borders.ts first (needs ENTSOE_TOKEN)."
           : "Run scripts/compute-centroids.ts first."),
+      { cause: err },
     );
   }
 }
@@ -85,7 +86,8 @@ export function buildZonesFile(
   const countries = countryCodes.map((code) => {
     const name = COUNTRY_NAMES[code];
     if (!name) throw new Error(`No country name for ${code} in reference/zones.ts`);
-    return { code, name, zones: zones.filter((z) => z.countries.includes(code)).map((z) => z.id) };
+    const ids = zones.filter((z) => z.countries.includes(code)).map((z) => z.id);
+    return { code, name, zones: ids as [string, ...string[]] };
   });
 
   return {
