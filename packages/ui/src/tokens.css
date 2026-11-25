@@ -44,7 +44,8 @@
   --ps-state-missing: #6e7179;
 
   /* Fuel types (keys match FUEL_TYPES in @powerstation/schema) */
-  --ps-fuel-nuclear: #7b4fb8;
+  /* Nuclear: sand, not violet (DESIGN.md). Colour-blind check in test/tokens.test.ts. */
+  --ps-fuel-nuclear: #cab78b;
   --ps-fuel-lignite: #6b4a2f;
   --ps-fuel-hard-coal: #3d3d3d;
   --ps-fuel-gas: #e07b39;
