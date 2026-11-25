@@ -71,15 +71,18 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 2. Register on the ENTSO-E Transparency Platform and request API access. Give me the token for local runs (I keep it in `pipeline/.env`, which git ignores). Add it as a secret in the GitHub environment `data-publish`.
 3. Create the R2 bucket, public access on a custom domain (proposal: `data.powerstation.ai`) and CORS for the site domain.
 4. Create an R2 API token and add it as secrets in the GitHub environment `data-publish` (see `pipeline/README.md`, Setup).
-5. Merge the schema 1.1.0 PR (after session D's first PR, as in `briefs/README.md`).
+5. ~~Merge the schema 1.1.0 PR~~ Done: PR #2 merged.
+6. Decide whether Epoch AI "AI supercomputers" is the right data-center source (see task 5).
+7. Decide on session C's request: an optional `centroid` on `countries[]` in zones.json (schema change, not built).
 
-## Status of tasks 3 and 4 (branch `ws/a-zones`, not pushed as a PR)
+## Status of tasks 3, 4 and 5 (branch `ws/a-zones`)
 
-- Task 3: `pipeline/reference/zones.ts` (49 candidate zones, EIC codes from the ENTSO-E area list, updated 2026-09-21), `pipeline/reference/centroids.json` (Natural Earth v5.1.2), `pipeline/src/zones.ts` (builds zones.json). Neighbours come from `scripts/discover-borders.ts`, which needs the ENTSO-E token.
-- Task 4: the backfill subagent stopped on a usage limit. Its unfinished code is in a WIP commit (`198ae00`): ENTSO-E client, XML parser, hourly aggregation, fuel mapping, file builders. Not yet type-checked or tested. To finish: backfill and discover-borders scripts, tests, README.
-
-## Next (offline, no publishing)
-
-- Task 3: check EIC codes and centroids against ENTSO-E reference data; list all bidding zones that publish flows.
-- Task 4: backfill script with throttling (≤ 6 requests per second), netting and hourly aggregation; tests on saved sample XML. No upload until the R2 bucket exists and Daniel decides on task 1.
-- Task 5 (replaced, Daniel 2026-11-25): no n8n in v1. The hourly job is a scheduled GitHub Actions workflow (`.github/workflows/data-hourly.yml`) that runs the `/pipeline` code. Fallback, only if Actions is unreliable: the same code in a Cloudflare Worker with a Cron Trigger. The monthly data-center job is `.github/workflows/data-monthly.yml`.
+- **Task 3, zones:** `pipeline/reference/zones.ts` (49 candidate zones; EIC codes from the ENTSO-E area list, updated 2026-09-21). `pipeline/reference/centroids.json` and `zone-shapes.json` (Natural Earth v5.1.2; shapes only for countries with several zones). `pipeline/src/zones.ts` builds zones.json. Neighbours come from `scripts/discover-borders.ts` (real data, not memory). It needs the ENTSO-E token, so `pipeline/reference/borders.json` does not exist yet.
+- **Task 4, backfill:** `scripts/backfill.ts`, ENTSO-E client (≤ 6 requests/s, ≤ 350/min, 429 wait), XML parser (curve types A01 and A03, gaps), hourly averages (an hour needs all sub-steps), netting, fuel mapping, R2 upload. Tests use synthetic XML only.
+- **Task 5, scheduled jobs (replaces n8n, Daniel 2026-11-25):**
+  - `.github/workflows/data-hourly.yml`: minute 17 every hour and manual runs. It fetches the last 48 h plus 24 h ahead, merges them into the rolling files on R2, validates with `--deploy` and uploads. `status.json` goes last. A first run with no files on R2 fetches 30 days.
+  - `.github/workflows/data-monthly.yml`: day 3 of each month at 04:41 UTC and manual runs. It builds `datacenters.json` from Epoch AI "AI supercomputers" (CC BY 4.0). Epoch's "AI data centers" CSV has no coordinates and only about 7 European sites, so it is not used. [Inference] The 53 European sites (local check, not committed) are AI supercomputers of 0.2–23 MW, not 1 GW campuses. Session B must not present them as large data centers.
+  - Both jobs keep each other's entries in `status.json` (`mergeStatus`).
+  - Restricted gate: the workflows never set `ENTSOE_RESTRICTED_PUBLISH_OK`. `upload.ts` checks the content and refuses scheduled flows, generation files, wind/solar forecasts and mock files.
+  - Setup steps for Daniel: `pipeline/README.md` → "Setup (Daniel)". It covers the GitHub facts checked on the live docs: schedules run only on the default branch, delays at the start of the hour, the 60-day stop in public repos and how to re-enable, and who gets failure emails.
+- **Not verified (no secrets yet):** real ENTSO-E responses, R2 upload and download, a GitHub run with the `data-publish` environment.
