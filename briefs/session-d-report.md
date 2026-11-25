@@ -25,13 +25,14 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`
 
 ## Follow-up PR (`ws/d-fixes`)
 
-- Copy fix: less than one home now reads "less than one home in Germany uses on average" and "less than what one EU home uses in a year" (was "about as much as less than 1 home ..."). Demo page shows all of them. Checked at 375 px, light and dark, with keyboard focus.
+- Copy fix: less than one home now reads "less than one home in Germany uses on average" and "less than what one EU home uses in a year" (was "about as much as less than 1 home ...").
+- License fix: `HOUSEHOLD_SOURCE.license` now names the Eurostat reuse policy (Commission Decision of 12 December 2011) instead of CC BY 4.0, plus a comment on the non-EU reuse limit. Demo page shows all of them. Checked at 375 px, light and dark, with keyboard focus.
 
 ## Decisions
 
 - **Household figures:** Eurostat, data year 2024, retrieved from the Eurostat API on 2026-11-25. kWh per household = `nrg_bal_c` (nrg_bal=FC_OTH_HH_E, siec=E7000, unit=GWH) × 1e6 ÷ `lfst_hhnhtych` (phhcomp, n_child, agechild = TOTAL, unit=THS_HH) ÷ 1e3, rounded to whole kWh, stored as MWh. 32 countries have both figures. EU27_2020 = 3,525 kWh (fallback). Eurostat "EL" is stored as "GR". Countries with energy data but no household count (AL, GE, IS, MD, ME, XK) and countries with neither (CH, UK) use the EU value. All 32 values match session B's table exactly.
 - **Fallback wording:** a known country gives "homes in <country name>" (or "homes in this country" without a name); the fallback gives "EU homes". `householdsFor(code).isFallback` exposes it. Never 0.
-- **License:** Eurostat content is CC BY 4.0 ([copyright notice](https://ec.europa.eu/eurostat/help/copyright-notice)): name the source, say the data was changed (our ratio), and say Eurostat is not responsible. `HOUSEHOLD_SOURCE.attribution` does all three. [Unverified] The notice limits some data from non-EU sources; check it for the non-EU countries (BA, MK, NO, RS, TR) during session A's terms check.
+- **License:** Eurostat statistical data falls under the Commission reuse Decision of 12 December 2011 ([copyright notice](https://ec.europa.eu/eurostat/help/copyright-notice), read by session A on 2026-11-25): reuse allowed with the source named, changes stated and a non-responsibility note. CC BY 4.0 covers only Eurostat's editorial content. `HOUSEHOLD_SOURCE.license` says this; `HOUSEHOLD_SOURCE.attribution` names Eurostat, says it is our calculation and has the disclaimer. Data for countries outside the EU, EFTA and the official candidate countries is not for commercial reuse; all 32 countries are inside (EU27 + NO + BA, MK, RS, TR). A code comment warns before anyone adds e.g. UK or CH.
 - **Homes comparisons round to 2 significant figures** ("2.4 million", "240,000") to avoid false precision.
 - **Freshness uses the stalest checked file.** Each file the page uses must have measured data newer than 2 hours. Files with `newest_measured_at: null` (forecasts, zones) are skipped. No measured data at all = delayed. Pass `paths` so a page checks only the files it loads.
 - **Data-state patterns:** measured = solid, planned = dashed, modelled = diagonal hatch, missing = dotted outline with a slash. The map should use the same idea for lines (solid / dashed / dotted / gap).

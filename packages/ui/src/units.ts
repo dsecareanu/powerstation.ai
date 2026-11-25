@@ -15,7 +15,12 @@ export interface HouseholdFigure {
 export const HOUSEHOLD_SOURCE = {
   name: "Eurostat",
   url: "https://ec.europa.eu/eurostat/databrowser/view/nrg_bal_c/default/table",
-  license: "CC-BY-4.0",
+  /**
+   * Statistical data: Commission reuse Decision of 12 December 2011 (source must be named,
+   * changes stated, Eurostat not responsible). CC BY 4.0 covers Eurostat's editorial content only.
+   * https://ec.europa.eu/eurostat/help/copyright-notice (checked by session A, 2026-11-25)
+   */
+  license: "Eurostat reuse policy (Commission Decision of 12 December 2011), attribution required",
   /** The figure is our ratio of two Eurostat datasets. */
   method:
     "Electricity used by households in a country in one year, divided by the number of private households in that country, both from Eurostat.",
@@ -42,6 +47,10 @@ export const HOUSEHOLD_SOURCE = {
  * kWh = nrg_bal_c (GWh) x 1e6 / lfst_hhnhtych (thousand households) / 1e3, rounded to whole kWh.
  * Eurostat API, data year 2024, retrieved 2026-11-25. Eurostat "EL" (Greece) is stored as "GR".
  * Countries without both figures (e.g. CH) are left out and use the EU value.
+ *
+ * Reuse limit: the Eurostat notice says data for countries outside the EU, EFTA and the official
+ * candidate countries is not for commercial reuse. All entries below are inside (EU27 + NO + BA,
+ * MK, RS, TR). Before adding a country (e.g. UK or CH) from Eurostat, check the notice first.
  */
 export const HOUSEHOLD_MWH_PER_YEAR: Readonly<Record<string, HouseholdFigure>> = {
   AT: { mwhPerYear: 5.219, year: 2024 },
