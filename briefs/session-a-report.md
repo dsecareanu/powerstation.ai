@@ -79,7 +79,7 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 3. Create the R2 bucket, public access on a custom domain (proposal: `data.powerstation.ai`) and CORS for the site domain.
 4. Create an R2 API token and add it as secrets in the GitHub environment `data-publish` (see `pipeline/README.md`, Setup).
 5. ~~Merge the schema 1.1.0 PR~~ Done: PR #2 merged.
-6. Decide whether Epoch AI "AI supercomputers" is the right data-center source (see task 5).
+6. ~~Decide whether Epoch AI "AI supercomputers" is the right data-center source~~ Decided (Daniel, 2026-11-25): Epoch AI "AI supercomputers" is the v1 source.
 7. ~~Session C's request: an optional `centroid` on `countries[]` in zones.json~~ Daniel skipped it (2026-11-25). Not built.
 
 ## Deploy plan (Daniel, 2026-11-25)
