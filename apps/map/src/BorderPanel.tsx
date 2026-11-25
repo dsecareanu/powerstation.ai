@@ -1,9 +1,10 @@
-// Planned vs measured for one border: the day-ahead planned trade next to the measured flow.
-import type { DataState } from "@powerstation/schema";
-import { pointAt, toMs } from "./data/series";
-import { dayTicks, formatDay, formatHour } from "./format";
-import { type Model, pairKey } from "./model";
+// "How full is this border?": the measured flow next to the day-ahead capacity offered for the
+// same direction (both open ENTSO-E data). Planned trade is drawn only when it is published.
+import { Chart, type ChartLine } from "./Chart";
+import { formatHour, formatPercent } from "./format";
+import { borderUseAt, type Model, pairKey } from "./model";
 import { DataStateBadge, formatPower } from "@powerstation/ui";
+import { pointAt } from "./data/series";
 
 interface Props {
   model: Model;
@@ -12,10 +13,6 @@ interface Props {
   onSelectPair: (key: string) => void;
   onHour: (ms: number) => void;
 }
-
-const CW = 600;
-const CH = 260;
-const PAD = { l: 60, r: 8, t: 10, b: 24 };
 
 export function BorderPanel(props: Props) {
   const { model, hour } = props;
@@ -39,136 +36,146 @@ export function BorderPanel(props: Props) {
   );
   if (!pair) return <section class="panel">{picker}</section>;
 
-  const hours = model.hours;
-  const t0 = hours[0]!;
-  const t1 = hours[hours.length - 1]!;
   const phys = pair.physical?.series;
   const sched = pair.scheduled?.series;
-  const vals = [...(phys?.values ?? []), ...(sched?.values ?? [])].filter(
-    (v): v is number => v !== null,
-  );
-  const max = Math.max(1, ...vals.map(Math.abs));
-  const x = (ms: number) => PAD.l + ((ms - t0) / (t1 - t0)) * (CW - PAD.l - PAD.r);
-  const y = (v: number) => PAD.t + ((max - v) / (2 * max)) * (CH - PAD.t - PAD.b);
+  const capAB = model.capacity.get(`${pair.from}>${pair.to}`);
+  const capBA = model.capacity.get(`${pair.to}>${pair.from}`);
+  const hasPlanned = !!sched?.states.some((s) => s !== "missing");
+  const hasModelled = !!phys?.states.includes("modelled");
+  const hasCapacity = !!(capAB ?? capBA);
 
-  /** SVG path of the hours in one state; gaps elsewhere. */
-  const line = (s: typeof phys, want: DataState, until?: number) => {
-    if (!s) return "";
-    let d = "";
-    let pen = false;
-    s.values.forEach((v, i) => {
-      const t = toMs(s.start) + i * 3_600_000;
-      if (
-        t < t0 ||
-        t > t1 ||
-        (until !== undefined && t >= until) ||
-        v === null ||
-        s.states[i] !== want
-      )
-        return void (pen = false);
-      d += `${pen ? "L" : "M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`;
-      pen = true;
+  const lines: ChartLine[] = [];
+  if (capAB) lines.push({ series: capAB, state: "planned", class: "chart__capacity" });
+  if (capBA) lines.push({ series: capBA, state: "planned", class: "chart__capacity", sign: -1 });
+  if (sched && hasPlanned) lines.push({ series: sched, state: "planned", class: "chart__planned" });
+  if (phys) {
+    lines.push({
+      series: phys,
+      state: "measured",
+      class: "chart__measured",
+      until: model.measuredEnd,
     });
-    return d;
-  };
+    lines.push({
+      series: phys,
+      state: "modelled",
+      class: "chart__modelled",
+      until: model.measuredEnd,
+    });
+  }
 
-  const a = phys ? pointAt(phys, hour) : null;
-  const s = sched ? pointAt(sched, hour) : null;
-  const diff = a?.value != null && s?.value != null ? a.value - s.value : null;
-  const days = dayTicks(hours);
+  const use = borderUseAt(model, pair, hour);
+  const planned = sched && hasPlanned ? pointAt(sched, hour) : null;
+  const diff =
+    planned?.value != null && use.flow.value !== null ? use.flow.value - planned.value : null;
+  const future = hour >= model.measuredEnd;
+  const towards =
+    use.flow.value !== null && use.flow.value < 0
+      ? `${name(pair.to)} → ${name(pair.from)}`
+      : `${name(pair.from)} → ${name(pair.to)}`;
 
   return (
-    <section class="panel" aria-label="Planned trade compared with measured flow">
+    <section class="panel" aria-label="How full this border is">
       {picker}
-      <h2 class="panel__title">Planned vs measured</h2>
-      <p class="panel__lead">How much power crosses one border, planned against measured.</p>
-      <p class="panel__note">
-        Each day, traders plan how much power crosses each border the next day. The grid does not
-        always follow the plan. Above zero: power flows from {name(pair.from)} to {name(pair.to)}.
-        Below zero: the other way.
+      <h2 class="panel__title">How full is this border?</h2>
+      <p class="panel__lead">
+        How much power crosses one border, against the capacity offered for it.
       </p>
-      <svg
-        viewBox={`0 0 ${CW} ${CH}`}
-        class="chart"
-        role="img"
-        aria-label={`Chart of planned trade and measured flow between ${name(pair.from)} and ${name(pair.to)}.`}
-        onClick={(e) => {
-          const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-          const ms =
-            t0 +
-            (((e.clientX - r.left) * (CW / r.width) - PAD.l) / (CW - PAD.l - PAD.r)) * (t1 - t0);
-          props.onHour(ms);
-        }}
-      >
-        <line x1={PAD.l} x2={CW - PAD.r} y1={y(0)} y2={y(0)} class="chart__zero" />
-        <text x={PAD.l - 4} y={y(max) + 4} text-anchor="end" class="chart__axis">
-          {formatPower(max)}
-        </text>
-        <text x={PAD.l - 4} y={y(-max)} text-anchor="end" class="chart__axis">
-          −{formatPower(max)}
-        </text>
-        {days.map((d) => (
-          <text key={d} x={x(d)} y={CH - 6} class="chart__axis" text-anchor="middle">
-            {formatDay(d)}
-          </text>
-        ))}
-        <rect
-          x={x(model.measuredEnd)}
-          y={PAD.t}
-          width={Math.max(0, x(t1) - x(model.measuredEnd))}
-          height={CH - PAD.t - PAD.b}
-          class="chart__future"
-        />
-        <path d={line(sched, "planned")} class="chart__planned" />
-        <path d={line(phys, "measured", model.measuredEnd)} class="chart__measured" />
-        <path d={line(phys, "modelled", model.measuredEnd)} class="chart__modelled" />
-        <line x1={x(hour)} x2={x(hour)} y1={PAD.t} y2={CH - PAD.b} class="chart__cursor" />
-      </svg>
+      <p class="panel__note">
+        Each day, grid operators publish how much power they can let cross each border the next day
+        (day-ahead capacity). The measured flow shows how much of it was used. Above zero: power
+        flows from {name(pair.from)} to {name(pair.to)}. Below zero: the other way.
+      </p>
+      <Chart
+        model={model}
+        hour={hour}
+        lines={lines}
+        label={`Chart of measured flow and offered capacity between ${name(pair.from)} and ${name(pair.to)}.`}
+        onHour={props.onHour}
+      />
       <ul class="chart__key">
         <li>
           <span class="key-line key-line--measured" aria-hidden="true" /> Measured flow
         </li>
-        <li>
-          <span class="key-line key-line--planned" aria-hidden="true" /> Planned trade
-        </li>
-        <li>
-          <span class="key-line key-line--modelled" aria-hidden="true" /> Modelled
-          {phys?.method ? ` (${phys.method})` : ""}
-        </li>
+        {hasCapacity ? (
+          <li>
+            <span class="key-line key-line--capacity" aria-hidden="true" /> Offered capacity
+            (day-ahead), each direction
+          </li>
+        ) : null}
+        {hasPlanned ? (
+          <li>
+            <span class="key-line key-line--planned" aria-hidden="true" /> Planned trade
+          </li>
+        ) : null}
+        {hasModelled ? (
+          <li>
+            <span class="key-line key-line--modelled" aria-hidden="true" /> Modelled
+            {phys?.method ? ` (${phys.method})` : ""}
+          </li>
+        ) : null}
         <li>Gaps: no data. Shaded: ahead of measurements.</li>
       </ul>
       <p class="panel__time">{formatHour(hour)}</p>
       <dl class="facts">
         <div class="fact">
-          <dt>Measured</dt>
+          <dt>Measured flow</dt>
           <dd>
-            {hour >= model.measuredEnd ? (
+            {future ? (
               "Not measured yet"
             ) : (
               <>
-                {a?.value == null ? "–" : signed(a.value)}{" "}
-                {a ? <DataStateBadge state={a.state} method={a.method} /> : null}
+                {use.flow.value === null
+                  ? "–"
+                  : `${formatPower(Math.abs(use.flow.value))}, ${towards}`}{" "}
+                <DataStateBadge state={use.flow.state} method={use.flow.method} />
               </>
             )}
           </dd>
         </div>
         <div class="fact">
-          <dt>Planned</dt>
+          <dt>Offered capacity</dt>
           <dd>
-            {s?.value == null ? "–" : signed(s.value)}{" "}
-            {s ? (
-              <DataStateBadge
-                state={s.state}
-                label={s.state === "planned" ? "Planned trade" : undefined}
-              />
-            ) : null}
+            {use.capacity.value === null ? "–" : formatPower(use.capacity.value)}{" "}
+            <DataStateBadge
+              state={use.capacity.state}
+              label={use.capacity.state === "planned" ? "Planned capacity" : undefined}
+            />
           </dd>
         </div>
         <div class="fact">
-          <dt>Difference</dt>
-          <dd>{diff === null ? "–" : signed(diff)}</dd>
+          <dt>How full</dt>
+          <dd>
+            {use.share.value === null
+              ? "–"
+              : `${formatPercent(use.share.value)} of offered capacity`}{" "}
+            <DataStateBadge state={use.share.state} method={use.share.method} />
+          </dd>
         </div>
+        {planned ? (
+          <>
+            <div class="fact">
+              <dt>Planned trade</dt>
+              <dd>
+                {planned.value === null ? "–" : signed(planned.value)}{" "}
+                <DataStateBadge
+                  state={planned.state}
+                  label={planned.state === "planned" ? "Planned trade" : undefined}
+                />
+              </dd>
+            </div>
+            <div class="fact">
+              <dt>Measured − planned</dt>
+              <dd>{diff === null ? "–" : signed(diff)}</dd>
+            </div>
+          </>
+        ) : null}
       </dl>
+      {use.share.value !== null && use.share.value > 1 ? (
+        <p class="panel__note">
+          The flow is above the day-ahead capacity figure. This can happen: capacity can be added
+          later in the day, and power can loop through neighbouring grids.
+        </p>
+      ) : null}
     </section>
   );
 }

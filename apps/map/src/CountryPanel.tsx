@@ -1,9 +1,10 @@
 // Country panel: generation mix, load, net imports/exports at the selected hour.
 import { FUEL_TYPES } from "@powerstation/schema";
-import { generationAt, netImportAt, type FlowAt } from "./data/metrics";
-import type { Point } from "./data/series";
+import { Chart } from "./Chart";
+import { generationAt } from "./data/metrics";
+import { MISSING, type Point, toIso } from "./data/series";
 import { FUEL_LABELS, formatHour, formatPercent } from "./format";
-import type { Model } from "./model";
+import { type Model, netPhysicalAt } from "./model";
 import { nodeFromSelect } from "./selection";
 import {
   DataStateBadge,
@@ -17,12 +18,12 @@ interface Props {
   model: Model;
   nodeId: string | null;
   hour: number;
-  flows: FlowAt[];
   onSelectNode: (id: string | null) => void;
+  onHour: (ms: number) => void;
 }
 
 export function CountryPanel(props: Props) {
-  const { model, nodeId, hour, flows } = props;
+  const { model, nodeId, hour } = props;
   const node = nodeId ? model.index.byId.get(nodeId) : undefined;
 
   const picker = (
@@ -53,7 +54,16 @@ export function CountryPanel(props: Props) {
   }
 
   const gen = generationAt(model.gen, node.id, hour);
-  const net = netImportAt(node.id, flows);
+  // Net position from measured physical flows only (open data); planned trade is not used here.
+  const net = netPhysicalAt(model, node.id, hour);
+  const netPoints = model.hours.map((h) => netPhysicalAt(model, node.id, h));
+  const netSeries = {
+    start: toIso(model.hours[0]!),
+    resolution: "PT1H" as const,
+    unit: "MW" as const,
+    values: netPoints.map((p) => p.value),
+    states: netPoints.map((p) => p.state),
+  };
   const future = hour >= model.measuredEnd;
   // One country: its own household figure. Shared zone (DE-LU): no single country, so EU homes.
   const homes: HomesTextOptions =
@@ -63,6 +73,7 @@ export function CountryPanel(props: Props) {
     : [];
   const sorted = [...fuels].sort((a, b) => (b.p.value ?? -Infinity) - (a.p.value ?? -Infinity));
   const total = gen?.total.value ?? null;
+  const share = gen?.renewableShare ?? MISSING;
 
   return (
     <section class="panel" aria-label={`${node.name} details`}>
@@ -86,31 +97,46 @@ export function CountryPanel(props: Props) {
           homes={homes}
           label={
             net.value === null
-              ? "Imports / exports"
+              ? "Net imports / exports"
               : net.value >= 0
-                ? "Net imports"
-                : "Net exports"
+                ? "Net importer"
+                : "Net exporter"
           }
           point={net}
-          stateLabel={net.state === "planned" ? "Planned trade" : undefined}
         />
-        <Fact label="Electricity use (load)" point={gen?.load ?? null} homes={homes} />
-        <Fact label="Generation" point={gen?.total ?? null} homes={homes} />
-        {gen ? (
-          <div class="fact">
-            <dt>Renewables share</dt>
-            <dd>
-              {gen.renewableShare.value === null ? "–" : formatPercent(gen.renewableShare.value)}{" "}
-              <DataStateBadge state={gen.renewableShare.state} method={gen.renewableShare.method} />
-            </dd>
-          </div>
-        ) : null}
+        <Fact label="Electricity use (load)" point={gen?.load ?? MISSING} homes={homes} />
+        <Fact label="Generation" point={gen?.total ?? MISSING} homes={homes} />
+        <div class="fact">
+          <dt>Renewables share</dt>
+          <dd>
+            {share.value === null ? "–" : formatPercent(share.value)}{" "}
+            <DataStateBadge state={share.state} method={share.method} />
+          </dd>
+        </div>
       </dl>
+
+      <h3 class="panel__sub">Net imports and exports</h3>
+      <p class="panel__note">
+        The sum of the measured flows on all of its borders. Above zero: it takes in more power than
+        it sends out.
+      </p>
+      <Chart
+        model={model}
+        hour={hour}
+        lines={[
+          { series: netSeries, state: "measured", class: "chart__measured" },
+          { series: netSeries, state: "modelled", class: "chart__modelled" },
+        ]}
+        label={`Chart of the net imports and exports of ${node.name}, from measured flows.`}
+        above="imports"
+        below="exports"
+        onHour={props.onHour}
+      />
 
       {future ? (
         <p class="panel__note">
-          Generation and load are measured values, so they stop at the latest measured hour. Move
-          the timeline back to see them.
+          Flows, generation and load are measured values, so they stop at the latest measured hour.
+          Move the timeline back to see them.
         </p>
       ) : null}
 
@@ -142,25 +168,27 @@ export function CountryPanel(props: Props) {
             })}
           </ul>
         </>
+      ) : !future ? (
+        <>
+          <h3 class="panel__sub">Generation mix</h3>
+          <p>
+            – <DataStateBadge state="missing" />
+          </p>
+        </>
       ) : null}
     </section>
   );
 }
 
-function Fact(props: {
-  label: string;
-  point: Point | null;
-  stateLabel?: string;
-  homes: HomesTextOptions;
-}) {
+function Fact(props: { label: string; point: Point; homes: HomesTextOptions }) {
   const p = props.point;
-  const homes = p?.value != null ? describePowerInHomes(Math.abs(p.value), props.homes) : "";
+  const homes = p.value !== null ? describePowerInHomes(Math.abs(p.value), props.homes) : "";
   return (
     <div class="fact">
       <dt>{props.label}</dt>
       <dd>
-        {p?.value == null ? "–" : formatPower(Math.abs(p.value))}{" "}
-        {p ? <DataStateBadge state={p.state} label={props.stateLabel} method={p.method} /> : null}
+        {p.value === null ? "–" : formatPower(Math.abs(p.value))}{" "}
+        <DataStateBadge state={p.state} method={p.method} />
         {homes ? <span class="fact__homes">{homes}</span> : null}
       </dd>
     </div>

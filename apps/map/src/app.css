@@ -433,7 +433,7 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* Planned vs measured chart */
+/* Panel charts */
 .chart {
   width: 100%;
   height: auto;
@@ -467,6 +467,12 @@ button:disabled {
   stroke-dasharray: 2 2;
   stroke-width: 3;
 }
+/* Offered capacity: thin solid line in the planned colour (planned trade is thick and dashed). */
+.chart__capacity {
+  fill: none;
+  stroke: var(--ps-state-planned);
+  stroke-width: 1.25;
+}
 .chart__cursor {
   stroke: var(--ps-color-accent);
   stroke-width: 1.5;
@@ -488,6 +494,9 @@ button:disabled {
 }
 .key-line--planned {
   border-top: 2px dashed var(--ps-state-planned);
+}
+.key-line--capacity {
+  border-top: 1px solid var(--ps-state-planned);
 }
 .key-line--modelled {
   border-top: 3px dotted var(--ps-state-modelled);

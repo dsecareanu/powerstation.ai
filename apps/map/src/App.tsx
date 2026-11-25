@@ -9,7 +9,7 @@ import type { LayerId } from "./layers";
 import { Legend } from "./Legend";
 import { MapView } from "./map/MapView";
 import { toggleNode } from "./selection";
-import { buildModel, flowsAt, mostSurprisingPair, pairKey } from "./model";
+import { buildModel, flowsAt, fullestPair, loadForecastAt, pairKey } from "./model";
 import { AttributionPanel, type AttributionSource, DataDelayedBanner } from "@powerstation/ui";
 import { Timeline } from "./Timeline";
 import "./app.css";
@@ -35,7 +35,7 @@ export function App() {
   const [loading30d, setLoading30d] = useState(false);
   const [hourMs, setHourMs] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [layer, setLayer] = useState<LayerId>("renewables");
+  const [layer, setLayer] = useState<LayerId | null>(null);
   const [node, setNode] = useState<string | null>(null);
   const [pair, setPair] = useState<string | null>(null);
   const [tab, setTab] = useState<"country" | "border">("country");
@@ -59,16 +59,21 @@ export function App() {
 
   const files = range === "30d" && data30 ? { ...data!, ...data30 } : data;
   const model = useMemo(
-    () => (files ? buildModel(files.zones, files.flows, files.generation) : null),
-    [files?.zones, files?.flows, files?.generation],
+    () =>
+      files
+        ? buildModel(files.zones, files.flows, files.generation, files.capacity, files.forecasts)
+        : null,
+    [files?.zones, files?.flows, files?.generation, files?.capacity, files?.forecasts],
   );
 
-  // Defaults once the data is in: newest measured hour, most surprising border.
+  // Defaults once the data is in: newest measured hour, fullest border, and renewables only when
+  // generation data is published (it is restricted ENTSO-E data).
   useEffect(() => {
     if (!model) return;
     if (hourMs === null) setHourMs(model.measuredEnd - 3_600_000);
+    if (layer === null) setLayer(model.hasGeneration ? "renewables" : "netImport");
     if (pair === null) {
-      const p = mostSurprisingPair(model);
+      const p = fullestPair(model);
       if (p) setPair(pairKey(p));
     }
   }, [model]);
@@ -94,7 +99,7 @@ export function App() {
         Sorry, the map could not load. {error}
       </p>
     );
-  if (!data || !geo || !model || hourMs === null)
+  if (!data || !geo || !model || hourMs === null || layer === null)
     return <p class="app-loading">Loading the grid…</p>;
 
   const index = nearestIndex(model.hours, hourMs);
@@ -106,8 +111,13 @@ export function App() {
     data.zones,
     files!.flows,
     files!.generation,
+    data.capacity,
+    data.forecasts,
     SHAPES_SOURCE,
-  ];
+  ].filter((f): f is AttributionSource => f !== null);
+  const forecastHere = model.index.nodes.some(
+    (n) => loadForecastAt(model, n.id, hour).value !== null,
+  );
 
   return (
     <div class="app">
@@ -145,6 +155,7 @@ export function App() {
             index={index}
             latestIndex={latestIndex}
             measuredEnd={model.measuredEnd}
+            hasPlanned={model.hasPlanned}
             now={now}
             playing={playing}
             range={range}
@@ -156,7 +167,14 @@ export function App() {
           />
         </div>
         <div class="app__legend">
-          <Legend layer={layer} future={hour >= model.measuredEnd} onLayer={setLayer} />
+          <Legend
+            layer={layer}
+            future={hour >= model.measuredEnd}
+            hasGeneration={model.hasGeneration}
+            hasPlanned={model.hasPlanned}
+            forecastHere={forecastHere}
+            onLayer={setLayer}
+          />
         </div>
         <aside class="app__side">
           <div class="tabs" role="tablist" aria-label="Details">
@@ -182,8 +200,8 @@ export function App() {
               model={model}
               nodeId={node}
               hour={hour}
-              flows={flows}
               onSelectNode={setNode}
+              onHour={setHourMs}
             />
           ) : (
             <BorderPanel
