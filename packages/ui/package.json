@@ -11,6 +11,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css",
+    "./fonts.css": "./src/fonts.css",
+    "./fonts/*": "./src/fonts/*",
     "./styles.css": "./src/styles.css"
   },
   "scripts": {

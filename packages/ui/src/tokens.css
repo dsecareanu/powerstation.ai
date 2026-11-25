@@ -1,5 +1,5 @@
 /*
- * powerstation.ai design tokens.
+ * powerstation.ai design tokens. Direction "Line diagram": see DESIGN.md at the repo root.
  *
  * Theme: light by default. Dark follows prefers-color-scheme, unless the page
  * sets data-theme="light" or data-theme="dark" on <html>.
@@ -7,29 +7,39 @@
  *
  * Contrast (WCAG 2.2): text tokens >= 4.5:1, data-state colors >= 3:1 on
  * --ps-color-bg and --ps-color-surface. test/tokens.test.ts checks it.
+ * Signal yellow is never text and never alone on paper: always with ink.
  * Fuel colors are for chart fills. Always show a label or legend with them.
+ * Fonts: fonts.css (IBM Plex Sans and Mono, self-hosted).
  */
 
 :root {
   color-scheme: light;
 
   /* Base colors */
-  --ps-color-bg: #fbfaf7;
+  --ps-color-bg: #f5f6f3;
   --ps-color-surface: #ffffff;
-  --ps-color-surface-sunken: #f1efe9;
-  --ps-color-border: #d6d3cb;
-  --ps-color-text: #1b1d21;
-  --ps-color-text-muted: #5a5f69;
-  --ps-color-accent: #0b57d0;
-  --ps-color-on-accent: #ffffff;
-  --ps-color-focus: #0b57d0;
-  --ps-color-warning-bg: #fff1cc;
-  --ps-color-warning-text: #5c3b00;
-  --ps-color-warning-border: #e0b44c;
+  --ps-color-surface-sunken: #eceee9;
+  --ps-color-border: #d5d9d3;
+  --ps-color-field: #80868f;
+  --ps-color-land: #e3e6e0;
+  --ps-color-land-strong: #cfd3cc;
+  --ps-color-text: #15191e;
+  --ps-color-text-muted: #555c66;
+  /* Actions are ink. No blue accent: blue means measured. */
+  --ps-color-accent: #15191e;
+  --ps-color-on-accent: #f5f6f3;
+  --ps-color-focus: #15191e;
+  /* Signal: the one brand color (now, selection, focus halo, one highlight). */
+  --ps-color-signal: #ffd21a;
+  --ps-color-signal-tint: #fff4c2;
+  --ps-color-warning-bg: #fff4c2;
+  --ps-color-warning-text: #15191e;
+  --ps-color-warning-border: #15191e;
 
   /* Data states: color + pattern (see styles.css). Never color alone. */
   --ps-state-measured: #0072b2;
   --ps-state-planned: #c4520a;
+  --ps-state-planned-text: #ad4708;
   --ps-state-modelled: #a2337a;
   --ps-state-missing: #6e7179;
 
@@ -51,19 +61,22 @@
   --ps-fuel-other-renewable: #9bd16a;
   --ps-fuel-other: #a7a9ae;
 
-  /* Type. System fonts only: no web font download. */
-  --ps-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --ps-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Type: IBM Plex (fonts.css), system stack as fallback. Two weights only. */
+  --ps-font-sans:
+    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --ps-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ps-font-weight-regular: 400;
-  --ps-font-weight-bold: 650;
-  --ps-font-weight-display: 800;
+  --ps-font-weight-bold: 600;
+  --ps-font-weight-display: 600;
   --ps-text-xs: 0.75rem;
   --ps-text-sm: 0.875rem;
   --ps-text-md: 1rem;
   --ps-text-lg: 1.25rem;
-  --ps-text-xl: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
-  --ps-text-display: clamp(2rem, 1.4rem + 3vw, 3.25rem);
-  --ps-line-height-tight: 1.15;
+  --ps-text-xl: clamp(1.375rem, 1.2rem + 0.8vw, 1.5625rem);
+  --ps-text-display: clamp(2rem, 1.4rem + 2.6vw, 2.875rem);
+  --ps-text-readout: clamp(2.25rem, 1.6rem + 3vw, 3.25rem);
+  --ps-line-height-tight: 1.1;
   --ps-line-height-body: 1.5;
 
   /* Spacing (4 px grid) */
@@ -76,13 +89,15 @@
   --ps-space-7: 3rem;
 
   /* Radius */
-  --ps-radius-sm: 4px;
-  --ps-radius-md: 8px;
-  --ps-radius-lg: 16px;
+  --ps-radius-sm: 2px;
+  --ps-radius-md: 6px;
+  --ps-radius-lg: 10px;
+  /* Only for things that are circles (now marker, step numbers). No pill buttons. */
   --ps-radius-pill: 999px;
 
   /* Focus ring */
-  --ps-focus-ring: 0 0 0 2px var(--ps-color-bg), 0 0 0 4px var(--ps-color-focus);
+  /* Ink ring with a signal halo: visible on paper, panels and dark. */
+  --ps-focus-ring: 0 0 0 2px var(--ps-color-focus), 0 0 0 5px var(--ps-color-signal);
 
   /* Motion. Set to 0ms under prefers-reduced-motion. */
   --ps-duration-fast: 120ms;
@@ -92,20 +107,25 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --ps-color-bg: #111317;
-    --ps-color-surface: #1b1e24;
-    --ps-color-surface-sunken: #0b0c0f;
-    --ps-color-border: #3a3f47;
-    --ps-color-text: #eef0f3;
-    --ps-color-text-muted: #aab0ba;
-    --ps-color-accent: #8ab4ff;
-    --ps-color-on-accent: #0b1220;
-    --ps-color-focus: #8ab4ff;
-    --ps-color-warning-bg: #3a2c0a;
-    --ps-color-warning-text: #ffd98a;
-    --ps-color-warning-border: #8a6a1f;
+    --ps-color-bg: #0e1116;
+    --ps-color-surface: #171b21;
+    --ps-color-surface-sunken: #0a0c10;
+    --ps-color-border: #2c323b;
+    --ps-color-field: #6b727d;
+    --ps-color-land: #1f242c;
+    --ps-color-land-strong: #2e343e;
+    --ps-color-text: #eceef0;
+    --ps-color-text-muted: #a3aab5;
+    --ps-color-accent: #eceef0;
+    --ps-color-on-accent: #0e1116;
+    --ps-color-focus: #eceef0;
+    --ps-color-signal-tint: #3a3110;
+    --ps-color-warning-bg: #3a3110;
+    --ps-color-warning-text: #eceef0;
+    --ps-color-warning-border: #ffd21a;
     --ps-state-measured: #56b4e9;
     --ps-state-planned: #f0a04b;
+    --ps-state-planned-text: #f0a04b;
     --ps-state-modelled: #e58ac9;
     --ps-state-missing: #9a9ea7;
     --ps-fuel-lignite: #a07850;
@@ -119,20 +139,25 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --ps-color-bg: #111317;
-  --ps-color-surface: #1b1e24;
-  --ps-color-surface-sunken: #0b0c0f;
-  --ps-color-border: #3a3f47;
-  --ps-color-text: #eef0f3;
-  --ps-color-text-muted: #aab0ba;
-  --ps-color-accent: #8ab4ff;
-  --ps-color-on-accent: #0b1220;
-  --ps-color-focus: #8ab4ff;
-  --ps-color-warning-bg: #3a2c0a;
-  --ps-color-warning-text: #ffd98a;
-  --ps-color-warning-border: #8a6a1f;
+  --ps-color-bg: #0e1116;
+  --ps-color-surface: #171b21;
+  --ps-color-surface-sunken: #0a0c10;
+  --ps-color-border: #2c323b;
+  --ps-color-field: #6b727d;
+  --ps-color-land: #1f242c;
+  --ps-color-land-strong: #2e343e;
+  --ps-color-text: #eceef0;
+  --ps-color-text-muted: #a3aab5;
+  --ps-color-accent: #eceef0;
+  --ps-color-on-accent: #0e1116;
+  --ps-color-focus: #eceef0;
+  --ps-color-signal-tint: #3a3110;
+  --ps-color-warning-bg: #3a3110;
+  --ps-color-warning-text: #eceef0;
+  --ps-color-warning-border: #ffd21a;
   --ps-state-measured: #56b4e9;
   --ps-state-planned: #f0a04b;
+  --ps-state-planned-text: #f0a04b;
   --ps-state-modelled: #e58ac9;
   --ps-state-missing: #9a9ea7;
   --ps-fuel-lignite: #a07850;
