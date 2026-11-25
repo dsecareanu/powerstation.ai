@@ -58,3 +58,20 @@ Per the orchestrator: plain styling, tokens only. A restyle touches `apps/site/s
 
 1. **Token reach.** A Cloudflare API token cannot be limited to one Worker. The deploy token (Workers Scripts: Edit) can also change `domain-landers`. The guard limits what the workflow does, not what the token can do. Options: accept this with the guard (now), or move the site to a separate Cloudflare account later. Which?
 2. [Unverified] **Token permission.** The README asks for one permission, Account > Workers Scripts > Edit. Cloudflare's docs suggest the broader "Edit Cloudflare Workers" template. I expect the single permission to be enough for an assets-only Worker on workers.dev; the first deploy run will confirm it.
+
+## Update: PR 1 merged, PR 2 (guide)
+
+PR #18 merged on 2026-11-25. The orchestrator ran the first deploy from `main`: the preview serves `/`, `/calculator/` and `/about/` with the banner. The single token permission "Workers Scripts: Edit" was enough (open question 2 closed). `domain-landers` is untouched.
+
+PR 2, branch `ws/e-guide` (from `origin/main`):
+
+- `/guide/` ("Power infrastructure for the AI era"): the text of the old powerstation.ai page (backup of 2026-11-25), edited to the CLAUDE.md writing rules. Dropped: the "domain for sale" banner, the offer form, the HubSpot script and the RSS news feed (in `IDEAS.md`).
+- Header link "Guide" added (Map, Calculator, Guide, About).
+- Links from the guide to the map and the calculator: at the top, after "How much power AI needs" and after "Why the grid is the bottleneck".
+- Search value: title "powerstation.ai: Power infrastructure for the AI era" and a description close to the old one; canonical `https://powerstation.ai/guide/`; Open Graph tags; `Article` + `FAQPage` structured data with the same answers as the page (`apps/site/src/guide-meta.ts`). Demo builds stay `noindex`.
+- The comparison table scrolls sideways inside its own box (focusable region with a label). The page itself has no sideways scroll at 375 px.
+- Styles: two small blocks added to `apps/site/src/shell.css` (`.site-table`, `.site-note`), tokens only.
+- Checked: IEA figures (415 TWh in 2024, about 1.5%; about 945 TWh in 2030, base case) against the IEA "Energy and AI" report pages (2025). Other figures and timelines are from the old page and are listed as [Unverified] in the PR description.
+- `IDEAS.md`: the news feed, and `robots.txt` + `sitemap.xml` for the launch (the guide moves from `/` to `/guide/`).
+
+Open question for Daniel (launch): the old guide lived at `/`. At launch, `/` becomes the map. Keep the search value with a link from the map, a sitemap, or both?
