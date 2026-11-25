@@ -67,3 +67,20 @@ export async function uploadFiles(
     log(`Uploaded ${item.key}`);
   }
 }
+
+/**
+ * Restricted ENTSO-E data (generation, load, scheduled exchanges, wind/solar forecasts)
+ * may not be published until ENTSO-E gives written permission.
+ */
+export function assertPublishAllowed(
+  includeRestricted: boolean,
+  env: Record<string, string | undefined> = process.env,
+): void {
+  if (includeRestricted && env["ENTSOE_RESTRICTED_PUBLISH_OK"] !== "yes") {
+    throw new Error(
+      "Refusing to upload restricted data (generation, load, scheduled exchanges, wind/solar " +
+        "forecasts). We wait for written permission from ENTSO-E. " +
+        "Set ENTSOE_RESTRICTED_PUBLISH_OK=yes only after permission is recorded.",
+    );
+  }
+}

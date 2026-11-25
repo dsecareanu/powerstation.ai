@@ -14,7 +14,7 @@ import { validateAll, writeFiles } from "../src/build/output";
 import { EntsoeClient } from "../src/entsoe/client";
 import { loadDotEnv, requireEnv } from "../src/entsoe/env";
 import { HOUR_MS } from "../src/entsoe/parse";
-import { readR2Config, uploadFiles } from "../src/r2";
+import { assertPublishAllowed, readR2Config, uploadFiles } from "../src/r2";
 import { buildZonesFile, neighbourPairs, readBorders, readCentroids } from "../src/zones";
 
 loadDotEnv();
@@ -37,13 +37,7 @@ const includeRestricted = args["include-restricted"] === true;
 const upload = args.upload === true;
 
 // Checks before any ENTSO-E request.
-if (upload && includeRestricted && process.env["ENTSOE_RESTRICTED_PUBLISH_OK"] !== "yes") {
-  throw new Error(
-    "Refusing to upload restricted data (generation, load, scheduled exchanges, wind/solar " +
-      "forecasts). We wait for written permission from ENTSO-E. " +
-      "Set ENTSOE_RESTRICTED_PUBLISH_OK=yes only after permission is recorded.",
-  );
-}
+if (upload) assertPublishAllowed(includeRestricted);
 const r2 = upload ? readR2Config() : undefined;
 const token = requireEnv("ENTSOE_TOKEN");
 

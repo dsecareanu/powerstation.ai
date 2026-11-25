@@ -87,7 +87,11 @@ export class EntsoeClient {
         res = await this.fetchFn(url);
       } catch (err) {
         const reason = this.scrub((err as Error).message);
-        if (serverErrors >= BACKOFF_MS.length) throw new Error(`Network error: ${reason}`);
+        if (serverErrors >= BACKOFF_MS.length) {
+          // No cause on purpose: the original error can contain the token.
+          // eslint-disable-next-line preserve-caught-error
+          throw new Error(`Network error: ${reason}`);
+        }
         this.log(`Network error (${reason}); retry ${serverErrors + 1}/${BACKOFF_MS.length}`);
         await this.sleep(BACKOFF_MS[serverErrors++]!);
         continue;
