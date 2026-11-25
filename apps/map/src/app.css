@@ -675,6 +675,18 @@ button:disabled {
   }
 }
 
+/* Shown when the map opens on an older hour than the newest one. */
+.timeline__behind {
+  flex-basis: 100%;
+  order: 3;
+  margin: 0;
+  font-size: var(--ps-text-sm);
+  color: var(--ps-color-text-muted);
+}
+.timeline__behind button {
+  margin-left: var(--ps-space-1);
+}
+
 /* Footer */
 .app__footer {
   padding: 16px 0 32px;
