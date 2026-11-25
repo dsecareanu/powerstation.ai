@@ -173,7 +173,10 @@ async function main(): Promise<void> {
     JSON.stringify({ generated_at: generatedAt, now: iso(nowMs), warnings: warningList }, null, 2) +
       "\n",
   );
-  log(`Files written to ${outDir} (${client.requestCount} ENTSO-E requests).`);
+  const failedRequests = recentRun.failedRequests + (fullRun?.failedRequests ?? 0);
+  log(
+    `Files written to ${outDir} (${client.requestCount} ENTSO-E requests, ${failedRequests} failed).`,
+  );
   if (warningList.length > 0) {
     log(`\n${warningList.length} warning(s):`);
     for (const w of warningList) log(`  - ${w.message}${w.count > 1 ? ` (x${w.count})` : ""}`);
