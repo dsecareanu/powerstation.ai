@@ -45,9 +45,10 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
    - Never fill a gap without marking it `modelled` or `missing`.
 2. **Planned is not forecast.** ENTSO-E day-ahead scheduled exchanges are commercial plans. Label them "planned trade", never "forecast flow".
 3. **Units:** power in MW (hourly average), energy in MWh, time in UTC ISO 8601. Convert to local time only in the UI.
-4. **Everyday units in the UI:** next to MW/GW, show a plain comparison (e.g. "about as much as N homes"). Keep the conversion factor in one place, with its source.
+4. **Everyday units in the UI:** next to MW/GW, show a plain comparison (e.g. "about as much as N homes"). The household figure lives only in `@powerstation/ui` (`packages/ui/src/units.ts`): Eurostat per country, EU aggregate as fallback, labelled "average EU homes". Apps import it. Do not add a second figure.
 5. **Freshness:** the UI reads `status.json`. If the newest data is older than 2 hours, show "data delayed".
 6. **Attribution:** every data file carries its source and license. The UI shows them in the attribution panel.
+7. **ENTSO-E open data only:** physical flows, day-ahead capacity and day-ahead load forecast are CC BY 4.0. Do not publish actual load, generation per fuel, wind/solar forecasts or scheduled exchanges until Daniel confirms ENTSO-E permission (see `DATA_SOURCES.md`).
 
 ## Schema change rule
 
@@ -82,8 +83,17 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 
 - One session = one git worktree = one branch: `ws/<session-letter>-<short-name>` (e.g. `ws/b-calculator`).
 - Small commits with clear messages.
-- Open a pull request to `main`. Daniel merges one branch at a time.
+- Open a pull request to `main`. Daniel (or the orchestrator on his instruction) merges one branch at a time.
 - Do not edit files owned by another workstream. If you need a change there, write it in your PR description.
+- `main` is protected (ruleset "Protect main"): PR only, CI check `check` must pass on an up-to-date branch, no force push. Never merge with `--admin` or another bypass.
+- Never edit, commit or switch branches in the main checkout (`~/RevTechAgency/PowerstationAI`). If your session starts there, first run `git worktree add -b ws/<letter>-<name> ../PowerstationAI-worktrees/ws-<letter>-<name> main` and work only in that folder.
+- `pnpm-lock.yaml` conflict: take main's version, run `pnpm install`, commit. Never hand-edit it.
+- Stacked PR (base = another `ws/` branch): after the base merges, change the base to `main`. Branches are not deleted on merge.
+- Local-only ignores (drafts, notes): add them to `.git/info/exclude`, not `.gitignore`.
+
+## Checks (same as CI)
+
+`pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm format:check && pnpm schema:check && pnpm test && pnpm validate:fixtures`
 
 ## Labels when reporting to Daniel
 
