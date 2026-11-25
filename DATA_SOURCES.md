@@ -51,6 +51,13 @@ Clause 3.1: the Data User must "mention the ENTSO-E Transparency Platform as the
 
 Clause 3.2: ENTSO-E does not check the data for accuracy; the user uses it "under its sole responsibility". Clause 5.3 forbids use that "may cause unjustified damage to the reputation of ENTSO-E, of ENTSO-E members or of a Primary Owner of Data".
 
+### Questions for ENTSO-E (Daniel asks; open)
+
+1. **Restricted data items:** permission to publish the 4 items marked **No** in the table above (scheduled exchanges, actual load, generation per fuel, wind and solar forecasts).
+2. **ENTSO-E news feed** (added 2026-11-25): may powerstation.ai show headlines from https://www.entsoe.eu/rss/news.xml? We show only the title, a link to the article on entsoe.eu, the name "ENTSO-E" and the date. No article text, images or logo. Why we ask: the website disclaimer (https://www.entsoe.eu/about/legal-and-regulatory/disclaimer) does not allow users to "display, reuse, reproduce, publish" content without ENTSO-E's written permission. Until ENTSO-E answers in writing, the feed stays out of `pipeline/src/news.ts`.
+
+Record each answer here (date, who answered, exact wording) before any code change.
+
 ### API limits
 
 - 400 requests per minute per API token ([API Rate Limit](https://transparencyplatform.zendesk.com/hc/en-us/articles/12783148966036-API-Rate-Limit-Part-1)). [Unverified] It may also count per IP. Our client uses at most 120 per minute and 2 per second.
