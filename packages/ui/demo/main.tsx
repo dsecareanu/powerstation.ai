@@ -14,7 +14,7 @@ import {
   formatEnergy,
   formatPower,
   fuelColorVar,
-  HOUSEHOLD_ELECTRICITY,
+  HOUSEHOLD_SOURCE,
   Missions,
   Mystery,
   ScoreBar,
@@ -172,16 +172,22 @@ function Demo() {
         <ul>
           {[100, 500, 1000].map((mw) => (
             <li key={mw}>
-              {formatPower(mw)}: {describePowerInHomes(mw)}
+              {formatPower(mw)}:{" "}
+              {describePowerInHomes(mw, { countryCode: "RO", countryName: "Romania" })}
             </li>
           ))}
           <li>
-            {formatEnergy(876_000)}: {describeEnergyInHomes(876_000)}
+            {formatPower(1000)} (country with no figure, e.g. CH):{" "}
+            {describePowerInHomes(1000, { countryCode: "CH" })}
+          </li>
+          <li>
+            {formatEnergy(876_000)}:{" "}
+            {describeEnergyInHomes(876_000, { countryCode: "DE", countryName: "Germany" })}
           </li>
         </ul>
         <p style={{ color: "var(--ps-color-text-muted)", fontSize: "var(--ps-text-sm)" }}>
-          Source: <a href={HOUSEHOLD_ELECTRICITY.sourceUrl}>{HOUSEHOLD_ELECTRICITY.source}</a>,{" "}
-          {HOUSEHOLD_ELECTRICITY.scope}: {HOUSEHOLD_ELECTRICITY.mwhPerYear} MWh per year.
+          {HOUSEHOLD_SOURCE.method} Source:{" "}
+          <a href={HOUSEHOLD_SOURCE.url}>{HOUSEHOLD_SOURCE.name}</a>, {HOUSEHOLD_SOURCE.dataYear}.
         </p>
       </section>
 
