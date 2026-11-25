@@ -16,7 +16,9 @@ import { fileURLToPath } from "node:url";
 import {
   checkBudget,
   checkDemo,
+  checkFontsOnce,
   checkProduction,
+  dropAppFonts,
   JS_BUDGET_BYTES,
   measurePageJs,
 } from "../src/checks";
@@ -78,6 +80,9 @@ cpSync(
 const tokens = readFileSync(fileURLToPath(import.meta.resolve("@powerstation/ui/tokens.css")));
 const shellCss = readFileSync(join(siteDir, "src", "shell.css"));
 writeFileSync(join(dist, "site.css"), `${fontsCss}\n${tokens}\n${shellCss}`);
+
+// The apps' own font copies would download each font a second time. site.css has them.
+dropAppFonts(dist);
 
 // Static files: logo, favicons, web manifest (public/brand/).
 cpSync(join(siteDir, "public"), dist, { recursive: true });
@@ -141,7 +146,11 @@ const sizes = measurePageJs(dist);
 for (const s of sizes) {
   console.log(`  ${s.page.padEnd(24)} initial JS ${(s.gzipBytes / 1024).toFixed(1)} KB gzip`);
 }
-const problems = [...checkBudget(sizes), ...(demo ? checkDemo(dist) : checkProduction(dist))];
+const problems = [
+  ...checkBudget(sizes),
+  ...checkFontsOnce(dist),
+  ...(demo ? checkDemo(dist) : checkProduction(dist)),
+];
 if (problems.length > 0) {
   console.error(`\nSite build check failed:\n- ${problems.join("\n- ")}`);
   process.exit(1);
