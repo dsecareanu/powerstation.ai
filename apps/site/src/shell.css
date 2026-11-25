@@ -1,23 +1,27 @@
 /*
- * Site shell styles: header, footer, demo banner and the About/404 pages.
- * Plain layout on @powerstation/ui tokens only. No new colors or type sizes here:
- * the coming design system replaces this file (and tokens.css) in one pass.
- * The build writes tokens.css + this file to /site.css; every page links it.
+ * Site shell styles: header, footer, demo banner and the About, Guide and 404 pages.
+ * Design: "Line diagram" (DESIGN.md at the repo root). Tokens only, from @powerstation/ui.
+ * The build writes fonts.css + tokens.css + this file to /site.css; every page links it.
  */
 .site-header,
 .site-footer,
 .site-demo,
 .site-main {
+  box-sizing: border-box;
   font-family: var(--ps-font-sans);
-  line-height: 1.5;
+  line-height: var(--ps-line-height-body);
 }
+
+/* ---------- Header ---------- */
 .site-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--ps-space-2) var(--ps-space-4);
-  padding: var(--ps-space-3) var(--ps-space-4);
+  gap: 0 var(--ps-space-5);
+  padding-block: var(--ps-space-1);
+  padding-left: max(var(--ps-space-4), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--ps-space-4), env(safe-area-inset-right, 0px));
   background: var(--ps-color-surface);
   border-bottom: 1px solid var(--ps-color-border);
   color: var(--ps-color-text);
@@ -25,52 +29,99 @@
 .site-header ul {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ps-space-1) var(--ps-space-4);
+  gap: 0 var(--ps-space-5);
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.site-header a,
-.site-footer a,
-.site-main a {
-  color: var(--ps-color-accent);
-}
 .site-header .site-logo {
-  font-weight: var(--ps-font-weight-display);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--ps-color-text);
   text-decoration: none;
 }
-.site-header nav a {
-  display: inline-block;
-  padding: var(--ps-space-1) 0;
+/* Wordmark height 22px on phones, 24px from 768px. Clear space: see DESIGN.md. */
+.site-logo__mark {
+  display: block;
+  height: 22px;
+  width: auto;
 }
-.site-header nav a[aria-current="page"] {
+@media (min-width: 768px) {
+  .site-logo__mark {
+    height: 24px;
+  }
+}
+.site-header nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--ps-color-text);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  text-underline-offset: 6px;
+}
+.site-header nav a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+/* Current page: bold weight and a solid 2px underline, not colour alone. */
+.site-header nav a[aria-current="page"] {
   font-weight: var(--ps-font-weight-bold);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- Demo banner: the notice style, full width ---------- */
+.site-demo {
+  padding-block: var(--ps-space-2);
+  padding-left: max(var(--ps-space-4), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--ps-space-4), env(safe-area-inset-right, 0px));
+  background: var(--ps-color-warning-bg);
+  color: var(--ps-color-warning-text);
+  border-bottom: 1.5px solid var(--ps-color-warning-border);
+  font-size: var(--ps-text-sm);
+}
+.site-demo strong {
+  font-weight: var(--ps-font-weight-bold);
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+  margin-top: var(--ps-space-7);
+  padding-block: var(--ps-space-5) var(--ps-space-6);
+  padding-left: max(var(--ps-space-4), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--ps-space-4), env(safe-area-inset-right, 0px));
+  border-top: 1px solid var(--ps-color-border);
+  color: var(--ps-color-text-muted);
+  font-size: var(--ps-text-sm);
+}
+.site-footer p {
+  max-width: 44rem;
+  margin: 0 auto var(--ps-space-2);
+}
+
+/* ---------- Links and focus ---------- */
+.site-footer a,
+.site-main a {
+  color: var(--ps-color-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.site-footer a:hover,
+.site-main a:hover {
   text-decoration-thickness: 2px;
 }
 .site-header a:focus-visible,
 .site-footer a:focus-visible,
 .site-main a:focus-visible {
-  outline: 3px solid var(--ps-color-focus);
-  outline-offset: 2px;
+  outline: 2px solid transparent;
+  box-shadow: var(--ps-focus-ring);
+  border-radius: var(--ps-radius-sm);
 }
-.site-demo {
-  padding: var(--ps-space-2) var(--ps-space-4);
-  background: var(--ps-color-warning-bg);
-  color: var(--ps-color-warning-text);
-  border-bottom: 1px solid var(--ps-color-warning-border);
-}
-.site-footer {
-  margin-top: var(--ps-space-6);
-  padding: var(--ps-space-4);
-  border-top: 1px solid var(--ps-color-border);
-  color: var(--ps-color-text-muted);
-}
-.site-footer p {
-  max-width: 64rem;
-  margin: 0 auto var(--ps-space-2);
-}
+
+/* ---------- About, Guide and 404 pages ---------- */
 body.site-doc {
   margin: 0;
   background: var(--ps-color-bg);
@@ -79,14 +130,122 @@ body.site-doc {
 .site-main {
   max-width: 44rem;
   margin: 0 auto;
-  padding: var(--ps-space-4);
+  padding-block: var(--ps-space-7) 0;
+  padding-left: max(var(--ps-space-4), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--ps-space-4), env(safe-area-inset-right, 0px));
+  font-size: var(--ps-text-md);
+}
+.site-main h1,
+.site-main h2,
+.site-main h3 {
+  font-weight: var(--ps-font-weight-display);
+  line-height: var(--ps-line-height-tight);
+  text-wrap: balance;
+}
+.site-main h1 {
+  margin: 0 0 var(--ps-space-5);
+  font-size: var(--ps-text-display);
+  letter-spacing: -0.01em;
+}
+.site-main h2 {
+  margin: var(--ps-space-7) 0 var(--ps-space-3);
+  padding-top: var(--ps-space-5);
+  border-top: 1px solid var(--ps-color-border);
+  font-size: var(--ps-text-xl);
+}
+.site-main h3 {
+  margin: var(--ps-space-5) 0 var(--ps-space-2);
+  font-size: var(--ps-text-lg);
+}
+.site-main p,
+.site-main ol,
+.site-main ul {
+  margin: 0 0 var(--ps-space-4);
+}
+.site-main li + li {
+  margin-top: var(--ps-space-2);
+}
+.site-main code {
+  font-family: var(--ps-font-mono);
+  font-size: 0.9em;
+}
+
+/* Guide contents: a quiet panel, not a second heading level. */
+.site-main nav[aria-labelledby] {
+  margin: var(--ps-space-6) 0;
+  padding: var(--ps-space-4) var(--ps-space-5);
+  background: var(--ps-color-surface);
+  border: 1px solid var(--ps-color-border);
+  border-radius: var(--ps-radius-lg);
+}
+.site-main nav[aria-labelledby] h2 {
+  margin: 0 0 var(--ps-space-2);
+  padding: 0;
+  border: 0;
+  font-size: var(--ps-text-md);
+}
+.site-main nav[aria-labelledby] ol {
+  margin: 0;
+}
+
+/* Definition lists: rows between hairlines. */
+.site-main dl {
+  margin: 0 0 var(--ps-space-4);
+  border-top: 1px solid var(--ps-color-border);
 }
 .site-main dt {
+  padding-top: var(--ps-space-3);
   font-weight: var(--ps-font-weight-bold);
 }
 .site-main dd {
-  margin: 0 0 var(--ps-space-3);
+  margin: var(--ps-space-1) 0 0;
+  padding-bottom: var(--ps-space-3);
+  border-bottom: 1px solid var(--ps-color-border);
+  color: var(--ps-color-text-muted);
 }
+
+/* Data-state labels: the same line patterns as the map and charts (DESIGN.md). */
+.site-state {
+  display: flex;
+  align-items: center;
+  gap: var(--ps-space-3);
+}
+.site-state::before {
+  content: "";
+  flex: none;
+  box-sizing: border-box;
+  width: 2.5rem;
+  border-top: 3px solid var(--site-state-color);
+}
+.site-state--measured {
+  --site-state-color: var(--ps-state-measured);
+}
+.site-state--planned {
+  --site-state-color: var(--ps-state-planned);
+}
+.site-state--planned::before {
+  border-top-style: dashed;
+}
+.site-state--modelled {
+  --site-state-color: var(--ps-state-modelled);
+}
+.site-state--modelled::before {
+  height: 0.75rem;
+  border: 1.5px solid var(--site-state-color);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--site-state-color) 0 1.5px,
+    transparent 1.5px 4px
+  );
+}
+.site-state--missing {
+  --site-state-color: var(--ps-state-missing);
+}
+.site-state--missing::before {
+  border-top-style: dotted;
+}
+
+/* Tables */
 .site-table {
   overflow-x: auto;
   margin: var(--ps-space-4) 0;
@@ -94,6 +253,7 @@ body.site-doc {
 .site-table table {
   border-collapse: collapse;
   min-width: 36rem;
+  font-size: var(--ps-text-sm);
 }
 .site-table caption {
   text-align: left;
@@ -106,6 +266,9 @@ body.site-doc {
   vertical-align: top;
   padding: var(--ps-space-2);
   border-bottom: 1px solid var(--ps-color-border);
+}
+.site-table th {
+  font-weight: var(--ps-font-weight-bold);
 }
 .site-note {
   color: var(--ps-color-text-muted);
