@@ -1,6 +1,6 @@
 # Session D report — Shared UI package
 
-Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`, PR #3) passed CI. PR 2 (items 6–10 + household table + review fixes, branch `ws/d-game`, PR #5, stacked on `ws/d-ui`) open.
+Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`, PR #3) merged into `main`. PR 2 (items 6–10 + household table + review fixes, branch `ws/d-game`, PR #5, base `main`) open.
 
 ## What exists now (first PR)
 
@@ -35,7 +35,7 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`
 - **System fonts only.** No web font download. Display weight 800.
 - **Preact peer range `>=10.27.0 <12`** (Daniel approved 2026-11-25). Dev uses Preact 10.29.8. B and C can use 10 or 11.
 - **Levels (proposal):** Grid apprentice 0, Grid watcher 100, Grid balancer 300, Grid dispatcher 600, Grid operator 1,000 points. [Estimate] The thresholds are a first guess; tune them when B and C decide how many points each action gives. Apps can pass their own `levels`.
-- **PR 2 is stacked:** `ws/d-game` branches from `ws/d-ui`, because PR #3 was still open. Its PR targets `ws/d-ui`; retarget it to `main` after #3 merges.
+- **PR 2 was stacked** on `ws/d-ui` while #3 was open. #3 merged on 2026-11-25 (main `b0160b4`); the orchestrator changed #5's base to `main`, and `ws/d-game` merged `origin/main`.
 - **No fetching in the package.** The banner takes the parsed `status.json`. The brief allowed a fetch helper; it is not needed.
 
 ## Measurements
@@ -55,7 +55,6 @@ Date: 2026-11-25. Branch: `ws/d-ui`. Status: PR 1 (items 1–5, branch `ws/d-ui`
 
 ## Open questions for Daniel
 
-0. Merging: your first instruction to this session was "never merge". The orchestrator relayed a new rule that sessions merge their own PRs. I have not merged anything. Please confirm in this thread if sessions should merge.
 
 1. Level names and thresholds: OK as a proposal, or do you want other names?
 2. Points per action (for example a mission, a mystery opened): B and C decide, or one shared table in this package?
