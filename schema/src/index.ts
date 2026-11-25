@@ -4,6 +4,7 @@ import type {
   CapacityFile,
   DatacentersFile,
   EmissionFactorsFile,
+  NewsFile,
   ForecastsFile,
   FlowsFile,
   GenerationFile,
@@ -15,7 +16,7 @@ import type {
 export type * from "./generated";
 
 /** Version of the data contract this package describes. */
-export const SCHEMA_VERSION = "1.1.0" as const;
+export const SCHEMA_VERSION = "1.2.0" as const;
 
 /** Any published data file. Narrow it with the `dataset` field. */
 export type DataFile =
@@ -26,7 +27,8 @@ export type DataFile =
   | ForecastsFile
   | DatacentersFile
   | CapacityFile
-  | EmissionFactorsFile;
+  | EmissionFactorsFile
+  | NewsFile;
 
 export type Dataset = DataFile["dataset"];
 
@@ -42,6 +44,7 @@ export const DATA_PATHS = {
   datacenters: "v1/datacenters/datacenters.json",
   capacity30d: "v1/capacity/rolling-30d.json",
   emissionFactors: "v1/meta/emission-factors.json",
+  news: "v1/meta/news.json",
 } as const;
 
 export type FuelType = keyof ZoneGeneration["generation"];

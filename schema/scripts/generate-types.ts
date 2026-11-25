@@ -18,6 +18,7 @@ const DATASETS = [
   "datacenters",
   "capacity",
   "emission-factors",
+  "news",
 ];
 
 // One root schema that references every file schema, so shared definitions

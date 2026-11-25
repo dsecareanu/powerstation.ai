@@ -211,6 +211,7 @@ export function statusFile(
   const files: FileStatus[] = Object.entries(written).map(([path, file]) => {
     if (!KNOWN_PATHS.has(path)) throw new Error(`Unknown data path ${path}`);
     if (file.dataset === "status") throw new Error("status.json cannot list itself");
+    if (file.dataset === "news") throw new Error("news.json is not listed in status.json");
     return {
       path,
       dataset: file.dataset,

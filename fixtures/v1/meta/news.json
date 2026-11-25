@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.2.0",
+  "generated_at": "2026-11-25T12:00:00Z",
+  "mock": true,
+  "source": "powerstation.ai mock data generator",
+  "license": "AGPL-3.0-only",
+  "attribution": "Mock data for development and tests. This is not real grid data.",
+  "dataset": "news",
+  "items": [
+    {
+      "title": "Mock headline: new interconnector between two zones starts trial operation",
+      "url": "https://example.org/mock-news/1",
+      "source": "Mock Grid News",
+      "published_at": "2026-11-25T09:00:00Z"
+    },
+    {
+      "title": "Mock headline: data center campus asks for 300 MW grid connection",
+      "url": "https://example.org/mock-news/2",
+      "source": "Mock Data Center Weekly",
+      "published_at": "2026-11-25T03:00:00Z"
+    },
+    {
+      "title": "Mock headline: TSOs publish winter outlook for cross-border flows",
+      "url": "https://example.org/mock-news/3",
+      "source": "Mock Grid News",
+      "published_at": "2026-11-24T10:00:00Z"
+    },
+    {
+      "title": "Mock headline: AI demand changes load forecasts in three countries",
+      "url": "https://example.org/mock-news/4",
+      "source": "Mock Energy Daily",
+      "published_at": "2026-11-23T10:00:00Z"
+    },
+    {
+      "title": "Mock headline: regulator reviews day-ahead transfer capacity rules",
+      "url": "https://example.org/mock-news/5",
+      "source": "Mock Energy Daily",
+      "published_at": "2026-11-22T09:00:00Z"
+    },
+    {
+      "title": "Mock headline: feed item without a date goes last",
+      "url": "https://example.org/mock-news/6",
+      "source": "Mock Data Center Weekly",
+      "published_at": null
+    }
+  ]
+}

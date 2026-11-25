@@ -10,6 +10,7 @@ import emissionFactors from "../json/emission-factors.schema.json" with { type: 
 import flows from "../json/flows.schema.json" with { type: "json" };
 import forecasts from "../json/forecasts.schema.json" with { type: "json" };
 import generation from "../json/generation.schema.json" with { type: "json" };
+import news from "../json/news.schema.json" with { type: "json" };
 import status from "../json/status.schema.json" with { type: "json" };
 import zones from "../json/zones.schema.json" with { type: "json" };
 import type { DataFile, DataState, Dataset, TimeSeries, ZonesFile } from "./index";
@@ -29,6 +30,7 @@ const SCHEMAS = {
   datacenters,
   capacity,
   emission_factors: emissionFactors,
+  news,
 } as const;
 
 // ajv-formats is CommonJS; its default export shape differs between bundlers.
@@ -191,6 +193,27 @@ function checkSemantics(file: DataFile, errors: string[]): void {
           }
         }
         if (f.match !== "direct" && !f.note) errors.push(`${p}: match ${f.match} needs a note`);
+      }
+      break;
+    }
+    case "news": {
+      const titles = new Set<string>();
+      const perSource = new Map<string, number>();
+      if (file.items.length > 8) errors.push(`/items: ${file.items.length} items, at most 8`);
+      file.items.forEach((item, i) => {
+        const key = item.title.trim().toLowerCase();
+        if (titles.has(key)) errors.push(`/items/${i}: duplicate title`);
+        titles.add(key);
+        const n = (perSource.get(item.source) ?? 0) + 1;
+        perSource.set(item.source, n);
+        if (n > 2) errors.push(`/items/${i}: more than 2 items from ${item.source}`);
+      });
+      for (let i = 1; i < file.items.length; i++) {
+        const prev = file.items[i - 1]!.published_at;
+        const cur = file.items[i]!.published_at;
+        if (cur !== null && (prev === null || Date.parse(cur) > Date.parse(prev))) {
+          errors.push(`/items/${i}: not newest first (items without a date go last)`);
+        }
       }
       break;
     }

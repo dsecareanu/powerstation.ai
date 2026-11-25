@@ -14,6 +14,7 @@ import {
   type Datacenter,
   type DataState,
   type FuelType,
+  type NewsItem,
   type TimeSeries,
   type Zone,
   type ZoneForecast,
@@ -628,6 +629,32 @@ const capacity30: DirectedCapacity[] = BORDERS.flatMap(([from, to, typical, swin
 // The real values and citations (pipeline/src/emission-factors.ts). The file is still mock: true.
 const emissionFactors = EMISSION_FACTORS;
 
+// ---------- news ----------
+// Mock headlines with example.org links: never real articles. The last one has no date.
+const NEWS: NewsItem[] = (
+  [
+    [
+      "Mock headline: new interconnector between two zones starts trial operation",
+      "Mock Grid News",
+      3,
+    ],
+    [
+      "Mock headline: data center campus asks for 300 MW grid connection",
+      "Mock Data Center Weekly",
+      9,
+    ],
+    ["Mock headline: TSOs publish winter outlook for cross-border flows", "Mock Grid News", 26],
+    ["Mock headline: AI demand changes load forecasts in three countries", "Mock Energy Daily", 50],
+    ["Mock headline: regulator reviews day-ahead transfer capacity rules", "Mock Energy Daily", 75],
+    ["Mock headline: feed item without a date goes last", "Mock Data Center Weekly", null],
+  ] as const
+).map(([title, source, hoursAgo], i) => ({
+  title,
+  url: `https://example.org/mock-news/${i + 1}`,
+  source,
+  published_at: hoursAgo === null ? null : iso(nowMs - hoursAgo * HOUR),
+}));
+
 // ---------- files ----------
 const window30 = { start: iso(start30), end: iso(nowMs + AHEAD * HOUR) };
 const window7 = { start: iso(start7), end: iso(nowMs + AHEAD * HOUR) };
@@ -665,6 +692,7 @@ const out: Record<string, object> = {
     borders: capacity30,
   },
   [DATA_PATHS.emissionFactors]: { ...envelope, ...emissionFactors },
+  [DATA_PATHS.news]: { ...envelope, dataset: "news", items: NEWS },
 };
 const fileStatus = (path: string, dataset: string, measured: boolean) => ({
   path,
