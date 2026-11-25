@@ -225,6 +225,9 @@ importers:
       '@preact/preset-vite':
         specifier: ^2.10.6
         version: 2.10.6(@babel/core@7.29.13(supports-color@10.2.2))(preact@11.2.0)(supports-color@10.2.2)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(tsx@4.23.15))
+      preact-render-to-string:
+        specifier: ^6.8.3
+        version: 6.8.3(preact@11.2.0)
       vite:
         specifier: ^8.3.8
         version: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(tsx@4.23.15)
@@ -3160,7 +3163,6 @@ snapshots:
   preact-render-to-string@6.8.3(preact@11.2.0):
     dependencies:
       preact: 11.2.0(preact-render-to-string@6.8.3)
-    optional: true
 
   preact@10.29.8(preact-render-to-string@6.8.3):
     optionalDependencies:

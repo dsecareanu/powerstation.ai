@@ -183,6 +183,9 @@ input[type="number"] {
   border: 2px dashed var(--ps-state-modelled);
   background: var(--ps-color-surface-sunken);
 }
+.block.missing {
+  border: 2px dotted var(--ps-state-missing);
+}
 .block-head {
   display: flex;
   justify-content: space-between;

@@ -2,6 +2,7 @@
 import { formatPower } from "@powerstation/ui";
 import type { CalcResult, ExtraSource } from "../calc/types";
 import {
+  GENERATION_MISSING_REASON,
   describePeakPressure,
   directionLabel,
   formatInt,
@@ -34,6 +35,11 @@ export function summariseZone(z: SummaryZone): string {
   const r = z.result;
   const lines: string[] = [];
   lines.push(`A ${formatPower(r.sizeMw)} data center in ${z.name} (${z.homesText}):`);
+  if (r.generationMissing) {
+    lines.push(
+      `- Share of load, imports, carbon intensity and likely extra source: no data. ${GENERATION_MISSING_REASON}`,
+    );
+  }
   if (r.load) {
     lines.push(
       `- Share of load: ${formatShare(r.load.shareOfMean)} of the average load, ` +

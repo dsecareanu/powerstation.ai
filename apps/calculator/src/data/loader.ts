@@ -64,17 +64,34 @@ async function fetchFile(path: string, dataset: DataFile["dataset"]): Promise<Da
 
 export const loadStatus = (): Promise<StatusFile> => loadFile(DATA_PATHS.status, "status");
 export const loadZones = (): Promise<ZonesFile> => loadFile(DATA_PATHS.zones, "zones");
-export const loadDatacenters = (): Promise<DatacentersFile> =>
-  loadFile(DATA_PATHS.datacenters, "datacenters");
+/** Optional: undefined when the file cannot be loaded (for example, not published yet). */
+async function optional<T>(load: () => Promise<T>): Promise<T | undefined> {
+  try {
+    return await load();
+  } catch {
+    return undefined;
+  }
+}
+
+/** Data center records. Undefined when the file cannot be loaded: the list then shows "No data". */
+export const loadDatacenters = (): Promise<DatacentersFile | undefined> =>
+  optional(() => loadFile(DATA_PATHS.datacenters, "datacenters"));
 
 export interface PeriodData {
-  generation: GenerationFile;
+  /**
+   * Undefined when the file cannot be loaded. Generation per fuel is not published until ENTSO-E
+   * gives permission (CLAUDE.md data rule 7). Results that need it then show "No data".
+   */
+  generation: GenerationFile | undefined;
   flows: FlowsFile;
 }
 
+/** Flows are required (the promise rejects if they fail). Generation is optional. */
 export async function loadPeriod(period: Period): Promise<PeriodData> {
   const [generation, flows] = await Promise.all([
-    loadFile(period === "7d" ? DATA_PATHS.generation7d : DATA_PATHS.generation30d, "generation"),
+    optional(() =>
+      loadFile(period === "7d" ? DATA_PATHS.generation7d : DATA_PATHS.generation30d, "generation"),
+    ),
     loadFile(period === "7d" ? DATA_PATHS.flows7d : DATA_PATHS.flows30d, "flows"),
   ]);
   return { generation, flows };
@@ -84,19 +101,9 @@ export async function loadPeriod(period: Period): Promise<PeriodData> {
  * Day-ahead capacity per direction (30-day file). Undefined when the file cannot be loaded:
  * the page then says "not available" for interconnector pressure and works for the rest.
  */
-export async function loadCapacity(): Promise<CapacityFile | undefined> {
-  try {
-    return await loadFile(DATA_PATHS.capacity30d, "capacity");
-  } catch {
-    return undefined;
-  }
-}
+export const loadCapacity = (): Promise<CapacityFile | undefined> =>
+  optional(() => loadFile(DATA_PATHS.capacity30d, "capacity"));
 
 /** Emission factors per fuel. Undefined when the file cannot be loaded (carbon is then "not available"). */
-export async function loadEmissionFactors(): Promise<EmissionFactorsFile | undefined> {
-  try {
-    return await loadFile(DATA_PATHS.emissionFactors, "emission_factors");
-  } catch {
-    return undefined;
-  }
-}
+export const loadEmissionFactors = (): Promise<EmissionFactorsFile | undefined> =>
+  optional(() => loadFile(DATA_PATHS.emissionFactors, "emission_factors"));

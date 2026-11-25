@@ -1,0 +1,6 @@
+// Test only (see the "test" script). tsx applies the JSX settings only to files in `include`,
+// so the shared UI source is listed here too. Typecheck still uses tsconfig.json.
+{
+  "extends": "./tsconfig.json",
+  "include": ["src", "test", "../../packages/ui/src"]
+}

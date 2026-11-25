@@ -25,7 +25,11 @@ export interface CalcInput {
   zone: string;
   /** Data center size in MW. Flat load: the same extra load every hour. */
   sizeMw: number;
-  generation: ZoneGeneration;
+  /**
+   * Undefined = generation data is not available. Load, imports, carbon and extra source are then
+   * null; interconnector pressure is still computed from flows and capacity for every hour.
+   */
+  generation: ZoneGeneration | undefined;
   /** Data window: only hours in [start, end) are used. Value i covers start + i hours. */
   window: { start: string; end: string };
   /** All borders in the flows file. Only `physical` borders that touch the zone are used. */
@@ -34,7 +38,8 @@ export interface CalcInput {
   capacity: DirectedCapacity[] | undefined;
   /** Undefined = emission factors are not available. */
   emissionFactors: EmissionFactors | undefined;
-  datacenters: Datacenter[];
+  /** Undefined = the data center list is not available. */
+  datacenters: Datacenter[] | undefined;
 }
 
 interface Hour {
@@ -233,6 +238,31 @@ export function calculate(input: CalcInput): CalcResult {
   const { zone, sizeMw, generation, capacity, emissionFactors } = input;
   const startMs = Date.parse(input.window.start);
   const endMs = Date.parse(input.window.end);
+  const datacenters = input.datacenters ? summariseDatacenters(input.datacenters) : null;
+
+  if (!generation) {
+    // No generation file: never estimate load or the mix. Only pressure needs no generation.
+    const all: { ms: number }[] = [];
+    for (let ms = startMs; ms < endMs; ms += HOUR_MS) all.push({ ms });
+    const p = capacity ? computePressure(all, input, capacity) : null;
+    return {
+      zone,
+      sizeMw,
+      generationMissing: true,
+      totalHours: all.length,
+      validHours: 0,
+      hoursWithoutData: all.length,
+      modelledInputHours: p ? p.modelledMs.size : 0,
+      dataWindow: null,
+      load: null,
+      imports: null,
+      pressure: p ? p.result : null,
+      carbon: null,
+      extraSource: [],
+      datacenters,
+    };
+  }
+
   const fuelsPresent = FUEL_TYPES.filter((f) => generation.generation[f] !== undefined);
 
   const hours: Hour[] = [];
@@ -261,10 +291,11 @@ export function calculate(input: CalcInput): CalcResult {
   const base = {
     zone,
     sizeMw,
+    generationMissing: false,
     totalHours,
     validHours,
     hoursWithoutData: totalHours - validHours,
-    datacenters: summariseDatacenters(input.datacenters),
+    datacenters,
   };
   if (validHours === 0) {
     return {
@@ -335,7 +366,9 @@ export function calculate(input: CalcInput): CalcResult {
   };
 }
 
-export function summariseDatacenters(records: Datacenter[]): CalcResult["datacenters"] {
+export function summariseDatacenters(
+  records: Datacenter[],
+): NonNullable<CalcResult["datacenters"]> {
   let withKnownPower = 0;
   let knownPowerMw = 0;
   let unknownPower = 0;
