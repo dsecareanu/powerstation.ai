@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/capacity.schema.json",
+  "title": "CapacityFile",
+  "description": "v1/capacity/rolling-30d.json. Hourly day-ahead forecasted transfer capacity (NTC) per border and direction, 30 days back to 24 h ahead. Source: ENTSO-E data item 'Forecasted cross-zonal capacity, day-ahead' (Transparency Regulation article 11.1.a). All values have state planned or missing. Show as 'planned capacity'.",
+  "type": "object",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/Envelope" }],
+  "required": ["dataset", "window", "borders"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": { "const": "capacity" },
+    "window": { "$ref": "common.schema.json#/$defs/Window" },
+    "borders": { "type": "array", "items": { "$ref": "#/$defs/DirectedCapacity" } }
+  },
+  "$defs": {
+    "DirectedCapacity": {
+      "title": "DirectedCapacity",
+      "description": "Capacity for one direction of one border: the most power in MW that can be traded from from_zone to to_zone in each hour. Values are 0 or more. Capacity is not netted: a border has up to two entries, one per direction. A direction with no published capacity is left out.",
+      "type": "object",
+      "required": ["from_zone", "to_zone", "series"],
+      "additionalProperties": false,
+      "properties": {
+        "from_zone": { "$ref": "common.schema.json#/$defs/ZoneId" },
+        "to_zone": { "$ref": "common.schema.json#/$defs/ZoneId" },
+        "series": { "$ref": "common.schema.json#/$defs/TimeSeries" }
+      }
+    }
+  }
+}
