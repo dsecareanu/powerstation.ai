@@ -53,7 +53,7 @@ Clause 3.2: ENTSO-E does not check the data for accuracy; the user uses it "unde
 
 ### API limits
 
-- 400 requests per minute per API token (not per IP).
+- 400 requests per minute per API token ([API Rate Limit](https://transparencyplatform.zendesk.com/hc/en-us/articles/12783148966036-API-Rate-Limit-Part-1)). [Unverified] It may also count per IP. Our client uses at most 120 per minute and 2 per second.
 - Over the limit, the token can be banned for about 10 minutes.
 - Requests from several machines with one token count together.
 - ENTSO-E can revoke a misused token. Terms of Use clause 3.3 lets ENTSO-E add technical limits.

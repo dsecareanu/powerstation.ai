@@ -34,14 +34,14 @@ The secrets (`ENTSOE_TOKEN` and the R2 variables) live only in the GitHub enviro
 Run it in GitHub Actions, not on a laptop (the token lives only in GitHub):
 
 1. Go to **Actions** > **Discover borders** > **Run workflow**.
-2. Wait about 7 to 20 minutes. It sends about 2,350 requests. The log lists the zones without flows.
+2. Wait about 20 to 70 minutes. It sends about 2,350 requests. The log lists the zones without flows.
 3. The workflow commits `pipeline/reference/borders.json` to a branch `data/borders-<run id>` and opens a pull request to `main`. If `borders.json` did not change, it stops without a branch.
 4. Review the pull request. GitHub does not start CI by itself on a pull request that a workflow opened: select **Approve workflows to run** in the pull request. Then merge it as usual.
 5. If the run summary says it could not open the pull request, turn on **Settings** > **Actions** > **General** > **Allow GitHub Actions to create and approve pull requests**, or open the pull request with the link in the summary.
 
 The script is resumable. It saves each finished pair in `out/discover-cache.json`. After a crash or a 429, run it again. A cache older than 24 hours is ignored. Use `--fresh` to ignore the cache at once.
 
-The script sends up to 6 requests at the same time (`--concurrency <n>`). The client limit stays at 6 per second and 350 per minute. The log shows a progress line every 100 pairs and a heartbeat line after 60 s without output. In GitHub Actions, the workflow saves the cache with `actions/cache` (one key per UTC day), also when a run fails or is cancelled. A rerun on the same UTC day resumes from it.
+The script sends up to 3 requests at the same time (`--concurrency <n>`). The client limit is 2 per second and 120 per minute. The log shows a progress line every 100 pairs, with the request rate over the last minute, and a heartbeat line after 60 s without output. After a second HTTP 429 the script stops with exit code 2 and keeps the cache. In GitHub Actions, the workflow saves the cache with `actions/cache` (one key per UTC day), also when a run fails or is cancelled. A rerun on the same UTC day resumes from it.
 
 ## Backfill
 
@@ -223,9 +223,9 @@ R2 is not enabled on the Cloudflare account yet (API error 403, code 10042). Ena
 
 ## Rate limits
 
-ENTSO-E allows 400 requests per minute per token. The client stays below this: at most 6 requests per second and 350 per minute.
+ENTSO-E allows 400 requests per minute per token ([API Rate Limit](https://transparencyplatform.zendesk.com/hc/en-us/articles/12783148966036-API-Rate-Limit-Part-1)). [Unverified] The limit may also count per IP, and GitHub runner IPs are shared. The client uses 30% of the token limit: at most 2 requests per second and 120 per minute, in every job (discover, backfill, hourly update). The `maxPerSecond` and `maxPerMinute` client options change this.
 
-- HTTP 429 (the token is banned for about 10 minutes): the client waits 11 minutes and tries again, 2 times at most.
+- HTTP 429 (the token is banned for about 10 minutes): all requests of the client pause for 11 minutes, then continue. Requests already in flight that also get 429 count as the same ban. A second ban stops the client: no more requests are sent, and the script fails.
 - HTTP 5xx or a network error: the client tries again 3 times, after 2 s, 8 s and 30 s.
 - HTTP 401: the token is wrong. The script stops.
 - HTTP 400: the script stops and prints the reason from ENTSO-E.
