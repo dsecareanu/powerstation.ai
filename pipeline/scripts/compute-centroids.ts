@@ -299,3 +299,65 @@ const result = {
 };
 writeFileSync(outFile, JSON.stringify(result, null, 2) + "\n");
 console.log(`Wrote ${outFile}`);
+
+// ---------- simplified shapes for zones in countries with several zones ----------
+// Used to place a point (for example a data center) in the right zone.
+// Douglas-Peucker with a 0.02 degree tolerance; parts under 0.005 square degrees
+// are dropped; outer rings only.
+function simplify(r: Ring, tol: number): Ring {
+  if (r.length < 4) return r;
+  const keep = new Array<boolean>(r.length).fill(false);
+  keep[0] = keep[r.length - 1] = true;
+  const stack: [number, number][] = [[0, r.length - 1]];
+  while (stack.length > 0) {
+    const [a, b] = stack.pop()!;
+    const [ax, ay] = r[a]!;
+    const [bx, by] = r[b]!;
+    let maxD = -1;
+    let idx = -1;
+    for (let i = a + 1; i < b; i++) {
+      const [px, py] = r[i]!;
+      const dx = bx - ax;
+      const dy = by - ay;
+      const t = Math.max(
+        0,
+        Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)),
+      );
+      const d = Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+      if (d > maxD) {
+        maxD = d;
+        idx = i;
+      }
+    }
+    if (maxD > tol) {
+      keep[idx] = true;
+      stack.push([a, idx], [idx, b]);
+    }
+  }
+  return r
+    .filter((_, i) => keep[i])
+    .map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100] as [number, number]);
+}
+
+const zonesPerCountry = new Map<string, number>();
+for (const z of ZONE_REFERENCE)
+  for (const c of z.countries) zonesPerCountry.set(c, (zonesPerCountry.get(c) ?? 0) + 1);
+const shapes: Record<string, Ring[]> = {};
+for (const z of ZONE_REFERENCE) {
+  if (!z.countries.some((c) => (zonesPerCountry.get(c) ?? 0) > 1)) continue;
+  shapes[z.id] = partsFor(z.id, z.countries)
+    .filter((p) => Math.abs(ringStats(p[0]!, 1).a) >= 0.005)
+    .map((p) => simplify(p[0]!, 0.02))
+    .filter((r) => r.length >= 4);
+}
+const shapesFile = join(here, "..", "reference", "zone-shapes.json");
+writeFileSync(
+  shapesFile,
+  JSON.stringify({
+    method:
+      "Outer rings of the zone's land parts from the Natural Earth admin-1 regions listed in compute-centroids.ts, Douglas-Peucker 0.02 degrees, rounded to 0.01 degrees, parts under 0.005 square degrees dropped. Only zones in countries with several zones. Approximate; for placing points in a zone.",
+    source: `Natural Earth 1:10m admin-1 states/provinces, release ${RELEASE} (public domain)`,
+    shapes,
+  }) + "\n",
+);
+console.log(`Wrote ${shapesFile}`);
