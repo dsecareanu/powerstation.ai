@@ -32,6 +32,10 @@ My recommendation: option 2 now, with option 1 as the fallback. It keeps all opt
 
 **Attribution text proposal** (to confirm): "Source: ENTSO-E Transparency Platform (transparency.entsoe.eu). Hourly averages and netted border flows computed by powerstation.ai. Licensed CC BY 4.0 where ENTSO-E lists the data as open data." No ENTSO-E logo, and no wording that suggests endorsement (Terms of Use 3.1).
 
+**Standing rule (Daniel, via the orchestrator, 2026-11-25):** until ENTSO-E answers the permission request, publish none of the 4 non-open datasets (generation per fuel, actual load, wind/solar forecasts, planned trade). Publish means: no upload to R2, no committed real-data files, no public URL. Code for them may be built and tested with fixtures or local, uncommitted runs only. The backfill has a gate for this (`--include-restricted` off by default; upload of restricted data also needs `ENTSOE_RESTRICTED_PUBLISH_OK=yes`).
+
+**Eurostat check (requested by session D):** the Eurostat copyright notice allows non-commercial reuse without restriction. The commercial-use limit covers data for countries outside the EU, EFTA and official candidate countries. BA, MK, RS and TR are candidates and NO is EFTA. [Inference] powerstation.ai is free and non-commercial, so the household table is fine.
+
 ## Task 2 — Schema 1.1.0
 
 New files:
@@ -68,6 +72,11 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 3. Create the R2 bucket, public access on a custom domain (proposal: `data.powerstation.ai`) and CORS for the site domain.
 4. Create an R2 API token and add it as an n8n S3 credential.
 5. Merge the schema 1.1.0 PR (after session D's first PR, as in `briefs/README.md`).
+
+## Status of tasks 3 and 4 (branch `ws/a-zones`, not pushed as a PR)
+
+- Task 3: `pipeline/reference/zones.ts` (49 candidate zones, EIC codes from the ENTSO-E area list, updated 2026-09-21), `pipeline/reference/centroids.json` (Natural Earth v5.1.2), `pipeline/src/zones.ts` (builds zones.json). Neighbours come from `scripts/discover-borders.ts`, which needs the ENTSO-E token.
+- Task 4: the backfill subagent stopped on a usage limit. Its unfinished code is in a WIP commit (`198ae00`): ENTSO-E client, XML parser, hourly aggregation, fuel mapping, file builders. Not yet type-checked or tested. To finish: backfill and discover-borders scripts, tests, README.
 
 ## Next (offline, no publishing)
 
