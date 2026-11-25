@@ -94,11 +94,19 @@ test("data delayed when no file has a measured time", () => {
 });
 
 test("homes equivalent: no value without a sourced figure", () => {
-  assert.equal(annualKwhPerHousehold("DE"), undefined);
+  assert.equal(annualKwhPerHousehold("CH"), undefined);
   assert.equal(homesEquivalent(1000, undefined), null);
 });
 
 test("homes equivalent: size x 8760 h x 1000 / kWh per year", () => {
   assert.equal(homesEquivalent(1, 8760), 1000);
   assert.equal(annualKwhPerHousehold("XX", { XX: { kwhPerYear: 3000, year: 2000 } }), 3000);
+});
+
+test("household table has sourced figures for every fixture country", () => {
+  for (const c of ["DE", "LU", "FR", "NL", "BE", "PL", "CZ", "AT", "HU", "RO", "ES", "PT"]) {
+    const kwh = annualKwhPerHousehold(c);
+    assert.ok(kwh !== undefined && kwh > 1000 && kwh < 20000, `${c}: ${kwh}`);
+  }
+  assert.equal(annualKwhPerHousehold("CH"), undefined);
 });
