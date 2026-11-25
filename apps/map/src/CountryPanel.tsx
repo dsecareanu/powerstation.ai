@@ -4,7 +4,13 @@ import { generationAt, netImportAt, type FlowAt } from "./data/metrics";
 import type { Point } from "./data/series";
 import { FUEL_LABELS, formatHour, formatPercent } from "./format";
 import type { Model } from "./model";
-import { DataStateBadge, describePowerInHomes, formatPower, fuelColorVar } from "./standins/ui"; // TODO(D)
+import {
+  DataStateBadge,
+  describePowerInHomes,
+  formatPower,
+  fuelColorVar,
+  type HomesTextOptions,
+} from "@powerstation/ui";
 
 interface Props {
   model: Model;
@@ -49,6 +55,9 @@ export function CountryPanel(props: Props) {
   const gen = generationAt(model.gen, node.id, hour);
   const net = netImportAt(node.id, flows);
   const future = hour >= model.measuredEnd;
+  // One country: its own household figure. Shared zone (DE-LU): no single country, so EU homes.
+  const homes: HomesTextOptions =
+    node.countries.length === 1 ? { countryCode: node.countries[0], countryName: node.name } : {};
   const fuels = gen
     ? FUEL_TYPES.filter((f) => gen.byFuel[f]).map((f) => ({ fuel: f, p: gen.byFuel[f]! }))
     : [];
@@ -73,6 +82,7 @@ export function CountryPanel(props: Props) {
 
       <dl class="facts">
         <Fact
+          homes={homes}
           label={
             net.value === null
               ? "Imports / exports"
@@ -83,8 +93,8 @@ export function CountryPanel(props: Props) {
           point={net}
           stateLabel={net.state === "planned" ? "Planned trade" : undefined}
         />
-        <Fact label="Electricity use (load)" point={gen?.load ?? null} />
-        <Fact label="Generation" point={gen?.total ?? null} />
+        <Fact label="Electricity use (load)" point={gen?.load ?? null} homes={homes} />
+        <Fact label="Generation" point={gen?.total ?? null} homes={homes} />
         {gen ? (
           <div class="fact">
             <dt>Renewables share</dt>
@@ -136,9 +146,14 @@ export function CountryPanel(props: Props) {
   );
 }
 
-function Fact(props: { label: string; point: Point | null; stateLabel?: string }) {
+function Fact(props: {
+  label: string;
+  point: Point | null;
+  stateLabel?: string;
+  homes: HomesTextOptions;
+}) {
   const p = props.point;
-  const homes = p?.value != null ? describePowerInHomes(Math.abs(p.value)) : "";
+  const homes = p?.value != null ? describePowerInHomes(Math.abs(p.value), props.homes) : "";
   return (
     <div class="fact">
       <dt>{props.label}</dt>

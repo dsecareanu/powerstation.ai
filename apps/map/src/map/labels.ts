@@ -2,7 +2,7 @@
 import type { DataState } from "@powerstation/schema";
 import type { FlowAt } from "../data/metrics";
 import type { Model } from "../model";
-import { formatPower } from "../standins/ui"; // TODO(D)
+import { formatPower } from "@powerstation/ui";
 
 export function stateText(state: DataState): string {
   switch (state) {

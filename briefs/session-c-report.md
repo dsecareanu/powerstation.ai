@@ -22,8 +22,8 @@ Date: 2026-11-25. Branch: `ws/c-map`. Owns: `/apps/map`.
 
 | Item | Gzip |
 |---|---|
-| JS (whole app, incl. Preact and d3-geo) | 24.7 KB |
-| CSS | 3.1 KB |
+| JS (whole app, incl. Preact, d3-geo and `@powerstation/ui`) | 26.0 KB |
+| CSS | 4.6 KB |
 | `countries.geojson` | 15 KB |
 | Default data with fixtures (status, zones, flows 7d, generation 7d) | ~43 KB |
 
@@ -34,7 +34,7 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 ## Decisions (confirmed by Daniel on 2026-11-25)
 
 1. **No basemap.** Natural Earth country polygons only. No tile service, no terms risk.
-2. **SVG + d3-geo instead of MapLibre GL.** Reason: budget (24.7 KB vs 292 KB). **`CLAUDE.md` still says "MapLibre GL for the map": Daniel updates it.** The data layer does not depend on the renderer, so a move to MapLibre later stays possible.
+2. **SVG + d3-geo instead of MapLibre GL.** Reason: budget (26 KB for the whole app vs 292 KB for MapLibre alone). **`CLAUDE.md` still says "MapLibre GL for the map": Daniel updates it.** The data layer does not depend on the renderer, so a move to MapLibre later stays possible.
 3. **Country shapes: Natural Earth 1:50m admin-0**, clipped to lon −25…45, lat 34…72, simplified to 15 %. Built by `pnpm --filter @powerstation/map shapes` from a pinned commit. The output is committed.
 4. **Worktree**: the session started in the main checkout. Daniel chose a new worktree: `../PowerstationAI-ws-c-map`.
 
@@ -51,24 +51,23 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 - **Data URL**: `VITE_DATA_BASE_URL` (default `/data/`). The dev server maps `/data/` to `fixtures/`. Fixtures are never in the build.
 - **Calculator link**: `VITE_CALCULATOR_URL` (default `/calculator/`).
 
-## Stand-ins for session D (`TODO(D)`)
+## Shared UI (`@powerstation/ui`)
 
-`apps/map/src/standins/ui.tsx` and `ui.css` copy the names of D's PR #3: `DataStateBadge`, `DataDelayedBanner`, `getFreshness`, `AttributionPanel`, `fuelColorVar`, `formatPower`, `describePowerInHomes`, and the `--ps-*` variables. After PR #3 merges: change the imports to `@powerstation/ui`, import `@powerstation/ui/styles.css`, delete `src/standins/`.
-
-- `describePowerInHomes` returns "" in the stand-in, so **no "homes" comparison shows yet**. D's PR #3 has the sourced figure; it shows after the switch.
-- Preact is pinned to `^10.29.8` to match D (one Preact copy in the app).
+- PR #3 and #5 are merged. The map imports `DataStateBadge`, `DataDelayedBanner`, `AttributionPanel`, `formatPower`, `fuelColorVar`, `describePowerInHomes` and the styles from `@powerstation/ui`. The temporary stand-ins are deleted.
+- "Homes" comparison: a node with one country passes its code and name (country figure, or "EU homes" when the country has no figure). The DE-LU node covers two countries, so it uses the EU figure.
+- Preact `^10.29.8`, the same as `@powerstation/ui`.
+- Test fixtures use `SCHEMA_VERSION` (schema 1.1.0). The map does not use the new capacity or emission-factor files.
 
 ## Open questions for Daniel
 
-1. **Lockfile and rebase**: during a rebase, `git checkout --ours pnpm-lock.yaml` takes main's version (the sides swap in a rebase). I follow your intent: main's version, then `pnpm install`.
-2. **Strict sums**: with real data, one missing border hour blanks a country's net imports for that hour. Keep strict, or show a partial sum marked "incomplete" (needs a UI state that is not in the schema)?
-3. **Calculator URL**: what is the deployed path of the calculator? Default now: `/calculator/`.
-4. **Country centroids**: should `zones.json` `countries[]` get an optional `centroid` (schema change, session A)? It would anchor arrows for multi-zone countries better than the mean of zone centroids.
-5. **`DATA_SOURCES.md`**: add Natural Earth (public domain, 1:50m admin-0, commit `9380cca`, pulled 2026-11-25). I did not edit it (outside `/apps/map`).
-6. **Mock "now" vs real "now"**: the timeline window comes from the flows file. If the pipeline is late by many hours, the "now" tick can fall right of the window and is then hidden. OK?
+1. **Strict sums**: with real data, one missing border hour blanks a country's net imports for that hour. Keep strict, or show a partial sum marked "incomplete" (needs a UI state that is not in the schema)?
+2. **Calculator URL**: what is the deployed path of the calculator? Default now: `/calculator/`.
+3. **Country centroids**: should `zones.json` `countries[]` get an optional `centroid` (schema change, session A)? It would anchor arrows for multi-zone countries better than the mean of zone centroids.
+4. **`DATA_SOURCES.md`**: add Natural Earth (public domain, 1:50m admin-0, commit `9380cca`, pulled 2026-11-25). I did not edit it (outside `/apps/map`).
+5. **Mock "now" vs real "now"**: the timeline window comes from the flows file. If the pipeline is late by many hours, the "now" tick can fall right of the window and is then hidden. OK?
 
 ## What other sessions must know
 
-- **Session D**: requests for later PRs: (a) a legend item for the four flow line styles (solid, dashed, dotted, "?"), if the calculator needs it too; (b) `DataStateBadge` for "planned" needs `label="Planned trade"` on flows; the map passes it. No other shared component needed now.
+- **Session D**: possible later request: a legend item for the four flow line styles (solid, dashed, dotted, "?"), if the calculator needs it too. Nothing blocking.
 - **Session A**: the map needs `newest_measured_at` in `status.json` for every file with measured values, and the physical flow series to end at the newest measured hour (the map uses that end as the planned/measured switch).
 - **Session B**: the map links to the calculator with `VITE_CALCULATOR_URL`.

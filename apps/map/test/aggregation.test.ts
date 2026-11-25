@@ -11,6 +11,7 @@ import type {
   TimeSeries,
   ZonesFile,
 } from "@powerstation/schema";
+import { SCHEMA_VERSION } from "@powerstation/schema";
 import {
   flowAt,
   generationAt,
@@ -26,7 +27,7 @@ const T0 = "2026-11-25T00:00:00Z";
 const t = (h: number) => toMs(T0) + h * HOUR_MS;
 
 const envelope = {
-  schema_version: "1.0.0" as const,
+  schema_version: SCHEMA_VERSION,
   generated_at: T0,
   mock: true,
   source: "test",

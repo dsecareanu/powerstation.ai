@@ -2,7 +2,7 @@
 // Colours: ColorBrewer YlGnBu (sequential) and PuOr (diverging), both colour-blind safe.
 import type { Point } from "./data/series";
 import { formatPercent } from "./format";
-import { formatPower } from "./standins/ui"; // TODO(D): import from @powerstation/ui
+import { formatPower } from "@powerstation/ui";
 
 export type LayerId = "renewables" | "netImport";
 

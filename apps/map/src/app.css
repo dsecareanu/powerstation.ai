@@ -136,8 +136,12 @@ button:disabled {
   stroke: var(--ps-color-text);
   stroke-width: 2.5;
 }
-.country:focus-visible {
+/* SVG shapes show focus with their stroke, not a box outline. */
+.mapview svg :focus,
+.mapview svg :focus-visible {
   outline: none;
+}
+.country:focus-visible {
   stroke: var(--ps-color-focus);
   stroke-width: 3;
 }

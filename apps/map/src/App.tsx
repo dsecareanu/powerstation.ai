@@ -9,7 +9,7 @@ import type { LayerId } from "./layers";
 import { Legend } from "./Legend";
 import { MapView } from "./map/MapView";
 import { buildModel, flowsAt, mostSurprisingPair, pairKey } from "./model";
-import { AttributionPanel, type AttributionSource, DataDelayedBanner } from "./standins/ui"; // TODO(D)
+import { AttributionPanel, type AttributionSource, DataDelayedBanner } from "@powerstation/ui";
 import { Timeline } from "./Timeline";
 import "./app.css";
 

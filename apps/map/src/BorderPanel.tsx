@@ -3,7 +3,7 @@ import type { DataState } from "@powerstation/schema";
 import { pointAt, toMs } from "./data/series";
 import { dayTicks, formatDay, formatHour } from "./format";
 import { type Model, pairKey } from "./model";
-import { DataStateBadge, formatPower } from "./standins/ui"; // TODO(D)
+import { DataStateBadge, formatPower } from "@powerstation/ui";
 
 interface Props {
   model: Model;

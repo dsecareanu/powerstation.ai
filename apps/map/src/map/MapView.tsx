@@ -6,7 +6,7 @@ import { useMemo, useRef, useState } from "preact/hooks";
 import type { FlowAt } from "../data/metrics";
 import { binFor, LAYERS, type LayerId } from "../layers";
 import { layerValue, type Model, pairKey } from "../model";
-import { formatPower } from "../standins/ui"; // TODO(D)
+import { formatPower } from "@powerstation/ui";
 import { flowLabel, stateText } from "./labels";
 
 export type CountryFeature = Feature<Geometry, { code: string; name: string }>;
