@@ -41,7 +41,7 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 ## Decisions taken in this session
 
 - **Map nodes.** The map shows "nodes": the smallest group of countries and zones that can be shown without splitting data. DE and LU form one node ("Germany & Luxembourg"); both shapes show the same value. IT and NO are one node each; flows between their zones are ignored. Node centroid = mean of its zone centroids. [Inference] For IT the mean may fall near the coast; see open question 4.
-- **Sums are strict.** When any part of a sum is `missing`, the sum is `missing` (no partial totals). Any `modelled` part makes the sum `modelled`, with the methods joined. See open question 2.
+- **Sums are strict.** When any part of a sum is `missing`, the sum is `missing` (no partial totals). Any `modelled` part makes the sum `modelled`, with the methods joined. Confirmed by Daniel on 2026-11-25: keep strict sums.
 - **Planned trade starts at the latest measured hour**, not at the wall clock. Between the newest measured hour and "now" (a delay), the map shows planned trade, labelled as such.
 - **Renewables share** = biomass, geothermal, hydro run of river, hydro reservoir, wind on/offshore, solar, other renewable, divided by all generation except pumped storage. Waste and pumped storage are left out. A zone with no renewable fuel type has 0 %, not "missing". The list is `RENEWABLE_FUELS` in `src/data/metrics.ts`.
 - **Generation is measured only**, so future hours show "no data" on the renewables layer, with a note that points to the imports/exports layer. The forecasts file is not loaded (not in the default list).
@@ -49,7 +49,7 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 - **Keyboard**: countries are focusable in A–Z order (Enter/Space selects). Arrows are clickable but not in the tab order (up to ~70 borders with real data); keyboard users pick a border in the "Border" list. Both panels have a picker.
 - **Dev clock**: the dev server fixes "now" to 2026-11-25T12:30Z. `?now=<ISO>` overrides it in dev only (e.g. `?now=2026-11-25T18:00:00Z` shows the delayed banner). Production uses the real clock.
 - **Data URL**: `VITE_DATA_BASE_URL` (default `/data/`). The dev server maps `/data/` to `fixtures/`. Fixtures are never in the build.
-- **Calculator link**: `VITE_CALCULATOR_URL` (default `/calculator/`).
+- **Calculator link**: `/calculator/` (confirmed by Daniel, 2026-11-25). `VITE_CALCULATOR_URL` can override it.
 
 ## Shared UI (`@powerstation/ui`)
 
@@ -60,11 +60,9 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 
 ## Open questions for Daniel
 
-1. **Strict sums**: with real data, one missing border hour blanks a country's net imports for that hour. Keep strict, or show a partial sum marked "incomplete" (needs a UI state that is not in the schema)?
-2. **Calculator URL**: what is the deployed path of the calculator? Default now: `/calculator/`.
-3. **Country centroids**: should `zones.json` `countries[]` get an optional `centroid` (schema change, session A)? It would anchor arrows for multi-zone countries better than the mean of zone centroids.
-4. **`DATA_SOURCES.md`**: add Natural Earth (public domain, 1:50m admin-0, commit `9380cca`, pulled 2026-11-25). I did not edit it (outside `/apps/map`).
-5. **Mock "now" vs real "now"**: the timeline window comes from the flows file. If the pipeline is late by many hours, the "now" tick can fall right of the window and is then hidden. OK?
+1. **Country centroids**: should `zones.json` `countries[]` get an optional `centroid` (schema change, session A)? It would anchor arrows for multi-zone countries better than the mean of zone centroids.
+2. **`DATA_SOURCES.md`**: add Natural Earth (public domain, 1:50m admin-0, commit `9380cca`, pulled 2026-11-25). I did not edit it (outside `/apps/map`).
+3. **Mock "now" vs real "now"**: the timeline window comes from the flows file. If the pipeline is late by many hours, the "now" tick can fall right of the window and is then hidden. OK?
 
 ## What other sessions must know
 
