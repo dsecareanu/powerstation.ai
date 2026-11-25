@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Self-written test document. Not real ENTSO-E data: codes and values are made up. -->
+<Publication_MarketDocument xmlns="urn:test:synthetic:document:1:0">
+  <mRID>test-point-without-quantity</mRID>
+  <!-- 1. A01: Point 3 has no quantity, Point 4 has an empty quantity. -->
+  <TimeSeries>
+    <mRID>1</mRID>
+    <in_Domain.mRID codingScheme="A01">TEST-IN</in_Domain.mRID>
+    <out_Domain.mRID codingScheme="A01">TEST-OUT</out_Domain.mRID>
+    <quantity_Measure_Unit.name>MAW</quantity_Measure_Unit.name>
+    <curveType>A01</curveType>
+    <Period>
+      <timeInterval><start>2026-01-01T00:00Z</start><end>2026-01-01T05:00Z</end></timeInterval>
+      <resolution>PT60M</resolution>
+      <Point><position>1</position><quantity>100</quantity></Point>
+      <Point><position>2</position><quantity>110</quantity></Point>
+      <Point><position>3</position></Point>
+      <Point><position>4</position><quantity></quantity></Point>
+      <Point><position>5</position><quantity>140</quantity></Point>
+    </Period>
+  </TimeSeries>
+  <!-- 2. A03: Point 3 has no quantity. Value 200 must not run on into hours 3 and 4. -->
+  <TimeSeries>
+    <mRID>2</mRID>
+    <quantity_Measure_Unit.name>MAW</quantity_Measure_Unit.name>
+    <curveType>A03</curveType>
+    <Period>
+      <timeInterval><start>2026-01-01T00:00Z</start><end>2026-01-01T06:00Z</end></timeInterval>
+      <resolution>PT60M</resolution>
+      <Point><position>1</position><quantity>200</quantity></Point>
+      <Point><position>3</position><quantity>n/a</quantity></Point>
+      <Point><position>5</position><quantity>300</quantity></Point>
+    </Period>
+  </TimeSeries>
+  <!-- 3. Unknown unit: the whole series is left out, without an error. -->
+  <TimeSeries>
+    <mRID>3</mRID>
+    <quantity_Measure_Unit.name>MWH</quantity_Measure_Unit.name>
+    <curveType>A01</curveType>
+    <Period>
+      <timeInterval><start>2026-01-01T00:00Z</start><end>2026-01-01T01:00Z</end></timeInterval>
+      <resolution>PT60M</resolution>
+      <Point><position>1</position><quantity>5</quantity></Point>
+    </Period>
+  </TimeSeries>
+  <!-- 4. No Period at all. -->
+  <TimeSeries>
+    <mRID>4</mRID>
+    <quantity_Measure_Unit.name>MAW</quantity_Measure_Unit.name>
+    <curveType>A01</curveType>
+  </TimeSeries>
+</Publication_MarketDocument>
