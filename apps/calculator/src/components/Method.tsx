@@ -1,7 +1,13 @@
-import { DATA_DELAYED_AFTER_HOURS } from "@powerstation/schema";
+import {
+  DATA_DELAYED_AFTER_HOURS,
+  FUEL_TYPES,
+  type EmissionFactorsFile,
+} from "@powerstation/schema";
 import { PRESSURE_THRESHOLD } from "../calc/calculate";
+import { formatInt, fuelLabel } from "../format";
 
-export function Method() {
+export function Method(props: { emissionFactors: EmissionFactorsFile | undefined }) {
+  const factors = props.emissionFactors;
   return (
     <section class="panel" aria-labelledby="method-title">
       <h2 id="method-title">How we calculate this</h2>
@@ -29,7 +35,8 @@ export function Method() {
       <p>
         Data center size divided by the zone's average load, and by its peak load, over the hours
         with data. The homes comparison is size x 8,760 hours, divided by the yearly electricity use
-        of an average household in that country.
+        of an average household in that country (Eurostat, 2024). Without a figure for the country,
+        we use the average EU household and say so.
       </p>
       <h3>Hours that need imports</h3>
       <p>
@@ -41,17 +48,47 @@ export function Method() {
       <h3>Interconnector pressure</h3>
       <p>
         Worst case: we assume all extra load is imported. Net physical imports are the measured
-        flows on the zone's borders (into the zone is positive, out of it is negative). Pressure =
-        (net imports + data center size) divided by the zone's total import capacity. We flag hours
-        above {Math.round(PRESSURE_THRESHOLD * 100)}%. An hour where a border has no data is left
-        out of this number only.
+        flows on the zone's physical borders (into the zone is positive, out of it is negative).
+        Import capacity is the sum of the planned day-ahead capacity, in the direction into the
+        zone, over those borders. Pressure = (net imports + data center size) divided by import
+        capacity, hour by hour. We flag hours above {Math.round(PRESSURE_THRESHOLD * 100)}%. An hour
+        is left out of this number only if a flow or a capacity value is missing, or if the capacity
+        is 0. The page counts those hours.
+      </p>
+      <p>
+        If one of the zone's borders has no published capacity in the import direction, we do not
+        calculate pressure for the zone and we list the borders. Some borders use flow-based market
+        coupling, which publishes no single capacity figure. Capacity is planned, not forecast.
+        Pressure itself is modelled.
       </p>
       <h3>Carbon intensity</h3>
       <p>
-        Attributional and domestic only. Each hour, we weight the emission factor of every running
-        fuel by its output. Average mix of the zone's own power plants, modelled. Imports are not
-        included. An hour is left out if a running fuel has no emission factor.
+        Attributional and domestic only. Each hour, we weight the life-cycle emission factor of
+        every running fuel by its output. Average mix of the zone's own power plants, modelled.
+        Imports are not included. A fuel with no emission factor is left out of the weighting. It is
+        never counted as 0. The page shows which fuels are left out and their share of generation.
+        An hour with no generation that has a factor is left out and counted.
       </p>
+      {factors ? (
+        <>
+          <p>
+            Factors in {factors.unit}, life-cycle. Source:{" "}
+            {factors.sources.map((src) => `${src.publisher}, ${src.year}`).join("; ")}.
+          </p>
+          <ul>
+            {FUEL_TYPES.map((fuel) => {
+              const f = factors.factors[fuel];
+              return (
+                <li key={fuel}>
+                  <strong>{fuelLabel(fuel)}:</strong>{" "}
+                  {f.value === null ? "no factor" : `${formatInt(f.value)} (${f.match})`}
+                  {f.note ? `. ${f.note}` : ""}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ) : null}
       <h3>Likely extra source</h3>
       <p>
         A fixed rule, in this order: gas, hard coal, lignite, oil, reservoir hydro, imports. In each

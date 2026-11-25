@@ -1,16 +1,24 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { Datacenter, DatacentersFile, FlowsFile, GenerationFile } from "@powerstation/schema";
+import type {
+  CapacityFile,
+  Datacenter,
+  DatacentersFile,
+  EmissionFactorsFile,
+  FlowsFile,
+  GenerationFile,
+} from "@powerstation/schema";
 import {
   calculate,
   carbonIntensity,
+  importDirections,
   likelyExtraSource,
   netImportsAt,
   PRESSURE_THRESHOLD,
   summariseDatacenters,
   type CalcInput,
 } from "../src/calc/calculate";
-import { border, readFixture, series, T0, windowOf, zoneGen } from "./helpers";
+import { border, dir, factorTable, readFixture, series, T0, windowOf, zoneGen } from "./helpers";
 
 function base(overrides: Partial<CalcInput> = {}): CalcInput {
   return {
@@ -147,30 +155,95 @@ test("net imports is null when a touching border has no value", () => {
   assert.equal(netImportsAt(borders, "XX", Date.parse(T0) + 3_600_000), null);
 });
 
-test("pressure above 0.9 is flagged, with max and missing-border hours", () => {
+/** Pressure result when it is available; fails the test otherwise. */
+function availablePressure(r: ReturnType<typeof calculate>) {
+  assert.ok(r.pressure?.available, "pressure should be available");
+  return r.pressure;
+}
+
+const flows4 = [border("A", "XX", [100, -100, 80, null]), border("XX", "B", [40, 0, 0, 0])];
+const gen4 = zoneGen([100, 100, 100, 100], { gas: series([1, 1, 1, 1]) });
+
+test("import capacity is summed per direction into the zone; export directions are ignored", () => {
+  const borders = [
+    border("A", "XX", [0]),
+    border("XX", "B", [0]),
+    border("XX", "C", [0], "scheduled"),
+  ];
+  const capacity = [
+    dir("A", "XX", [60]),
+    dir("B", "XX", [40]),
+    dir("XX", "A", [999]),
+    dir("XX", "B", [999]),
+    dir("C", "XX", [555]),
+  ];
+  const d = importDirections(borders, capacity, "XX");
+  assert.deepEqual(
+    d.found.map((x) => [x.from_zone, x.to_zone]),
+    [
+      ["A", "XX"],
+      ["B", "XX"],
+    ],
+  );
+  assert.deepEqual(d.missing, []);
+  const r = calculate(
+    base({
+      sizeMw: 0,
+      generation: zoneGen([100], { gas: series([1]) }),
+      window: windowOf(1),
+      borders,
+      capacity,
+    }),
+  );
+  assert.equal(availablePressure(r).meanCapacityMw, 100);
+});
+
+test("pressure above 0.9 is flagged, with max, mean capacity and left-out hours", () => {
   const r = calculate(
     base({
       sizeMw: 50,
-      generation: zoneGen([100, 100, 100, 100], { gas: series([1, 1, 1, 1]) }),
+      generation: gen4,
       window: windowOf(4),
-      borders: [border("A", "XX", [100, -100, 80, null]), border("XX", "B", [40, 0, 0, 0])],
-      capacity: { zone: "XX", mw: 100 },
+      borders: flows4,
+      capacity: [dir("A", "XX", [60, 60, 60, 60]), dir("B", "XX", [40, 40, 40, 40])],
     }),
   );
+  // Capacity 100 every hour.
   // h0: net 100-40=60 -> (60+50)/100 = 1.1 flagged
   // h1: net -100 -> -0.5
   // h2: net 80 -> 1.3 flagged
-  // h3: border missing -> left out of pressure only
+  // h3: border flow missing -> left out of pressure only
   assert.equal(PRESSURE_THRESHOLD, 0.9);
   assert.equal(r.validHours, 4);
   assert.deepEqual(r.pressure, {
-    capacityMw: 100,
+    available: true,
+    directions: [
+      { from: "A", to: "XX" },
+      { from: "B", to: "XX" },
+    ],
     hoursCounted: 3,
-    hoursWithoutBorderData: 1,
+    hoursLeftOut: 1,
     hoursAboveThreshold: 2,
     maxPressure: 1.3,
+    meanCapacityMw: 100,
     threshold: 0.9,
   });
+});
+
+test("pressure uses the capacity of each hour", () => {
+  const r = calculate(
+    base({
+      sizeMw: 0,
+      generation: zoneGen([1, 1], { gas: series([1, 1]) }),
+      window: windowOf(2),
+      borders: [border("A", "XX", [50, 50])],
+      capacity: [dir("A", "XX", [100, 50])],
+    }),
+  );
+  const p = availablePressure(r);
+  assert.equal(p.maxPressure, 1);
+  assert.equal(p.hoursAboveThreshold, 1);
+  assert.equal(p.meanCapacityMw, 75);
 });
 
 test("pressure exactly at 0.9 is not flagged", () => {
@@ -180,21 +253,98 @@ test("pressure exactly at 0.9 is not flagged", () => {
       generation: zoneGen([100], { gas: series([1]) }),
       window: windowOf(1),
       borders: [border("A", "XX", [50])],
-      capacity: { zone: "XX", mw: 100 },
+      capacity: [dir("A", "XX", [100])],
     }),
   );
-  assert.equal(r.pressure?.hoursAboveThreshold, 0);
+  assert.equal(availablePressure(r).hoursAboveThreshold, 0);
 });
 
-test("pressure is null when capacity is undefined", () => {
+test("a missing capacity value leaves the hour out of pressure only, and counts it", () => {
+  const r = calculate(
+    base({
+      sizeMw: 10,
+      generation: zoneGen([1, 1, 1], { gas: series([1, 1, 1]) }),
+      window: windowOf(3),
+      borders: [border("A", "XX", [10, 10, 10]), border("B", "XX", [10, 10, 10])],
+      capacity: [dir("A", "XX", [50, null, 50]), dir("B", "XX", [50, 50, 50])],
+    }),
+  );
+  const p = availablePressure(r);
+  assert.equal(p.hoursCounted, 2);
+  assert.equal(p.hoursLeftOut, 1);
+  // The other results still use all 3 hours.
+  assert.equal(r.validHours, 3);
+  assert.equal(r.hoursWithoutData, 0);
+});
+
+test("an hour with zero import capacity is left out and counted", () => {
+  const r = calculate(
+    base({
+      generation: zoneGen([1, 1], { gas: series([1, 1]) }),
+      window: windowOf(2),
+      borders: [border("A", "XX", [10, 10])],
+      capacity: [dir("A", "XX", [0, 100])],
+    }),
+  );
+  const p = availablePressure(r);
+  assert.equal(p.hoursCounted, 1);
+  assert.equal(p.hoursLeftOut, 1);
+  assert.ok(Number.isFinite(p.maxPressure));
+});
+
+test("pressure is unavailable, with the border list, when a border has no import capacity", () => {
+  // Capacity for A -> XX exists. B -> XX does not (only the export direction XX -> B does).
+  const r = calculate(
+    base({
+      generation: gen4,
+      window: windowOf(4),
+      borders: flows4,
+      capacity: [dir("A", "XX", [60, 60, 60, 60]), dir("XX", "B", [40, 40, 40, 40])],
+    }),
+  );
+  assert.deepEqual(r.pressure, {
+    available: false,
+    missingDirections: [{ from: "B", to: "XX" }],
+  });
+  // The rest of the page still works.
+  assert.equal(r.validHours, 4);
+  assert.ok(r.load);
+  assert.ok(r.imports);
+});
+
+test("pressure is unavailable, with several borders listed, when none has capacity", () => {
+  const r = calculate(base({ borders: flows4, capacity: [] }));
+  assert.deepEqual(r.pressure, {
+    available: false,
+    missingDirections: [
+      { from: "A", to: "XX" },
+      { from: "B", to: "XX" },
+    ],
+  });
+});
+
+test("pressure is null when capacity data is not loaded", () => {
   const r = calculate(base({ borders: [border("A", "XX", [100, 100, 100])] }));
   assert.equal(r.pressure, null);
+});
+
+test("pressure is unavailable even when no hour has data", () => {
+  const r = calculate(
+    base({
+      generation: zoneGen([null], { gas: series([1]) }),
+      window: windowOf(1),
+      borders: [border("A", "XX", [1])],
+      capacity: [],
+    }),
+  );
+  assert.equal(r.validHours, 0);
+  assert.equal(r.pressure?.available, false);
 });
 
 test("modelled border hours count as modelled input when pressure is computed", () => {
   const input = base({
     borders: [border("A", "XX", [1, 1, 1], "physical", [2])],
-    capacity: { zone: "XX", mw: 100 },
+    capacity: [dir("A", "XX", [100, 100, 100])],
   });
   assert.equal(calculate(input).modelledInputHours, 1);
   assert.equal(calculate({ ...input, capacity: undefined }).modelledInputHours, 0);
@@ -202,46 +352,72 @@ test("modelled border hours count as modelled input when pressure is computed", 
 
 // ---- Carbon intensity ------------------------------------------------------------------------
 
-test("carbon intensity is the output-weighted average of emission factors", () => {
+test("carbon intensity is the output-weighted average over fuels with a factor", () => {
   // (50 * 400 + 50 * 1000 + 0 * 0) / 100 = 700. Negative pumped storage is ignored.
+  const factors = factorTable({ gas: 400, hard_coal: 1000, nuclear: 0 });
   const v = carbonIntensity(
     { gas: 50, hard_coal: 50, nuclear: 0, hydro_pumped_storage: -20 },
-    { gas: 400, hard_coal: 1000, nuclear: 0 },
+    factors,
   );
   assert.equal(v, 700);
 });
 
-test("carbon intensity is null for a running fuel without a factor, or with no generation", () => {
-  assert.equal(carbonIntensity({ gas: 10, oil: 5 }, { gas: 400 }), null);
-  assert.equal(carbonIntensity({ gas: 0 }, { gas: 400 }), null);
-  // A fuel that does not run needs no factor.
-  assert.equal(carbonIntensity({ gas: 10, oil: 0 }, { gas: 400 }), 400);
+test("a fuel with no factor is left out of both sums, not counted as 0", () => {
+  const factors = factorTable({ gas: 400 });
+  // Counted as 0 it would give 400 * 10 / 30 = 133. Left out it gives 400.
+  assert.equal(carbonIntensity({ gas: 10, oil: 20 }, factors), 400);
 });
 
-test("carbon series has mean, min, max and counts excluded hours", () => {
+test("carbon intensity is null with no generation, or only fuels without a factor", () => {
+  const factors = factorTable({ gas: 400 });
+  assert.equal(carbonIntensity({ gas: 0 }, factors), null);
+  assert.equal(carbonIntensity({ oil: 5, waste: 5 }, factors), null);
+  assert.equal(carbonIntensity({}, factors), null);
+});
+
+test("carbon series: mean, min, max, hours left out, share without a factor, proxy notes", () => {
   const r = calculate(
     base({
       generation: zoneGen([1, 1, 1, 1], {
         gas: series([50, 100, 0, 10]),
         nuclear: series([50, 0, 0, 0]),
-        oil: series([0, 0, 0, 10]),
+        oil: series([0, 0, 10, 10]),
       }),
       window: windowOf(4),
-      emissionFactors: { gas: 400, nuclear: 0 },
+      emissionFactors: factorTable({
+        gas: { value: 400, match: "proxy", note: "Gas uses combined cycle." },
+        nuclear: 0,
+      }),
     }),
   );
-  // h0: (50*400)/100 = 200. h1: 400. h2: no generation -> excluded. h3: oil runs, no factor -> excluded.
+  // h0: (50*400)/100 = 200. h1: 400. h2: only oil runs, no factor -> left out and counted.
+  // h3: gas 10 and oil 10 -> oil is left out, so 400.
   assert.deepEqual(
     r.carbon?.hourly.map((h) => h.gPerKwh),
-    [200, 400],
+    [200, 400, 400],
   );
-  assert.equal(r.carbon?.mean, 300);
+  assert.equal(r.carbon?.mean, 1000 / 3);
   assert.equal(r.carbon?.min, 200);
   assert.equal(r.carbon?.max, 400);
-  assert.equal(r.carbon?.excludedHours, 2);
+  assert.equal(r.carbon?.excludedHours, 1);
+  // Generation: h0 100, h1 100, h2 10, h3 20 = 230 MWh. Oil = 20 MWh.
+  assert.equal(r.carbon?.noFactor.share, 20 / 230);
+  assert.deepEqual(r.carbon?.noFactor.fuels, [
+    { fuel: "oil", share: 20 / 230, note: "No factor." },
+  ]);
+  assert.deepEqual(r.carbon?.proxyFuels, [
+    { fuel: "gas", value: 400, note: "Gas uses combined cycle." },
+  ]);
 });
 
-test("carbon is null when emission factors are undefined", () => {
+test("carbon: no fuel without a factor means share 0 and no list", () => {
+  const r = calculate(base({ emissionFactors: factorTable({ gas: 400 }) }));
+  assert.equal(r.carbon?.noFactor.share, 0);
+  assert.deepEqual(r.carbon?.noFactor.fuels, []);
+  assert.deepEqual(r.carbon?.proxyFuels, []);
+});
+
+test("carbon is null when emission factors are not loaded", () => {
   assert.equal(calculate(base()).carbon, null);
 });
 
@@ -322,25 +498,64 @@ test("fixture DE-LU: gaps in load are excluded and counted", () => {
   assert.equal(r.validHours, 168 - expected);
 });
 
-test("fixture DE-LU: the FR border gap and modelled gap show up with synthetic capacity", () => {
-  const gen = readFixture<GenerationFile>("generation/rolling-7d.json");
-  const flows = readFixture<FlowsFile>("flows/rolling-7d.json");
-  const z = gen.zones.find((x) => x.zone === "DE-LU")!;
-  const common = {
-    zone: "DE-LU",
+function fixtureInput(zone: string, period: "7d" | "30d") {
+  const gen = readFixture<GenerationFile>(`generation/rolling-${period}.json`);
+  const flows = readFixture<FlowsFile>(`flows/rolling-${period}.json`);
+  const cap = readFixture<CapacityFile>("capacity/rolling-30d.json");
+  const ef = readFixture<EmissionFactorsFile>("meta/emission-factors.json");
+  const z = gen.zones.find((x) => x.zone === zone)!;
+  return base({
+    zone,
     generation: z,
     window: gen.window,
     borders: flows.borders,
+    capacity: cap.borders,
+    emissionFactors: ef.factors,
     sizeMw: 500,
-  };
-  const withCap = calculate(base({ ...common, capacity: { zone: "DE-LU", mw: 30000 } }));
-  const withoutCap = calculate(base(common));
-  // 3 hours missing 30 h before now; 4 hours modelled 48 h before now.
-  assert.equal(withCap.pressure?.hoursWithoutBorderData, 3);
-  assert.equal(withCap.pressure?.hoursCounted, withCap.validHours - 3);
-  assert.equal(withCap.modelledInputHours, withoutCap.modelledInputHours + 4);
-  assert.equal(withoutCap.pressure, null);
-  assert.equal(withoutCap.carbon, null);
+  });
+}
+
+test("fixture DE-LU: pressure is computed from the capacity file, in both periods", () => {
+  for (const period of ["7d", "30d"] as const) {
+    const input = fixtureInput("DE-LU", period);
+    const r = calculate(input);
+    const p = availablePressure(r);
+    // 6 physical borders: FR, NL, BE, PL, CZ, AT.
+    assert.equal(p.directions.length, 6);
+    assert.ok(p.directions.every((d) => d.to === "DE-LU"));
+    assert.equal(p.hoursCounted + p.hoursLeftOut, r.validHours);
+    // Capacity gaps, the flow gap on the FR border (3 hours) or missing hours leave hours out.
+    assert.ok(p.hoursLeftOut >= 3, `${period}: left out ${p.hoursLeftOut}`);
+    assert.ok(p.hoursCounted > 0);
+    assert.ok(p.meanCapacityMw! > 10_000, "six borders add up to well over 10 GW");
+  }
+});
+
+test("fixture zones: every zone has full import capacity except PT", () => {
+  const gen = readFixture<GenerationFile>("generation/rolling-30d.json");
+  const unavailable: Record<string, string[]> = {};
+  for (const z of gen.zones) {
+    const r = calculate(fixtureInput(z.zone, "30d"));
+    if (!r.pressure?.available) {
+      unavailable[z.zone] = (
+        r.pressure?.available === false ? r.pressure.missingDirections : []
+      ).map((d) => `${d.from}>${d.to}`);
+    }
+  }
+  // PT has one physical border (ES-PT, flow direction ES -> PT). The file has only PT -> ES.
+  assert.deepEqual(unavailable, { PT: ["ES>PT"] });
+});
+
+test("fixture emission factors: oil, waste and others are left out, lignite is a proxy", () => {
+  const r = calculate(fixtureInput("DE-LU", "30d"));
+  assert.ok(r.carbon && r.carbon.mean !== null);
+  assert.ok(r.carbon.mean > 0);
+  assert.ok(r.carbon.noFactor.share > 0 && r.carbon.noFactor.share < 1);
+  const allowed = ["oil", "waste", "other_renewable", "other", "hydro_pumped_storage"];
+  assert.ok(r.carbon.noFactor.fuels.every((f) => allowed.includes(f.fuel)));
+  const lignite = r.carbon.proxyFuels.find((f) => f.fuel === "lignite");
+  assert.equal(lignite?.value, 820);
+  assert.match(lignite?.note ?? "", /lignite/i);
 });
 
 test("fixtures: every zone and both periods run without error", () => {
@@ -348,9 +563,7 @@ test("fixtures: every zone and both periods run without error", () => {
     const gen = readFixture<GenerationFile>(`generation/rolling-${period}.json`);
     const flows = readFixture<FlowsFile>(`flows/rolling-${period}.json`);
     for (const z of gen.zones) {
-      const r = calculate(
-        base({ zone: z.zone, generation: z, window: gen.window, borders: flows.borders }),
-      );
+      const r = calculate({ ...fixtureInput(z.zone, period), borders: flows.borders });
       assert.equal(r.validHours + r.hoursWithoutData, r.totalHours);
       assert.equal(r.totalHours, period === "7d" ? 168 : 720);
     }
