@@ -19,7 +19,7 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 
 ## Stack (default — confirm in session 0)
 
-- TypeScript everywhere. Vite for the apps. MapLibre GL for the map.
+- TypeScript everywhere. Vite and Preact for the apps. The map is SVG with d3-geo and Natural Earth country shapes, with no basemap (MapLibre GL measured 292 KB gzipped, over the JS budget).
 - Static site on Cloudflare (Pages or Workers static assets), deployed from GitHub.
 - Data: JSON files in Cloudflare R2, written by n8n on n8n.appbuilder.ai.
 - **No backend in v1.** The browser reads public JSON files only.

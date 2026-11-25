@@ -34,7 +34,7 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 ## Decisions (confirmed by Daniel on 2026-11-25)
 
 1. **No basemap.** Natural Earth country polygons only. No tile service, no terms risk.
-2. **SVG + d3-geo instead of MapLibre GL.** Reason: budget (26 KB for the whole app vs 292 KB for MapLibre alone). **`CLAUDE.md` still says "MapLibre GL for the map": Daniel updates it.** The data layer does not depend on the renderer, so a move to MapLibre later stays possible.
+2. **SVG + d3-geo instead of MapLibre GL.** Reason: budget (26 KB for the whole app vs 292 KB for MapLibre alone). `CLAUDE.md` (Stack) now says so. The data layer does not depend on the renderer, so a move to MapLibre later stays possible.
 3. **Country shapes: Natural Earth 1:50m admin-0**, clipped to lon −25…45, lat 34…72, simplified to 15 %. Built by `pnpm --filter @powerstation/map shapes` from a pinned commit. The output is committed.
 4. **Worktree**: the session started in the main checkout. Daniel chose a new worktree: `../PowerstationAI-ws-c-map`.
 
@@ -42,6 +42,7 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 
 - **Map nodes.** The map shows "nodes": the smallest group of countries and zones that can be shown without splitting data. DE and LU form one node ("Germany & Luxembourg"); both shapes show the same value. IT and NO are one node each; flows between their zones are ignored. Node centroid = mean of its zone centroids. [Inference] For IT the mean may fall near the coast; see open question 4.
 - **Sums are strict.** When any part of a sum is `missing`, the sum is `missing` (no partial totals). Any `modelled` part makes the sum `modelled`, with the methods joined. Confirmed by Daniel on 2026-11-25: keep strict sums.
+- **Hidden "now" mark**: if the data is very late, the "now" mark can fall outside the timeline window and is then hidden. Confirmed OK by Daniel on 2026-11-25.
 - **Planned trade starts at the latest measured hour**, not at the wall clock. Between the newest measured hour and "now" (a delay), the map shows planned trade, labelled as such.
 - **Renewables share** = biomass, geothermal, hydro run of river, hydro reservoir, wind on/offshore, solar, other renewable, divided by all generation except pumped storage. Waste and pumped storage are left out. A zone with no renewable fuel type has 0 %, not "missing". The list is `RENEWABLE_FUELS` in `src/data/metrics.ts`.
 - **Generation is measured only**, so future hours show "no data" on the renewables layer, with a note that points to the imports/exports layer. The forecasts file is not loaded (not in the default list).
@@ -62,7 +63,6 @@ MapLibre GL 6.19 alone measured 292 KB gzipped JS (+10 KB CSS), over the 200 KB 
 
 1. **Country centroids**: should `zones.json` `countries[]` get an optional `centroid` (schema change, session A)? It would anchor arrows for multi-zone countries better than the mean of zone centroids.
 2. **`DATA_SOURCES.md`**: add Natural Earth (public domain, 1:50m admin-0, commit `9380cca`, pulled 2026-11-25). I did not edit it (outside `/apps/map`).
-3. **Mock "now" vs real "now"**: the timeline window comes from the flows file. If the pipeline is late by many hours, the "now" tick can fall right of the window and is then hidden. OK?
 
 ## What other sessions must know
 
