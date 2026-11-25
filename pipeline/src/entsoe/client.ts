@@ -1,6 +1,12 @@
 // ENTSO-E Transparency Platform client.
-// - Throttles to 6 requests/s and 350 requests/min (the limit is 400/min per token).
-// - HTTP 429: waits 11 minutes, retries up to 2 times.
+// - Throttles to 2 requests/s and 120 requests/min by default (options can change this).
+//   ENTSO-E allows 400 requests/min per token:
+//   https://transparencyplatform.zendesk.com/hc/en-us/articles/12783148966036-API-Rate-Limit-Part-1
+//   [Unverified] The limit may also count per IP (GitHub runner IPs are shared), and secondary
+//   sources say a ban lasts 10 minutes. 120/min is 30% of the token limit.
+// - HTTP 429: ALL requests of this client pause for 11 minutes, then continue. Requests that
+//   were already in flight and also get 429 count as the same ban. A second ban stops the
+//   client: every waiting and later request fails with RateLimitStop, so scripts can stop cleanly.
 // - HTTP 5xx and network errors: retries 3 times (2 s, 8 s, 30 s).
 // - HTTP 401: fails at once. HTTP 400: fails with the reason from ENTSO-E.
 // - Each request times out after 60 s (default fetch only) and counts as a network error.
@@ -25,8 +31,21 @@ export interface ClientOptions {
 }
 
 const BACKOFF_MS = [2_000, 8_000, 30_000];
-const BAN_WAIT_MS = 11 * 60_000;
-const MAX_429_RETRIES = 2;
+export const BAN_WAIT_MS = 11 * 60_000;
+/** The second ban stops the client. */
+export const MAX_BANS = 2;
+export const DEFAULT_MAX_PER_SECOND = 2;
+export const DEFAULT_MAX_PER_MINUTE = 120;
+
+/** ENTSO-E rate-limited the token twice: no more requests are sent. */
+export class RateLimitStop extends Error {
+  constructor() {
+    super(
+      `ENTSO-E rate limit (HTTP 429) ${MAX_BANS} times. Stopped sending requests. Run again later.`,
+    );
+    this.name = "RateLimitStop";
+  }
+}
 
 export function redact(message: string): string {
   return message.replace(/securityToken=[^&\s"')]*/gi, "securityToken=REDACTED");
@@ -46,6 +65,12 @@ export class EntsoeClient {
   private readonly maxPerSecond: number;
   private readonly maxPerMinute: number;
   private readonly sent: number[] = [];
+  /** Shared pause after HTTP 429: no request is sent before this time. */
+  private pausedUntil = 0;
+  /** Send time of the first request after the latest ban started. */
+  private banStartedAt = -Infinity;
+  bans = 0;
+  stopped = false;
   requestCount = 0;
   /** Finished HTTP responses and their total time, for progress logs. */
   responses = 0;
@@ -60,23 +85,50 @@ export class EntsoeClient {
     this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.clock = opts.clock ?? Date.now;
     this.log = opts.log ?? (() => {});
-    this.maxPerSecond = opts.maxPerSecond ?? 6;
-    this.maxPerMinute = opts.maxPerMinute ?? 350;
+    this.maxPerSecond = opts.maxPerSecond ?? DEFAULT_MAX_PER_SECOND;
+    this.maxPerMinute = opts.maxPerMinute ?? DEFAULT_MAX_PER_MINUTE;
   }
 
-  /** Waits until a request is allowed, then records it. */
-  private async throttle(): Promise<void> {
+  /** Waits until a request is allowed, then records it and returns its send time. */
+  private async throttle(): Promise<number> {
     for (;;) {
+      if (this.stopped) throw new RateLimitStop();
       const now = this.clock();
       while (this.sent.length > 0 && now - this.sent[0]! >= 60_000) this.sent.shift();
-      let wait = 0;
-      if (this.sent.length >= this.maxPerMinute) wait = 60_000 - (now - this.sent[0]!);
+      let wait = Math.max(0, this.pausedUntil - now);
+      if (this.sent.length >= this.maxPerMinute)
+        wait = Math.max(wait, 60_000 - (now - this.sent[0]!));
       const recent = this.sent.filter((t) => now - t < 1_000);
       if (recent.length >= this.maxPerSecond) wait = Math.max(wait, 1_000 - (now - recent[0]!));
       if (wait <= 0) break;
       await this.sleep(wait);
     }
-    this.sent.push(this.clock());
+    const sentAt = this.clock();
+    this.sent.push(sentAt);
+    return sentAt;
+  }
+
+  /** Requests sent in the last 60 seconds. */
+  requestsLastMinute(): number {
+    const now = this.clock();
+    return this.sent.filter((t) => now - t < 60_000).length;
+  }
+
+  /** Handles HTTP 429 for a request sent at sentAt. Throws RateLimitStop on the second ban. */
+  private onRateLimited(sentAt: number): void {
+    // A request sent before the current ban started belongs to that ban.
+    if (sentAt < this.banStartedAt) return;
+    this.bans++;
+    if (this.bans >= MAX_BANS) {
+      this.stopped = true;
+      this.log(`HTTP 429 (ban ${this.bans}/${MAX_BANS}). Stopping: no more requests.`);
+      throw new RateLimitStop();
+    }
+    this.pausedUntil = this.clock() + BAN_WAIT_MS;
+    this.banStartedAt = this.clock();
+    this.log(
+      `HTTP 429 (ban ${this.bans}/${MAX_BANS}). All requests pause for 11 minutes, then continue.`,
+    );
   }
 
   private scrub(message: string): string {
@@ -87,9 +139,8 @@ export class EntsoeClient {
   async get(params: Record<string, string>): Promise<string> {
     const url = `${ENTSOE_URL}?${new URLSearchParams({ securityToken: this.token, ...params })}`;
     let serverErrors = 0;
-    let bans = 0;
     for (;;) {
-      await this.throttle();
+      const sentAt = await this.throttle();
       this.requestCount++;
       let res: { status: number; text(): Promise<string> };
       let body: string;
@@ -113,11 +164,9 @@ export class EntsoeClient {
       if (res.status === 200) return body;
       if (res.status === 401) throw new Error("ENTSO-E rejected the token (HTTP 401)");
       if (res.status === 429) {
-        if (bans >= MAX_429_RETRIES) throw new Error("ENTSO-E rate limit (HTTP 429) after retries");
-        bans++;
-        this.log(`HTTP 429. Waiting 11 minutes (retry ${bans}/${MAX_429_RETRIES}).`);
-        await this.sleep(BAN_WAIT_MS);
-        continue;
+        if (this.stopped) throw new RateLimitStop();
+        this.onRateLimited(sentAt);
+        continue; // throttle() waits for the shared pause
       }
       if (res.status >= 500) {
         if (serverErrors >= BACKOFF_MS.length) {
