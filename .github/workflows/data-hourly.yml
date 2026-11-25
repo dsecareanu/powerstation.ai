@@ -1,0 +1,55 @@
+name: Hourly data update
+
+# Fetches recent ENTSO-E data, merges it into the rolling files on R2, checks them
+# and uploads them. Open data only: this workflow never sets
+# ENTSOE_RESTRICTED_PUBLISH_OK and never passes --include-restricted.
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      recent_hours:
+        description: "Hours of recent data to fetch from ENTSO-E"
+        required: false
+        default: "48"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-publish
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment: data-publish
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch recent data and merge it into the rolling files
+        env:
+          ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          RECENT_HOURS: ${{ inputs.recent_hours || '48' }}
+        run: pnpm --filter @powerstation/pipeline run update --recent-hours "$RECENT_HOURS" --out pipeline/out/run
+      - name: Validate the files for deploy
+        run: pnpm validate --deploy pipeline/out/run/v1
+      - name: Upload the files to R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: pnpm --filter @powerstation/pipeline run upload pipeline/out/run

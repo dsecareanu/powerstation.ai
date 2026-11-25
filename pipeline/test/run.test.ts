@@ -9,7 +9,7 @@ import {
 } from "@powerstation/schema";
 import { iso } from "../src/build/files";
 import { validateAll } from "../src/build/output";
-import { runBackfill } from "../src/build/run";
+import { runBackfill, type RunOptions } from "../src/build/run";
 import { EntsoeClient, type FetchFn } from "../src/entsoe/client";
 import { ZONE_REFERENCE } from "../reference/zones";
 import {
@@ -102,7 +102,7 @@ function respond(p: URLSearchParams): string {
   }
 }
 
-async function run(includeRestricted: boolean) {
+async function run(includeRestricted: boolean, extra: Partial<RunOptions> = {}) {
   const fetchFn: FetchFn = async (url) => ({
     status: 200,
     text: async () => respond(new URL(url).searchParams),
@@ -123,6 +123,7 @@ async function run(includeRestricted: boolean) {
     days: 30,
     includeRestricted,
     generatedAt: "2026-11-25T12:30:00Z",
+    ...extra,
   });
   return { ...result, requests: client.requestCount };
 }
@@ -233,4 +234,24 @@ test("validation catches a mock file", async () => {
     [DATA_PATHS.flows7d]: { ...files[DATA_PATHS.flows7d]!, mock: true },
   } as Record<string, DataFile>;
   assert.ok(validateAll(bad, zones).some((e) => e.includes("mock")));
+});
+
+test("hours and only: a short window for chosen datasets", async () => {
+  const { files, requests } = await run(false, { hours: 48, only: ["flows", "forecasts"] });
+  assert.deepEqual(
+    Object.keys(files).sort(),
+    [
+      DATA_PATHS.flows30d,
+      DATA_PATHS.flows7d,
+      DATA_PATHS.forecasts24h,
+      DATA_PATHS.status,
+      DATA_PATHS.zones,
+    ].sort(),
+  );
+  // 2 pairs x 2 directions x physical + 3 zones x load forecast
+  assert.equal(requests, 7);
+  const flows = get<FlowsFile>(files, DATA_PATHS.flows30d);
+  assert.equal(flows.window.start, iso(NOW - 48 * H));
+  assert.equal(flows.borders[0]!.series.values.length, 48);
+  assert.deepEqual(validateAll(files, zones), []);
 });

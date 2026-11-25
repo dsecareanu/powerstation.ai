@@ -10,7 +10,9 @@
     "fixtures": "tsx scripts/generate-fixtures.ts",
     "test": "node --import tsx --test test/*.test.ts",
     "backfill": "tsx scripts/backfill.ts",
-    "discover-borders": "tsx scripts/discover-borders.ts"
+    "discover-borders": "tsx scripts/discover-borders.ts",
+    "update": "tsx scripts/update.ts",
+    "upload": "tsx scripts/upload.ts"
   },
   "dependencies": {
     "@powerstation/schema": "workspace:*",

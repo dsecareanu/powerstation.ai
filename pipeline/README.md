@@ -9,6 +9,8 @@ Scripts that build the data files for powerstation.ai. The files follow the cont
 | `pnpm fixtures`         | Writes mock data to `/fixtures`. Every file has `mock: true`.                        |
 | `pnpm discover-borders` | Asks ENTSO-E which zone pairs have physical flows. Writes `reference/borders.json`.  |
 | `pnpm backfill`         | Fetches ENTSO-E data, builds the `v1/...` files, checks them. Can upload them to R2. |
+| `pnpm run update`       | Fetches recent ENTSO-E data and merges it into the rolling files from R2. No upload. |
+| `pnpm upload <dir>`     | Checks the files in `<dir>/v1` and uploads them to R2. `status.json` goes last.      |
 | `pnpm test`             | Runs the tests. They use synthetic XML only and need no network.                     |
 
 Run the scripts from `/pipeline`, or with `pnpm --filter @powerstation/pipeline <script>` from the root.
@@ -75,6 +77,45 @@ We wait for written permission from ENTSO-E for the restricted items. So:
 - Without `--include-restricted`, the script does not query them. It writes no generation files. The flows files have only `physical` series. The forecasts file has load only.
 - With `--include-restricted`, the script writes everything locally. This is for tests and for the app work.
 - `--upload` together with `--include-restricted` fails, unless `ENTSOE_RESTRICTED_PUBLISH_OK=yes` is set. Set it only after the permission is recorded.
+
+## Hourly job (GitHub Actions)
+
+The workflow `.github/workflows/data-hourly.yml` updates the data on R2 every hour. It runs at minute 17. You can also start it by hand (`workflow_dispatch`, input `recent_hours`, default 48).
+
+The job runs in the GitHub environment `data-publish`. Only one run at a time is allowed. A run that is already going is not cancelled.
+
+Steps of one run:
+
+1. Check out the code and install the packages.
+2. `pnpm --filter @powerstation/pipeline run update`: download the current 30-day files from R2. Fetch the last `recent_hours` hours from ENTSO-E. Merge them into the old files. Write the result to `pipeline/out/run/v1/...`. This step does not upload.
+3. `pnpm validate --deploy pipeline/out/run/v1`: check every file against the schema. A file with `mock: true` fails. If a check fails, the run stops and nothing is uploaded.
+4. `pnpm --filter @powerstation/pipeline run upload pipeline/out/run`: check the content again, then upload every `v1/**/*.json` file. `status.json` goes last.
+
+Secrets (set them in the environment `data-publish`): `ENTSOE_TOKEN`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`. If one is missing, the step stops with one line for each missing secret.
+
+The workflow does not set `ENTSOE_RESTRICTED_PUBLISH_OK`. It does not pass `--include-restricted`. So it publishes open data only. The upload script also checks the file content. It refuses a flows file with a `scheduled` series, a `generation` file, and a forecasts file with wind or solar data. It refuses a file with `mock` not `false`.
+
+Merge rule, for each hour of the new 30-day window:
+
+- A new value wins.
+- If the new value is missing and the old value exists, the old value stays, with its state.
+- Otherwise the hour is `missing`.
+- Hours older than the window are dropped.
+- A series that is in the old file but not in the new data stays. It may only be late. If it has no value left in the window, it is dropped.
+- `forecasts/next-24h.json` and `zones.json` are always new. The 7-day files are cut from the merged 30-day files. `status.json` is made again from the merged files.
+
+If a 30-day file is absent on R2, or it has another `schema_version`, or it fails the schema check, the update ignores it. It then fetches all 30 days for that dataset.
+
+Run the update on your machine (no upload):
+
+```sh
+pnpm --filter @powerstation/pipeline run update --out pipeline/out/run
+pnpm validate --deploy pipeline/out/run/v1
+```
+
+Use `pnpm run update`. The short form `pnpm update` is a different pnpm command.
+
+## Setup (Daniel)
 
 ## Rate limits
 

@@ -36,6 +36,28 @@ export interface UploadItem {
 
 type FetchFn = (request: Request) => Promise<Response>;
 
+/** Downloads one object as text. Returns null if the object does not exist (HTTP 404). */
+export async function downloadFile(
+  config: R2Config,
+  key: string,
+  fetchFn: FetchFn = (r) => fetch(r),
+): Promise<string | null> {
+  const aws = new AwsClient({
+    accessKeyId: config.accessKeyId,
+    secretAccessKey: config.secretAccessKey,
+    service: "s3",
+    region: "auto",
+  });
+  const url = `https://${config.accountId}.r2.cloudflarestorage.com/${config.bucket}/${key}`;
+  const res = await fetchFn(await aws.sign(url, { method: "GET" }));
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 200).replace(/\s+/g, " ");
+    throw new Error(`R2 download of ${key} failed (HTTP ${res.status}): ${detail}`);
+  }
+  return res.text();
+}
+
 /** Uploads the items in the given order. Stops at the first failure. */
 export async function uploadFiles(
   items: UploadItem[],

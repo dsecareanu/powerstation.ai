@@ -35,10 +35,16 @@ export interface RunOptions {
   /** Current UTC hour, in ms. */
   nowMs: number;
   days: number;
+  /** If set, the window is this many hours (instead of `days`). */
+  hours?: number;
+  /** Datasets to fetch and build. Default: all. zones.json and status.json are always built. */
+  only?: readonly Dataset[];
   includeRestricted: boolean;
   generatedAt: string;
   log?: (message: string) => void;
 }
+
+export type Dataset = "flows" | "capacity" | "generation" | "forecasts";
 
 export interface RunResult {
   files: Record<string, DataFile>;
@@ -51,7 +57,9 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
   const { client, zones, pairs, nowMs, includeRestricted, generatedAt } = opts;
   const log = opts.log ?? (() => {});
   const warnings = new Warnings();
-  const start30 = nowMs - opts.days * DAY_MS;
+  const windowMs = opts.hours !== undefined ? opts.hours * HOUR_MS : opts.days * DAY_MS;
+  const has = (d: Dataset): boolean => !opts.only || opts.only.includes(d);
+  const start30 = nowMs - windowMs;
   const start7 = Math.max(nowMs - 7 * DAY_MS, start30);
   const end24 = nowMs + DAY_MS;
   const eic = new Map(zones.zones.map((z) => [z.id, z.eic]));
@@ -61,8 +69,11 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
     return e;
   };
 
-  const perPair = 2 * (2 + (includeRestricted ? 1 : 0));
-  const perZone = 1 + (includeRestricted ? 3 : 0);
+  const perPair =
+    2 * ((has("flows") ? 1 + (includeRestricted ? 1 : 0) : 0) + (has("capacity") ? 1 : 0));
+  const perZone =
+    (has("forecasts") ? 1 + (includeRestricted ? 1 : 0) : 0) +
+    (has("generation") && includeRestricted ? 2 : 0);
   const total = pairs.length * perPair + zones.zones.length * perZone;
   let n = 0;
   const request = (dataset: string, label: string, params: Params) => {
@@ -110,7 +121,7 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
         return true;
       },
     },
-  ].filter((k) => k.kind === "physical" || includeRestricted);
+  ].filter((k) => has("flows") && (k.kind === "physical" || includeRestricted));
   for (const k of kinds) {
     for (const [a, b] of pairs) {
       const ab = await direction(k.kind, a, b, k.query, k.end, k.keep);
@@ -141,7 +152,7 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
 
   // ---------- capacity ----------
   const capacity: DirectedCapacitySeries[] = [];
-  for (const [a, b] of pairs) {
+  for (const [a, b] of has("capacity") ? pairs : []) {
     for (const [from, to] of [
       [a, b],
       [b, a],
@@ -162,7 +173,7 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
   const generation: ZoneSeries<FuelType>[] = [];
   const forecasts: ZoneSeries<"solar" | "wind_offshore" | "wind_onshore">[] = [];
   for (const z of zones.zones) {
-    if (includeRestricted) {
+    if (includeRestricted && has("generation")) {
       const gen = await request("generation", z.id, generationQuery(eicOf(z.id), start30, nowMs));
       const load = await request("load", z.id, loadQuery(eicOf(z.id), start30, nowMs));
       if (gen.series.length > 0 || load.series.length > 0) {
@@ -178,6 +189,7 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
       }
     }
     // Forecasts: load is open data. Wind and solar are restricted.
+    if (!has("forecasts")) continue;
     const lf = await request("load forecast", z.id, loadForecastQuery(eicOf(z.id), nowMs, end24));
     const ws = includeRestricted
       ? await request(
@@ -203,11 +215,17 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
   const files: Record<string, DataFile> = {};
   files[DATA_PATHS.zones] = zones;
   const flowsEnd = includeRestricted ? end24 : nowMs;
-  files[DATA_PATHS.flows7d] = flowsFile(flowBorders, start7, flowsEnd, generatedAt);
-  files[DATA_PATHS.flows30d] = flowsFile(flowBorders, start30, flowsEnd, generatedAt);
-  files[DATA_PATHS.capacity30d] = capacityFile(capacity, start30, end24, generatedAt);
-  files[DATA_PATHS.forecasts24h] = forecastsFile(forecasts, nowMs, end24, generatedAt);
-  if (includeRestricted) {
+  if (has("flows")) {
+    files[DATA_PATHS.flows7d] = flowsFile(flowBorders, start7, flowsEnd, generatedAt);
+    files[DATA_PATHS.flows30d] = flowsFile(flowBorders, start30, flowsEnd, generatedAt);
+  }
+  if (has("capacity")) {
+    files[DATA_PATHS.capacity30d] = capacityFile(capacity, start30, end24, generatedAt);
+  }
+  if (has("forecasts")) {
+    files[DATA_PATHS.forecasts24h] = forecastsFile(forecasts, nowMs, end24, generatedAt);
+  }
+  if (includeRestricted && has("generation")) {
     files[DATA_PATHS.generation7d] = generationFile(generation, start7, nowMs, generatedAt);
     files[DATA_PATHS.generation30d] = generationFile(generation, start30, nowMs, generatedAt);
   }

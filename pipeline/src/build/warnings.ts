@@ -8,6 +8,15 @@ export class Warnings {
     else this.map.set(key, { message, count: 1 });
   }
 
+  /** Adds all warnings of another list, with their counts. */
+  addFrom(other: Warnings): void {
+    for (const [key, w] of other.map) {
+      const old = this.map.get(key);
+      if (old) old.count += w.count;
+      else this.map.set(key, { ...w });
+    }
+  }
+
   list(): { message: string; count: number }[] {
     return [...this.map.values()];
   }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { assertPublishAllowed, readR2Config, uploadFiles } from "../src/r2";
+import { requireSecrets } from "../src/entsoe/env";
+import { assertPublishAllowed, downloadFile, readR2Config, uploadFiles } from "../src/r2";
 
 test("readR2Config names every missing variable", () => {
   assert.throws(
@@ -63,4 +64,36 @@ test("restricted data cannot be published without the explicit permission variab
   );
   assert.doesNotThrow(() => assertPublishAllowed(true, { ENTSOE_RESTRICTED_PUBLISH_OK: "yes" }));
   assert.doesNotThrow(() => assertPublishAllowed(false, {}));
+});
+
+const cfg = { accountId: "acct", accessKeyId: "AK", secretAccessKey: "SK", bucket: "bkt" };
+
+test("downloadFile: returns the text, null on 404, throws on other errors", async () => {
+  let seen: Request | undefined;
+  const text = await downloadFile(cfg, "v1/a.json", async (r) => {
+    seen = r;
+    return new Response("hello", { status: 200 });
+  });
+  assert.equal(text, "hello");
+  assert.equal(seen!.method, "GET");
+  assert.equal(seen!.url, "https://acct.r2.cloudflarestorage.com/bkt/v1/a.json");
+  assert.equal(
+    await downloadFile(cfg, "k", async () => new Response("NoSuchKey", { status: 404 })),
+    null,
+  );
+  await assert.rejects(
+    downloadFile(cfg, "k", async () => new Response("denied", { status: 403 })),
+    (err: Error) => /HTTP 403/.test(err.message) && !err.message.includes("SK"),
+  );
+});
+
+test("requireSecrets: one clear line for each missing secret", () => {
+  assert.doesNotThrow(() => requireSecrets(["A"], { A: "x" }));
+  assert.throws(
+    () => requireSecrets(["A", "B", "C"], { B: "x" }),
+    (err: Error) =>
+      err.message ===
+      'Missing secret A (add it to the GitHub environment "data-publish")\n' +
+        'Missing secret C (add it to the GitHub environment "data-publish")',
+  );
 });
