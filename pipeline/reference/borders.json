@@ -1,0 +1,990 @@
+{
+  "checked_at": "2026-11-25T16:24:25Z",
+  "window": {
+    "start": "2026-11-18T16:00:00Z",
+    "end": "2026-11-25T16:00:00Z"
+  },
+  "method": "For every ordered pair of candidate zones, one ENTSO-E request for physical flows (document type A11) for the 7 days before the check. The data is aggregated to hours. A pair is kept if at least one hour has a value.",
+  "directed": [
+    {
+      "from": "AL",
+      "to": "GR",
+      "hours_with_data": 165
+    },
+    {
+      "from": "AL",
+      "to": "ME",
+      "hours_with_data": 167
+    },
+    {
+      "from": "AL",
+      "to": "XK",
+      "hours_with_data": 167
+    },
+    {
+      "from": "AT",
+      "to": "CH",
+      "hours_with_data": 168
+    },
+    {
+      "from": "AT",
+      "to": "CZ",
+      "hours_with_data": 168
+    },
+    {
+      "from": "AT",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "AT",
+      "to": "HU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "AT",
+      "to": "IT-North",
+      "hours_with_data": 168
+    },
+    {
+      "from": "AT",
+      "to": "SI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "BA",
+      "to": "HR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "BA",
+      "to": "ME",
+      "hours_with_data": 167
+    },
+    {
+      "from": "BA",
+      "to": "RS",
+      "hours_with_data": 167
+    },
+    {
+      "from": "BE",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "BE",
+      "to": "FR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "BE",
+      "to": "GB",
+      "hours_with_data": 168
+    },
+    {
+      "from": "BE",
+      "to": "NL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "BG",
+      "to": "GR",
+      "hours_with_data": 167
+    },
+    {
+      "from": "BG",
+      "to": "MK",
+      "hours_with_data": 167
+    },
+    {
+      "from": "BG",
+      "to": "RO",
+      "hours_with_data": 168
+    },
+    {
+      "from": "BG",
+      "to": "RS",
+      "hours_with_data": 167
+    },
+    {
+      "from": "CH",
+      "to": "AT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "CH",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "CH",
+      "to": "FR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "CH",
+      "to": "IT-North",
+      "hours_with_data": 168
+    },
+    {
+      "from": "CZ",
+      "to": "AT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "CZ",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "CZ",
+      "to": "PL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "CZ",
+      "to": "SK",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "AT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "BE",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "CH",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "CZ",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "DK1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "DK2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "FR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "NL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "NO2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "PL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DE-LU",
+      "to": "SE4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK1",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK1",
+      "to": "DK2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK1",
+      "to": "GB",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK1",
+      "to": "NL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK1",
+      "to": "NO2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK1",
+      "to": "SE3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK2",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK2",
+      "to": "DK1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "DK2",
+      "to": "SE4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "EE",
+      "to": "FI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "EE",
+      "to": "LV",
+      "hours_with_data": 168
+    },
+    {
+      "from": "ES",
+      "to": "FR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "ES",
+      "to": "PT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FI",
+      "to": "EE",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FI",
+      "to": "NO4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FI",
+      "to": "SE1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FI",
+      "to": "SE3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FR",
+      "to": "BE",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FR",
+      "to": "CH",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FR",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FR",
+      "to": "ES",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FR",
+      "to": "GB",
+      "hours_with_data": 168
+    },
+    {
+      "from": "FR",
+      "to": "IT-North",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GB",
+      "to": "BE",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GB",
+      "to": "DK1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GB",
+      "to": "FR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GB",
+      "to": "IE-SEM",
+      "hours_with_data": 135
+    },
+    {
+      "from": "GB",
+      "to": "NL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GB",
+      "to": "NO2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GR",
+      "to": "AL",
+      "hours_with_data": 166
+    },
+    {
+      "from": "GR",
+      "to": "BG",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GR",
+      "to": "IT-South",
+      "hours_with_data": 168
+    },
+    {
+      "from": "GR",
+      "to": "MK",
+      "hours_with_data": 166
+    },
+    {
+      "from": "HR",
+      "to": "BA",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HR",
+      "to": "HU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HR",
+      "to": "RS",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HR",
+      "to": "SI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HU",
+      "to": "AT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HU",
+      "to": "HR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HU",
+      "to": "RO",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HU",
+      "to": "RS",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HU",
+      "to": "SI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HU",
+      "to": "SK",
+      "hours_with_data": 168
+    },
+    {
+      "from": "HU",
+      "to": "UA",
+      "hours_with_data": 168
+    },
+    {
+      "from": "IE-SEM",
+      "to": "GB",
+      "hours_with_data": 135
+    },
+    {
+      "from": "IT-Calabria",
+      "to": "IT-Sicily",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Calabria",
+      "to": "IT-South",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Centre-North",
+      "to": "IT-Centre-South",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Centre-North",
+      "to": "IT-North",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Centre-South",
+      "to": "IT-Centre-North",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Centre-South",
+      "to": "IT-Sardinia",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Centre-South",
+      "to": "IT-South",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Centre-South",
+      "to": "ME",
+      "hours_with_data": 168
+    },
+    {
+      "from": "IT-North",
+      "to": "AT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "IT-North",
+      "to": "CH",
+      "hours_with_data": 168
+    },
+    {
+      "from": "IT-North",
+      "to": "FR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "IT-North",
+      "to": "IT-Centre-North",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-North",
+      "to": "SI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "IT-Sardinia",
+      "to": "IT-Centre-South",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Sicily",
+      "to": "IT-Calabria",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-Sicily",
+      "to": "MT",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-South",
+      "to": "GR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "IT-South",
+      "to": "IT-Calabria",
+      "hours_with_data": 154
+    },
+    {
+      "from": "IT-South",
+      "to": "IT-Centre-South",
+      "hours_with_data": 154
+    },
+    {
+      "from": "LT",
+      "to": "LV",
+      "hours_with_data": 168
+    },
+    {
+      "from": "LT",
+      "to": "PL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "LT",
+      "to": "SE4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "LV",
+      "to": "EE",
+      "hours_with_data": 168
+    },
+    {
+      "from": "LV",
+      "to": "LT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "ME",
+      "to": "AL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "ME",
+      "to": "BA",
+      "hours_with_data": 168
+    },
+    {
+      "from": "ME",
+      "to": "IT-Centre-South",
+      "hours_with_data": 168
+    },
+    {
+      "from": "ME",
+      "to": "RS",
+      "hours_with_data": 168
+    },
+    {
+      "from": "ME",
+      "to": "XK",
+      "hours_with_data": 168
+    },
+    {
+      "from": "MK",
+      "to": "BG",
+      "hours_with_data": 168
+    },
+    {
+      "from": "MK",
+      "to": "GR",
+      "hours_with_data": 166
+    },
+    {
+      "from": "MK",
+      "to": "RS",
+      "hours_with_data": 168
+    },
+    {
+      "from": "MK",
+      "to": "XK",
+      "hours_with_data": 167
+    },
+    {
+      "from": "MT",
+      "to": "IT-Sicily",
+      "hours_with_data": 154
+    },
+    {
+      "from": "NL",
+      "to": "BE",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NL",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NL",
+      "to": "DK1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NL",
+      "to": "GB",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NL",
+      "to": "NO2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO1",
+      "to": "NO2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO1",
+      "to": "NO3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO1",
+      "to": "NO5",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO1",
+      "to": "SE3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO2",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO2",
+      "to": "DK1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO2",
+      "to": "GB",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO2",
+      "to": "NL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO2",
+      "to": "NO1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO2",
+      "to": "NO5",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO3",
+      "to": "NO1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO3",
+      "to": "NO4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO3",
+      "to": "NO5",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO3",
+      "to": "SE2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO4",
+      "to": "FI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO4",
+      "to": "NO3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO4",
+      "to": "SE1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO4",
+      "to": "SE2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO5",
+      "to": "NO1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO5",
+      "to": "NO2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "NO5",
+      "to": "NO3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "PL",
+      "to": "CZ",
+      "hours_with_data": 168
+    },
+    {
+      "from": "PL",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "PL",
+      "to": "LT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "PL",
+      "to": "SE4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "PL",
+      "to": "SK",
+      "hours_with_data": 168
+    },
+    {
+      "from": "PL",
+      "to": "UA",
+      "hours_with_data": 168
+    },
+    {
+      "from": "PT",
+      "to": "ES",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RO",
+      "to": "BG",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RO",
+      "to": "HU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RO",
+      "to": "RS",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RO",
+      "to": "UA",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "BA",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "BG",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "HR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "HU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "ME",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "MK",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "RO",
+      "hours_with_data": 168
+    },
+    {
+      "from": "RS",
+      "to": "XK",
+      "hours_with_data": 167
+    },
+    {
+      "from": "SE1",
+      "to": "FI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE1",
+      "to": "NO4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE1",
+      "to": "SE2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE2",
+      "to": "NO3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE2",
+      "to": "NO4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE2",
+      "to": "SE1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE2",
+      "to": "SE3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE3",
+      "to": "DK1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE3",
+      "to": "FI",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE3",
+      "to": "NO1",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE3",
+      "to": "SE2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE3",
+      "to": "SE4",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE4",
+      "to": "DE-LU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE4",
+      "to": "DK2",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE4",
+      "to": "LT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE4",
+      "to": "PL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SE4",
+      "to": "SE3",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SI",
+      "to": "AT",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SI",
+      "to": "HR",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SI",
+      "to": "HU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SI",
+      "to": "IT-North",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SK",
+      "to": "CZ",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SK",
+      "to": "HU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SK",
+      "to": "PL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "SK",
+      "to": "UA",
+      "hours_with_data": 168
+    },
+    {
+      "from": "UA",
+      "to": "HU",
+      "hours_with_data": 168
+    },
+    {
+      "from": "UA",
+      "to": "PL",
+      "hours_with_data": 168
+    },
+    {
+      "from": "UA",
+      "to": "RO",
+      "hours_with_data": 168
+    },
+    {
+      "from": "UA",
+      "to": "SK",
+      "hours_with_data": 168
+    },
+    {
+      "from": "XK",
+      "to": "AL",
+      "hours_with_data": 167
+    },
+    {
+      "from": "XK",
+      "to": "ME",
+      "hours_with_data": 168
+    },
+    {
+      "from": "XK",
+      "to": "MK",
+      "hours_with_data": 167
+    },
+    {
+      "from": "XK",
+      "to": "RS",
+      "hours_with_data": 167
+    }
+  ]
+}

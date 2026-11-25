@@ -19,7 +19,7 @@ jobs:
   discover:
     runs-on: ubuntu-latest
     environment: data-publish
-    timeout-minutes: 90
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -41,7 +41,7 @@ jobs:
           key: discover-cache-${{ steps.day.outputs.day }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: discover-cache-${{ steps.day.outputs.day }}-
       - name: Query physical flows for every zone pair (about 2,350 requests)
-        timeout-minutes: 75
+        timeout-minutes: 150
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
         run: |
