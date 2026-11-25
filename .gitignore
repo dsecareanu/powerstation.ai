@@ -8,3 +8,5 @@ dist/
 # Project plan: kept outside the repo (not public).
 powerstation-ai-plan.md
 coverage/
+# Local handoff notes between planning chat and Claude Code (not public).
+HANDOFF.md
