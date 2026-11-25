@@ -21,7 +21,7 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 
 - TypeScript everywhere. Vite for the apps. MapLibre GL for the map.
 - Static site on Cloudflare (Pages or Workers static assets), deployed from GitHub.
-- Data: JSON files in Cloudflare R2, written by n8n on n8n.appbuilder.ai.
+- Data: JSON files in Cloudflare R2, written by a scheduled GitHub Actions workflow (hourly) that runs the `/pipeline` scripts. Decided by Daniel 2026-11-25: free, one codebase. If Actions proves unreliable (late or skipped runs), move the same code to a Cloudflare Worker with a Cron Trigger. n8n is not used in v1.
 - **No backend in v1.** The browser reads public JSON files only.
 - Package manager: pnpm workspaces.
 
@@ -34,7 +34,7 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 /apps/map        Step 1 — map with timeline
 /apps/calculator Step 2 — data center calculator
 /pipeline        Scripts: backfill, validation, back-tests
-/n8n             Exported n8n workflow JSON (public templates)
+/n8n             Not used in v1 (kept for possible later templates)
 /briefs          One brief per Claude Code session
 ```
 
@@ -71,10 +71,10 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 
 ## Secrets and licensing
 
-- No API keys or tokens in the repo. The ENTSO-E token lives in n8n credentials only.
+- No API keys or tokens in the repo. The ENTSO-E token and the R2 API token live in GitHub Actions secrets only (repository environment `data-publish`). Never print them in logs.
 - Repo: https://github.com/dsecareanu/powerstation.ai (default branch `main`). The root `LICENSE` (AGPL-3.0) already exists. Do not replace it.
 - Code license: AGPL-3.0.
-- Exception: the `/n8n` folder (workflow templates) is MIT, with its own `LICENSE` file in that folder. Never copy AGPL code into `/n8n`.
+- Exception: the `/n8n` folder is MIT, with its own `LICENSE` file in that folder. It is not used in v1. Never copy AGPL code into `/n8n`.
 - Data from OSM-derived sources stays ODbL. Keep `DATA_SOURCES.md` up to date (source, license, attribution text, date pulled).
 - Do not use: WRI Global Power Plant Database (unmaintained), PeeringDB, Electricity Maps API, any paid dataset.
 
