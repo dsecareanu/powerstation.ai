@@ -9,18 +9,18 @@ export function Guide() {
           whether a country imports or exports power.
         </li>
         <li>
-          <strong>Arrows</strong> show power crossing borders. Wider arrows carry more power. The
-          arrow points where the power goes.
+          <strong>Moving dots</strong> show power crossing borders. They move from the country that
+          exports to the country that imports. Bigger dots carry more power.
         </li>
         <li>
-          <strong>Solid arrows</strong> are measured by grid operators.{" "}
-          <strong>Dashed arrows</strong> are planned trade: what traders scheduled a day ahead.
-          Planned trade is not a measurement and not a forecast of physical flows.
+          <strong>Solid dots</strong> on a solid line are measured by grid operators.{" "}
+          <strong>Hollow dots</strong> on a dashed line are planned trade: what traders scheduled a
+          day ahead. Planned trade is not a measurement and not a forecast of physical flows.
         </li>
         <li>
           <strong>Modelled</strong> values are estimates we made to fill a short gap: hatched
-          countries and dotted gold arrows. The label names the method. A <strong>?</strong> on an
-          arrow or a dotted country means no data for that hour.
+          countries and dots on a short-dash line. The label names the method. A dotted line with a{" "}
+          <strong>?</strong>, or a dotted country, means no data for that hour.
         </li>
         <li>
           Some countries share data. Germany and Luxembourg form one bidding zone, so they show the
@@ -28,7 +28,7 @@ export function Guide() {
         </li>
         <li>
           <strong>Planned vs measured</strong> compares the plan with what happened on one border.
-          Pick a border or tap an arrow.
+          Pick a border or tap a flow.
         </li>
         <li>Times are in your local time zone.</li>
       </ul>
