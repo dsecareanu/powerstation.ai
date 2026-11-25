@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { test } from "node:test";
 import { toHourly } from "../src/build/hourly";
 import { parseDocument, type StepMap } from "../src/entsoe/parse";
@@ -125,25 +127,65 @@ test("hours outside the data are missing", () => {
   assert.deepEqual(values(m), [3]);
 });
 
-test("an unsupported resolution is rejected", () => {
-  assert.throws(
-    () =>
-      parseDocument(
-        docXml([
-          {
-            periods: [
-              {
-                start: "2026-01-01T00:00Z",
-                end: "2026-01-01T01:00Z",
-                res: "PT5M",
-                points: [[1, 1]],
-              },
-            ],
-          },
-        ]),
-      ),
-    /Unsupported resolution/,
+test("an unsupported resolution leaves the period out, without an error", () => {
+  const doc = parseDocument(
+    docXml([
+      {
+        periods: [
+          { start: "2026-01-01T00:00Z", end: "2026-01-01T01:00Z", res: "PT5M", points: [[1, 1]] },
+        ],
+      },
+    ]),
   );
+  assert.equal(doc.series[0]!.steps.size, 0);
+  assert.match(doc.series[0]!.problems.join(), /unsupported resolution "PT5M"/);
+});
+
+// Saved, self-written document (test/data). It has Points without a quantity.
+const saved = () =>
+  parseDocument(
+    readFileSync(join(import.meta.dirname, "data", "point-without-quantity.xml"), "utf8"),
+  );
+
+test("saved XML: a Point without a quantity is a missing hour, not an error", () => {
+  const s = saved().series[0]!;
+  assert.deepEqual(toHourly(s.steps, T0, T0 + 5 * H), [100, 110, null, null, 140]);
+  assert.deepEqual(s.problems, ["2 Point(s) without a quantity left out"]);
+});
+
+test("saved XML: with A03, a value does not run on into a Point without a quantity", () => {
+  const s = saved().series[1]!;
+  assert.deepEqual(toHourly(s.steps, T0, T0 + 6 * H), [200, 200, null, null, 300, 300]);
+  assert.deepEqual(s.problems, ["1 Point(s) without a quantity left out"]);
+});
+
+test("saved XML: unknown unit and empty series give no values and no error", () => {
+  const doc = saved();
+  assert.equal(doc.series[2]!.steps.size, 0);
+  assert.match(doc.series[2]!.problems.join(), /unsupported unit "MWH"/);
+  assert.equal(doc.series[3]!.steps.size, 0);
+  assert.deepEqual(doc.series[3]!.problems, []);
+});
+
+test("a Point without a valid position is left out", () => {
+  const xml = docXml([
+    {
+      periods: [
+        {
+          start: "2026-01-01T00:00Z",
+          end: "2026-01-01T02:00Z",
+          res: "PT60M",
+          points: [
+            [1, 5],
+            [0, 9],
+          ],
+        },
+      ],
+    },
+  ]);
+  const s = parseDocument(xml).series[0]!;
+  assert.deepEqual(toHourly(s.steps, T0, T0 + 2 * H), [5, null]);
+  assert.deepEqual(s.problems, ["1 Point(s) without a valid position left out"]);
 });
 
 test("acknowledgement with reason 999 is an empty result", () => {
