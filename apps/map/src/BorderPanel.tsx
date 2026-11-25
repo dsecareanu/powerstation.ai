@@ -24,7 +24,7 @@ export function BorderPanel(props: Props) {
 
   const picker = (
     <label class="panel__picker">
-      Border{" "}
+      <span class="panel__label">Border</span>
       <select
         value={props.pairKey ?? ""}
         onChange={(e) => props.onSelectPair((e.target as HTMLSelectElement).value)}
@@ -81,6 +81,7 @@ export function BorderPanel(props: Props) {
     <section class="panel" aria-label="Planned trade compared with measured flow">
       {picker}
       <h2 class="panel__title">Planned vs measured</h2>
+      <p class="panel__lead">How much power crosses one border, planned against measured.</p>
       <p class="panel__note">
         Each day, traders plan how much power crosses each border the next day. The grid does not
         always follow the plan. Above zero: power flows from {name(pair.from)} to {name(pair.to)}.
