@@ -40,6 +40,8 @@ Run it in GitHub Actions, not on a laptop (the token lives only in GitHub):
 
 The script is resumable. It saves each finished pair in `out/discover-cache.json`. After a crash or a 429, run it again. A cache older than 24 hours is ignored. Use `--fresh` to ignore the cache at once.
 
+The script sends up to 6 requests at the same time (`--concurrency <n>`). The client limit stays at 6 per second and 350 per minute. The log shows a progress line every 100 pairs and a heartbeat line after 60 s without output. In GitHub Actions, the workflow saves the cache with `actions/cache` (one key per UTC day), also when a run fails or is cancelled. A rerun on the same UTC day resumes from it.
+
 ## Backfill
 
 ```sh
