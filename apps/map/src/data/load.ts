@@ -12,22 +12,32 @@ import {
 } from "@powerstation/schema";
 import { toMs } from "./series";
 
-const BASE = import.meta.env.VITE_DATA_BASE_URL ?? "/data/";
+// `env` is undefined outside Vite (unit tests).
+const BASE = import.meta.env?.VITE_DATA_BASE_URL ?? "/data/";
 
 async function fetchFile<T extends DataFile>(path: string, dataset: T["dataset"]): Promise<T> {
-  const file = await fetchOptional<T>(path, dataset);
+  const file = await fetchOptional<T>(null, path, dataset);
   if (!file) throw new Error(`Could not load ${path} (HTTP 404)`);
   return file;
 }
 
+/** True when status.json lists the file. The pipeline lists every file it publishes. */
+export function isListed(status: StatusFile, path: string): boolean {
+  return status.files.some((f) => f.path === path);
+}
+
 /**
- * A file the live pipeline may not publish (yet). HTTP 404 → null, and the views show its values
- * as missing. Example: generation and actual load are restricted ENTSO-E data (CLAUDE.md rule 7).
+ * A file the live pipeline may not publish (yet). It is requested only when status.json lists it,
+ * so an unpublished file costs no request and no 404. Not listed, or HTTP 404 → null, and the
+ * views show its values as missing. Example: generation and actual load are restricted ENTSO-E
+ * data (CLAUDE.md rule 7).
  */
 async function fetchOptional<T extends DataFile>(
+  status: StatusFile | null,
   path: string,
   dataset: T["dataset"],
 ): Promise<T | null> {
+  if (status && !isListed(status, path)) return null;
   const res = await fetch(BASE + path);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Could not load ${path} (HTTP ${res.status})`);
@@ -48,24 +58,26 @@ export interface DefaultData {
   forecasts: ForecastsFile | null;
 }
 
-/** The files the default (7-day) view needs. */
+/** The files the default (7-day) view needs. status.json comes first: it says what exists. */
 export async function loadDefault(): Promise<DefaultData> {
-  const [status, zones, flows, generation, capacity, forecasts] = await Promise.all([
-    fetchFile<StatusFile>(DATA_PATHS.status, "status"),
+  const status = await fetchFile<StatusFile>(DATA_PATHS.status, "status");
+  const [zones, flows, generation, capacity, forecasts] = await Promise.all([
     fetchFile<ZonesFile>(DATA_PATHS.zones, "zones"),
     fetchFile<FlowsFile>(DATA_PATHS.flows7d, "flows"),
-    fetchOptional<GenerationFile>(DATA_PATHS.generation7d, "generation"),
-    fetchOptional<CapacityFile>(DATA_PATHS.capacity30d, "capacity"),
-    fetchOptional<ForecastsFile>(DATA_PATHS.forecasts24h, "forecasts"),
+    fetchOptional<GenerationFile>(status, DATA_PATHS.generation7d, "generation"),
+    fetchOptional<CapacityFile>(status, DATA_PATHS.capacity30d, "capacity"),
+    fetchOptional<ForecastsFile>(status, DATA_PATHS.forecasts24h, "forecasts"),
   ]);
   return { status, zones, flows, generation, capacity, forecasts };
 }
 
 /** Loaded only when the user turns on the 30-day view. */
-export async function load30d(): Promise<Pick<DefaultData, "flows" | "generation">> {
+export async function load30d(
+  status: StatusFile,
+): Promise<Pick<DefaultData, "flows" | "generation">> {
   const [flows, generation] = await Promise.all([
     fetchFile<FlowsFile>(DATA_PATHS.flows30d, "flows"),
-    fetchOptional<GenerationFile>(DATA_PATHS.generation30d, "generation"),
+    fetchOptional<GenerationFile>(status, DATA_PATHS.generation30d, "generation"),
   ]);
   return { flows, generation };
 }
