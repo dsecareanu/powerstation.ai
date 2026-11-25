@@ -1,0 +1,329 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-11-25T12:00:00Z",
+  "mock": true,
+  "source": "powerstation.ai mock data generator",
+  "license": "AGPL-3.0-only",
+  "attribution": "Mock data for development and tests. This is not real grid data.",
+  "dataset": "forecasts",
+  "window": {
+    "start": "2026-11-25T12:00:00Z",
+    "end": "2026-11-26T12:00:00Z"
+  },
+  "zones": [
+    {
+      "zone": "DE-LU",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [48361,46909,46784,49264,54750,59413,58100,52320,47605,45719,45299,45244,45240,45243,45258,45324,45545,46126,47305,49094,50997,52128,51838,50302],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [14031,10062,4874,586,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,294,4295,9502,13694,15395],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [14877,14249,13953,14527,14217,15016,14813,14233,13252,13430,14270,13703,14622,14872,15155,16292,16499,15541,16209,15470,15503,14870,13914,13480],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_offshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [1869,2036,1861,2068,1849,1683,1701,1640,1485,1459,1579,1527,1393,1341,1207,1401,1197,966,1073,865,657,707,778,979],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "FR",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [46833,45115,44209,45073,48896,54449,56566,52723,47183,44033,43082,42918,42900,42901,42907,42936,43049,43389,44182,45594,47431,49002,49481,48584],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [6192,5088,3142,1064,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,748,2752,4783,6078],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [6141,6560,6093,6298,6371,6482,6418,5948,5831,5986,6351,6112,6233,6482,6100,6321,6097,5859,6002,5689,5583,5646,5702,5614],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_offshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [604,641,663,671,657,656,684,693,707,676,688,710,710,738,771,808,801,805,781,774,811,812,788,790],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "NL",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [10978,10598,10447,10778,11825,13084,13283,12178,10941,10331,10168,10142,10140,10140,10142,10152,10186,10284,10500,10862,11300,11632,11677,11408],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [6057,4736,2695,704,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1113,3199,5131,6206],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [1814,1773,1844,1868,2008,1978,2022,2150,2044,2162,2222,2286,2187,2082,1969,1817,1904,1953,1980,2022,1998,1850,1892,1722],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_offshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [2021,1904,1855,1767,1813,1691,1711,1706,1633,1672,1681,1764,1691,1774,1678,1565,1428,1342,1213,1145,1082,969,1049,1116],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "BE",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [8465,8166,8035,8260,9035,10020,10242,9431,8461,7962,7824,7802,7800,7800,7802,7808,7833,7904,8064,8336,8673,8938,8988,8793],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [2712,2152,1255,357,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,446,1364,2237,2744],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [922,902,908,935,1000,934,882,806,744,727,670,678,677,671,728,714,736,769,737,735,798,770,753,778],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_offshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [932,893,923,920,858,909,897,878,863,907,945,958,949,950,1004,940,898,906,844,818,850,869,911,875],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "PL",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [15522,15267,15682,17141,19019,19470,17947,16095,15136,14867,14824,14820,14821,14823,14835,14881,15015,15315,15830,16470,16977,17078,16713,16092],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [3784,2219,643,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,761,2365,3898,4796,4753],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [2802,2672,2494,2216,2001,1934,2191,2004,1876,1882,1941,1672,1738,1553,1357,1306,1105,899,1125,1172,1130,1313,1224,1304],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "CZ",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [6178,6034,6112,6579,7338,7725,7286,6517,6038,5882,5853,5850,5850,5851,5854,5867,5908,6007,6188,6436,6661,6750,6649,6419],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [881,569,217,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,91,413,759,996,1041],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [107,108,113,115,116,117,112,117,119,114,115,110,110,111,120,126,133,124,115,119,129,135,142,146],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "AT",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [6198,6041,6090,6517,7270,7724,7353,6582,6066,5889,5854,5850,5850,5851,5854,5865,5902,5994,6168,6412,6644,6750,6666,6443],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [1205,802,330,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,91,506,973,1308,1395],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [800,763,854,902,927,834,887,853,781,713,677,598,514,469,483,495,565,507,563,628,679,677,651,638],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "HU",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [4085,4018,4127,4511,5005,5124,4723,4236,3983,3912,3901,3900,3900,3901,3904,3916,3951,4030,4166,4334,4468,4494,4398,4235],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [1622,951,276,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,326,1014,1671,2055,2037],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [135,139,134,130,141,145,155,165,176,170,163,152,144,139,146,135,128,118,109,107,115,110,113,108],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "RO",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [5261,5240,5506,6113,6650,6528,5886,5347,5127,5077,5071,5070,5070,5072,5079,5103,5166,5296,null,null,null,null,null,null],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","missing","missing","missing","missing","missing","missing"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [697,344,47,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,281,636,926,1049,963],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [1287,1238,1158,1087,1087,1100,1157,1216,1315,1240,1176,1153,1156,1174,1231,1269,1311,1252,1269,1275,1354,1439,1446,1422],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "ES",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [25952,24952,24232,24234,25630,28529,30797,29892,26857,24517,23619,23426,23402,23400,23402,23411,23448,23570,23888,24521,25461,26435,26977,26776],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [12600,11321,7964,3708,332,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,374,3791,8045,11370],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [12426,13142,12479,12845,12541,12865,13504,13308,12546,13132,13420,14076,14664,13873,13722,14245,14155,14390,14507,14162,14079,14410,14657,14030],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    },
+    {
+      "zone": "PT",
+      "load": {
+        "start": "2026-11-25T12:00:00Z",
+        "resolution": "PT1H",
+        "unit": "MW",
+        "values": [5247,5047,4878,4825,5008,5520,6079,6101,5556,5008,4754,4690,4681,4680,4680,4681,4686,4704,4753,4860,5033,5234,5378,5383],
+        "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+      },
+      "generation": {
+        "solar": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [1736,1659,1265,688,152,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,362,948,1468],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        },
+        "wind_onshore": {
+          "start": "2026-11-25T12:00:00Z",
+          "resolution": "PT1H",
+          "unit": "MW",
+          "values": [1794,1952,2021,2031,2071,2013,1875,1851,1879,1947,1794,1757,1670,1754,1847,1977,1924,1969,1872,1836,1916,1862,1977,1969],
+          "states": ["planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned","planned"]
+        }
+      }
+    }
+  ]
+}

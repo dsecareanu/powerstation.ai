@@ -1,0 +1,8 @@
+node_modules/
+dist/
+pnpm-lock.yaml
+fixtures/
+schema/src/generated.ts
+# Planning documents: keep their hand formatting.
+briefs/
+CLAUDE.md

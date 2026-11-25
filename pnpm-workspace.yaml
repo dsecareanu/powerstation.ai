@@ -1,0 +1,12 @@
+packages:
+  - schema
+  - pipeline
+  - packages/*
+  - apps/*
+
+# Supply-chain guard: install only package versions published at least 7 days ago.
+minimumReleaseAge: 10080
+
+# Packages allowed to run install scripts.
+allowBuilds:
+  esbuild: true

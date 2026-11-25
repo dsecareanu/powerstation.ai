@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/common.schema.json",
+  "title": "Common definitions",
+  "description": "Shared definitions for all powerstation.ai data files.",
+  "$defs": {
+    "SchemaVersion": {
+      "title": "SchemaVersion",
+      "description": "Version of the data contract. Bump it on every schema change.",
+      "const": "1.0.0"
+    },
+    "DataState": {
+      "title": "DataState",
+      "description": "measured = reported by a grid operator or the named source. planned = day-ahead schedule or forecast. modelled = inferred by powerstation.ai (needs a method). missing = no value (the value is null).",
+      "enum": ["measured", "planned", "modelled", "missing"]
+    },
+    "UtcTimestamp": {
+      "title": "UtcTimestamp",
+      "description": "UTC time in ISO 8601 with a Z suffix, e.g. 2026-11-25T12:00:00Z.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    },
+    "Resolution": {
+      "title": "Resolution",
+      "description": "ISO 8601 duration of one step. v1 publishes hourly data only: the pipeline aggregates 15- and 30-minute source data to hourly averages.",
+      "enum": ["PT1H"]
+    },
+    "ZoneId": {
+      "title": "ZoneId",
+      "description": "Bidding zone id, e.g. DE-LU, FR, IT-North, NO1. Defined in v1/meta/zones.json.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*(-[A-Za-z0-9]+)*$"
+    },
+    "CountryCode": {
+      "title": "CountryCode",
+      "description": "ISO 3166-1 alpha-2 country code, e.g. DE.",
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "Window": {
+      "title": "Window",
+      "description": "Time range the file covers. start is inclusive, end is exclusive.",
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "$ref": "#/$defs/UtcTimestamp" },
+        "end": { "$ref": "#/$defs/UtcTimestamp" }
+      }
+    },
+    "TimeSeries": {
+      "title": "TimeSeries",
+      "description": "Columnar time series. Value i covers [start + i*resolution, start + (i+1)*resolution). values and states have the same length. A null value has state missing, and a missing state has a null value.",
+      "type": "object",
+      "required": ["start", "resolution", "unit", "values", "states"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "$ref": "#/$defs/UtcTimestamp" },
+        "resolution": { "$ref": "#/$defs/Resolution" },
+        "unit": {
+          "description": "MW = average power over the step.",
+          "enum": ["MW"]
+        },
+        "values": {
+          "type": "array",
+          "items": { "type": ["number", "null"] }
+        },
+        "states": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/DataState" }
+        },
+        "method": {
+          "description": "How modelled values were made, in plain English. Required when any state is modelled.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Envelope": {
+      "title": "Envelope",
+      "description": "Fields that every data file has.",
+      "type": "object",
+      "required": [
+        "schema_version",
+        "dataset",
+        "generated_at",
+        "mock",
+        "source",
+        "license",
+        "attribution"
+      ],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/SchemaVersion" },
+        "dataset": {
+          "description": "Kind of file. Selects the schema.",
+          "enum": ["status", "zones", "flows", "generation", "forecasts", "datacenters"]
+        },
+        "generated_at": { "$ref": "#/$defs/UtcTimestamp" },
+        "mock": {
+          "description": "true for fixtures and demo data. The deploy step refuses files with mock: true.",
+          "type": "boolean"
+        },
+        "source": {
+          "description": "Name of the data source, e.g. ENTSO-E Transparency Platform.",
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": { "type": "string", "format": "uri" },
+        "license": {
+          "description": "License of the data, e.g. CC-BY-4.0 or ODbL-1.0.",
+          "type": "string",
+          "minLength": 1
+        },
+        "attribution": {
+          "description": "Text the attribution panel shows.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

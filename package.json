@@ -1,0 +1,33 @@
+{
+  "name": "powerstation-ai",
+  "private": true,
+  "description": "Play the real grid. Free, open-source tool to explore European grid data.",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@12.23.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "schema:types": "pnpm --filter @powerstation/schema run types",
+    "schema:check": "pnpm --filter @powerstation/schema run types:check",
+    "fixtures": "pnpm --filter @powerstation/pipeline run fixtures",
+    "validate": "pnpm --filter @powerstation/schema run validate",
+    "validate:fixtures": "pnpm --filter @powerstation/schema run validate fixtures",
+    "test": "pnpm -r --if-present test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.15.0",
+    "json-schema-to-typescript": "^16.0.0",
+    "prettier": "^3.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.73.0"
+  },
+  "type": "module"
+}

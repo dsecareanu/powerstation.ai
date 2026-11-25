@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/status.schema.json",
+  "title": "StatusFile",
+  "description": "v1/meta/status.json. Last update per source and per file. The UI shows 'data delayed' when newest_measured_at is more than 2 hours old.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/Envelope"
+    }
+  ],
+  "required": ["dataset", "files", "sources"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": {
+      "const": "status"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FileStatus"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SourceStatus"
+      }
+    }
+  },
+  "$defs": {
+    "FileStatus": {
+      "title": "FileStatus",
+      "type": "object",
+      "required": ["path", "dataset", "updated_at", "newest_measured_at", "ok"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "R2 path, e.g. v1/flows/rolling-7d.json.",
+          "type": "string",
+          "pattern": "^v1/[a-z0-9/_.-]+\\.json$"
+        },
+        "dataset": {
+          "enum": ["zones", "flows", "generation", "forecasts", "datacenters"]
+        },
+        "updated_at": {
+          "$ref": "common.schema.json#/$defs/UtcTimestamp"
+        },
+        "newest_measured_at": {
+          "oneOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "description": "updated_at = when the pipeline last wrote the file. newest_measured_at = end of the newest step with a measured value; null if the file has no measured values (e.g. forecasts). ok = false if the last update failed."
+    },
+    "SourceStatus": {
+      "title": "SourceStatus",
+      "type": "object",
+      "required": ["id", "name", "last_success_at", "last_attempt_at", "ok"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "last_success_at": {
+          "oneOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_attempt_at": {
+          "oneOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
