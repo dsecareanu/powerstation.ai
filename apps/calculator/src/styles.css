@@ -9,6 +9,8 @@ body {
   color: var(--ps-color-text);
   background: var(--ps-color-bg);
   line-height: 1.5;
+  /* Native sliders, radios and checkboxes in ink, not the browser's blue. */
+  accent-color: var(--ps-color-accent);
 }
 .page {
   max-width: 64rem;
