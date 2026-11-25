@@ -91,7 +91,10 @@ export function flowsFile(
       from_zone: b.from,
       to_zone: b.to,
       kind: b.kind,
-      series: timeSeries(cut(b.series, windowStart), b.kind === "physical" ? "measured" : "planned"),
+      series: timeSeries(
+        cut(b.series, windowStart),
+        b.kind === "physical" ? "measured" : "planned",
+      ),
     })),
   };
 }

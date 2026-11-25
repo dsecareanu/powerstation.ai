@@ -86,7 +86,8 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
       const rightPair =
         (s.outDomain === undefined || s.outDomain === out) &&
         (s.inDomain === undefined || s.inDomain === inn);
-      if (!rightPair) warnings.add(`wrong-domain:${dataset}`, `${dataset}: series for another zone pair dropped`);
+      if (!rightPair)
+        warnings.add(`wrong-domain:${dataset}`, `${dataset}: series for another zone pair dropped`);
       return rightPair && keep(s);
     });
     const steps = mergeSeries(kept, warnings, `${dataset} ${from}->${to}`);
@@ -116,7 +117,10 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
       const ba = await direction(k.kind, b, a, k.query, k.end, k.keep);
       const net = netBorder(ab, ba);
       if (!net) {
-        warnings.add(`no-data:${k.kind}:${a}|${b}`, `${k.kind} ${a}-${b}: no data in either direction; border left out`);
+        warnings.add(
+          `no-data:${k.kind}:${a}|${b}`,
+          `${k.kind} ${a}-${b}: no data in either direction; border left out`,
+        );
         continue;
       }
       if (net.oneSided) {
@@ -126,16 +130,29 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
           `${k.kind} ${a}-${b}: direction ${missing} not published; used the other direction alone`,
         );
       }
-      flowBorders.push({ from: a, to: b, kind: k.kind, series: { start: start30, values: net.values } });
+      flowBorders.push({
+        from: a,
+        to: b,
+        kind: k.kind,
+        series: { start: start30, values: net.values },
+      });
     }
   }
 
   // ---------- capacity ----------
   const capacity: DirectedCapacitySeries[] = [];
   for (const [a, b] of pairs) {
-    for (const [from, to] of [[a, b], [b, a]] as const) {
-      const values = await direction("capacity", from, to, capacityQuery, end24, (s) =>
-        s.contractType === undefined || s.contractType === "A01",
+    for (const [from, to] of [
+      [a, b],
+      [b, a],
+    ] as const) {
+      const values = await direction(
+        "capacity",
+        from,
+        to,
+        capacityQuery,
+        end24,
+        (s) => s.contractType === undefined || s.contractType === "A01",
       );
       if (values) capacity.push({ from, to, series: { start: start30, values } });
     }
@@ -146,8 +163,8 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
   const forecasts: ZoneSeries<"solar" | "wind_offshore" | "wind_onshore">[] = [];
   for (const z of zones.zones) {
     if (includeRestricted) {
-      const gen = await request("generation", z.id, generationQuery(z.eic, start30, nowMs));
-      const load = await request("load", z.id, loadQuery(z.eic, start30, nowMs));
+      const gen = await request("generation", z.id, generationQuery(eicOf(z.id), start30, nowMs));
+      const load = await request("load", z.id, loadQuery(eicOf(z.id), start30, nowMs));
       if (gen.series.length > 0 || load.series.length > 0) {
         const loadSteps = mergeSeries(load.series, warnings, `${z.id} load`);
         const fuels = buildFuelSeries(gen.series, start30, nowMs, warnings, z.id);
@@ -161,9 +178,13 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
       }
     }
     // Forecasts: load is open data. Wind and solar are restricted.
-    const lf = await request("load forecast", z.id, loadForecastQuery(z.eic, nowMs, end24));
+    const lf = await request("load forecast", z.id, loadForecastQuery(eicOf(z.id), nowMs, end24));
     const ws = includeRestricted
-      ? await request("wind/solar forecast", z.id, windSolarForecastQuery(z.eic, nowMs, end24))
+      ? await request(
+          "wind/solar forecast",
+          z.id,
+          windSolarForecastQuery(eicOf(z.id), nowMs, end24),
+        )
       : { empty: true, series: [] as ParsedTimeSeries[] };
     if (lf.series.length > 0 || ws.series.length > 0) {
       const loadSteps = mergeSeries(lf.series, warnings, `${z.id} load forecast`);

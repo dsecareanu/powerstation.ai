@@ -30,10 +30,7 @@ export function redact(message: string): string {
 
 /** yyyyMMddHHmm in UTC. */
 export function formatPeriod(ms: number): string {
-  return new Date(ms)
-    .toISOString()
-    .replace(/[-:T]/g, "")
-    .slice(0, 12);
+  return new Date(ms).toISOString().replace(/[-:T]/g, "").slice(0, 12);
 }
 
 export class EntsoeClient {

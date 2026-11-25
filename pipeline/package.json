@@ -7,7 +7,10 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "fixtures": "tsx scripts/generate-fixtures.ts"
+    "fixtures": "tsx scripts/generate-fixtures.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "backfill": "tsx scripts/backfill.ts",
+    "discover-borders": "tsx scripts/discover-borders.ts"
   },
   "dependencies": {
     "@powerstation/schema": "workspace:*",

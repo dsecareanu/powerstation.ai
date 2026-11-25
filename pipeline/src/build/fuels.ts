@@ -69,11 +69,7 @@ export function buildFuelSeries(
     warnings,
     `${zoneId} generation`,
   );
-  const consumption = groupByPsr(
-    series.filter(isConsumption),
-    warnings,
-    `${zoneId} consumption`,
-  );
+  const consumption = groupByPsr(series.filter(isConsumption), warnings, `${zoneId} consumption`);
 
   const parts = new Map<FuelType, Hourly[]>();
   for (const [psr, steps] of generation) {
