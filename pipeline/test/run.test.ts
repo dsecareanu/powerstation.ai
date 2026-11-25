@@ -255,3 +255,105 @@ test("hours and only: a short window for chosen datasets", async () => {
   assert.equal(flows.borders[0]!.series.values.length, 48);
   assert.deepEqual(validateAll(files, zones), []);
 });
+
+// ---------- fault isolation ----------
+/** Runs with a fetch that answers HTTP 400 for the listed "documentType key" requests. */
+async function runWithFaults(failing: (doc: string, key: string) => boolean, logs: string[]) {
+  const fetchFn: FetchFn = async (url) => {
+    const p = new URL(url).searchParams;
+    const out = p.get("out_Domain");
+    const inn = p.get("in_Domain");
+    const key = out && inn ? `${idOf(out)}>${idOf(inn)}` : (p.get("outBiddingZone_Domain") ?? "");
+    if (failing(p.get("documentType")!, key)) {
+      return { status: 400, text: async () => "<html>bad request</html>" };
+    }
+    return { status: 200, text: async () => respond(p) };
+  };
+  const client = new EntsoeClient({
+    token: "t",
+    fetchFn,
+    sleep: async () => {},
+    clock: () => 0,
+    maxPerSecond: 1e9,
+    maxPerMinute: 1e9,
+  });
+  return runBackfill({
+    client,
+    zones,
+    pairs,
+    nowMs: NOW,
+    days: 30,
+    includeRestricted: false,
+    generatedAt: "2026-11-25T12:30:00Z",
+    log: (m) => logs.push(m),
+  });
+}
+
+test("one failed request: that border is left out of the run, the rest is built", async () => {
+  const logs: string[] = [];
+  const r = await runWithFaults((doc, key) => doc === "A11" && key === "FR>BE", logs);
+  assert.equal(r.failedRequests, 1);
+  assert.equal(r.requests, 11);
+  assert.deepEqual(validateAll(r.files, zones), []);
+  const flows = get<FlowsFile>(r.files, DATA_PATHS.flows30d);
+  // BE-FR is not netted from one direction: it is left out, so the merge keeps old values.
+  assert.equal(
+    flows.borders.find((b) => b.to_zone === "FR"),
+    undefined,
+  );
+  assert.ok(flows.borders.find((b) => b.to_zone === "NL"));
+  assert.ok(r.warnings.list().some((w) => w.message.includes("physical BE-FR: a request failed")));
+  assert.ok(logs.some((l) => l.startsWith("Request failed: physical FR -> BE")));
+  assert.ok(
+    logs.some((l) => l.startsWith("[11/11] requests with data: 8, ") && l.includes("1 failed")),
+  );
+});
+
+test("more than half of the requests fail: the run fails", async () => {
+  await assert.rejects(
+    runWithFaults((doc) => doc === "A11" || doc === "A61", []),
+    /8 of 11 ENTSO-E requests failed/,
+  );
+});
+
+test("a Point without a quantity in a response: missing hour and a warning, no crash", async () => {
+  const logs: string[] = [];
+  const fetchFn: FetchFn = async (url) => {
+    const p = new URL(url).searchParams;
+    let body = respond(p);
+    // Remove the quantity of the first Point of the physical flow BE -> NL.
+    if (
+      p.get("documentType") === "A11" &&
+      p.get("out_Domain") === eic("BE") &&
+      p.get("in_Domain") === eic("NL")
+    ) {
+      body = body.replace(/<quantity>50<\/quantity>/, "");
+    }
+    return { status: 200, text: async () => body };
+  };
+  const client = new EntsoeClient({
+    token: "t",
+    fetchFn,
+    sleep: async () => {},
+    clock: () => 0,
+    maxPerSecond: 1e9,
+    maxPerMinute: 1e9,
+  });
+  const r = await runBackfill({
+    client,
+    zones,
+    pairs,
+    nowMs: NOW,
+    days: 30,
+    includeRestricted: false,
+    generatedAt: "2026-11-25T12:30:00Z",
+    log: (m) => logs.push(m),
+  });
+  assert.equal(r.failedRequests, 0);
+  assert.deepEqual(validateAll(r.files, zones), []);
+  const bn = get<FlowsFile>(r.files, DATA_PATHS.flows30d).borders.find((b) => b.to_zone === "NL")!;
+  assert.equal(bn.series.values[0], null);
+  assert.equal(bn.series.states[0], "missing");
+  assert.equal(bn.series.values[1], 50);
+  assert.equal(logs.filter((l) => l.startsWith("Warning: physical BE -> NL")).length, 1);
+});

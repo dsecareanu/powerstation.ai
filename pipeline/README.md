@@ -98,7 +98,16 @@ The workflow `.github/workflows/data-news.yml` runs every 3 hours at minute 23, 
 
 The workflow `.github/workflows/data-hourly.yml` updates the data on R2 every hour. It runs at minute 17. You can also start it by hand (`workflow_dispatch`, input `recent_hours`, default 48).
 
-The job runs in the GitHub environment `data-publish`. Only one run at a time is allowed. A run that is already going is not cancelled.
+The job runs in the GitHub environment `data-publish`, with a 45-minute timeout. Only one run at a time is allowed: the concurrency group `data-publish` has `cancel-in-progress: false`, so a run that is already going is never cancelled. A scheduled run that starts while another run is going waits in the queue. GitHub keeps only one waiting run per group: if a third run arrives, the older waiting run is cancelled (not the running one). The monthly data-center job is in the same group.
+
+Requests run 3 at a time (`concurrency` in `src/build/run.ts`), inside the client limit of 2 per second and 120 per minute. A progress line comes every 50 requests, with the number of failed requests and the request rate over the last minute.
+
+Bad data does not stop the run:
+
+- A Point without a usable quantity or position, a Period with an unknown resolution, or a TimeSeries with an unknown curve type or unit is left out. Its hours are `missing`. One warning line is logged per affected series. No value is invented.
+- A request that still fails after the client's retries is logged and skipped. For a flow border, both directions are needed: if one fails, the border is not updated in this run, and the merge keeps the old values. Capacity, forecasts and generation are skipped per direction or zone in the same way.
+- If more than half of the requests of a run fail, the run fails and nothing is uploaded.
+- A second HTTP 429 ban stops the run (see "Rate limits").
 
 Steps of one run:
 

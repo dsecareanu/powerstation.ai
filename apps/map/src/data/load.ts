@@ -1,9 +1,11 @@
 // Fetches the public data files. No validation in the browser: the pipeline validates every
 // file against the schema before upload (pnpm validate --deploy), and ajv would add ~100 KB.
 import {
+  type CapacityFile,
   DATA_PATHS,
   type DataFile,
   type FlowsFile,
+  type ForecastsFile,
   type GenerationFile,
   type StatusFile,
   type ZonesFile,
@@ -13,7 +15,21 @@ import { toMs } from "./series";
 const BASE = import.meta.env.VITE_DATA_BASE_URL ?? "/data/";
 
 async function fetchFile<T extends DataFile>(path: string, dataset: T["dataset"]): Promise<T> {
+  const file = await fetchOptional<T>(path, dataset);
+  if (!file) throw new Error(`Could not load ${path} (HTTP 404)`);
+  return file;
+}
+
+/**
+ * A file the live pipeline may not publish (yet). HTTP 404 → null, and the views show its values
+ * as missing. Example: generation and actual load are restricted ENTSO-E data (CLAUDE.md rule 7).
+ */
+async function fetchOptional<T extends DataFile>(
+  path: string,
+  dataset: T["dataset"],
+): Promise<T | null> {
   const res = await fetch(BASE + path);
+  if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Could not load ${path} (HTTP ${res.status})`);
   const data = (await res.json()) as DataFile;
   if (data.dataset !== dataset) throw new Error(`${path}: expected dataset ${dataset}`);
@@ -24,25 +40,32 @@ export interface DefaultData {
   status: StatusFile;
   zones: ZonesFile;
   flows: FlowsFile;
-  generation: GenerationFile;
+  /** Restricted data: null until it is published. */
+  generation: GenerationFile | null;
+  /** Day-ahead transfer capacity (open data). */
+  capacity: CapacityFile | null;
+  /** Day-ahead load forecast (open data); wind and solar only with permission. */
+  forecasts: ForecastsFile | null;
 }
 
 /** The files the default (7-day) view needs. */
 export async function loadDefault(): Promise<DefaultData> {
-  const [status, zones, flows, generation] = await Promise.all([
+  const [status, zones, flows, generation, capacity, forecasts] = await Promise.all([
     fetchFile<StatusFile>(DATA_PATHS.status, "status"),
     fetchFile<ZonesFile>(DATA_PATHS.zones, "zones"),
     fetchFile<FlowsFile>(DATA_PATHS.flows7d, "flows"),
-    fetchFile<GenerationFile>(DATA_PATHS.generation7d, "generation"),
+    fetchOptional<GenerationFile>(DATA_PATHS.generation7d, "generation"),
+    fetchOptional<CapacityFile>(DATA_PATHS.capacity30d, "capacity"),
+    fetchOptional<ForecastsFile>(DATA_PATHS.forecasts24h, "forecasts"),
   ]);
-  return { status, zones, flows, generation };
+  return { status, zones, flows, generation, capacity, forecasts };
 }
 
 /** Loaded only when the user turns on the 30-day view. */
 export async function load30d(): Promise<Pick<DefaultData, "flows" | "generation">> {
   const [flows, generation] = await Promise.all([
     fetchFile<FlowsFile>(DATA_PATHS.flows30d, "flows"),
-    fetchFile<GenerationFile>(DATA_PATHS.generation30d, "generation"),
+    fetchOptional<GenerationFile>(DATA_PATHS.generation30d, "generation"),
   ]);
   return { flows, generation };
 }

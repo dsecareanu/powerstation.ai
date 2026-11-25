@@ -1,6 +1,9 @@
 // Parses ENTSO-E XML documents into step series.
 // A step series is a map: step start (ms, UTC) -> value and step length.
 // A step that is not in the map is missing.
+// Bad content inside a TimeSeries never throws: a Point without a usable quantity or
+// position, or a Period or TimeSeries with an unsupported resolution, curve type or unit,
+// leaves its steps out (missing) and is listed in `problems`. No value is invented.
 import { XMLParser } from "fast-xml-parser";
 import type { Warnings } from "../build/warnings";
 
@@ -22,6 +25,8 @@ export interface ParsedTimeSeries {
   contractType?: string;
   psrType?: string;
   steps: StepMap;
+  /** Content that was left out (missing steps). Empty when the series is clean. */
+  problems: string[];
 }
 
 export interface ParsedDocument {
@@ -55,34 +60,40 @@ function parseTime(value: unknown, what: string): number {
   return ms;
 }
 
-function expandPeriod(period: Node, curveType: string, steps: StepMap): void {
+function expandPeriod(period: Node, curveType: string, steps: StepMap, problems: string[]): void {
   const interval = period["timeInterval"] as Node | undefined;
   const start = parseTime(interval?.["start"], "Period start");
   const end = parseTime(interval?.["end"], "Period end");
   const resText = text(period["resolution"]) ?? "";
   const res = RESOLUTIONS[resText];
   if (res === undefined) {
-    throw new Error(
-      `Unsupported resolution ${JSON.stringify(resText)} (allowed: PT15M, PT30M, PT60M)`,
-    );
+    problems.push(`Period with unsupported resolution ${JSON.stringify(resText)} left out`);
+    return;
   }
   const stepCount = Math.floor((end - start) / res);
-  const points = asArray(period["Point"])
-    .map((p) => {
-      const pt = p as Node;
-      const position = Number(text(pt["position"]));
-      const value = Number(text(pt["quantity"]));
-      if (!Number.isInteger(position) || position < 1) {
-        throw new Error(`Bad Point position ${JSON.stringify(pt["position"])}`);
-      }
-      if (!Number.isFinite(value)) {
-        throw new Error(`Bad Point quantity ${JSON.stringify(pt["quantity"])}`);
-      }
-      return { position, value };
-    })
-    .sort((a, b) => a.position - b.position);
+  let badPositions = 0;
+  let badQuantities = 0;
+  const points: { position: number; value: number | null }[] = [];
+  for (const p of asArray(period["Point"])) {
+    const pt = p as Node;
+    const position = Number(text(pt["position"]));
+    if (!Number.isInteger(position) || position < 1) {
+      badPositions++;
+      continue;
+    }
+    const raw = text(pt["quantity"]);
+    const value = raw === undefined || raw.trim() === "" ? NaN : Number(raw);
+    if (!Number.isFinite(value)) badQuantities++;
+    // A Point without a usable quantity stays in the list as a gap, so with A03 the
+    // previous value does not run on into its steps.
+    points.push({ position, value: Number.isFinite(value) ? value : null });
+  }
+  if (badPositions > 0) problems.push(`${badPositions} Point(s) without a valid position left out`);
+  if (badQuantities > 0) problems.push(`${badQuantities} Point(s) without a quantity left out`);
+  points.sort((a, b) => a.position - b.position);
 
   points.forEach((p, i) => {
+    if (p.value === null) return;
     // A01: one step per point. A03: the value holds until the next point.
     const next = points[i + 1];
     const lastPosition = curveType === "A03" ? (next ? next.position - 1 : stepCount) : p.position;
@@ -94,16 +105,17 @@ function expandPeriod(period: Node, curveType: string, steps: StepMap): void {
 }
 
 function parseTimeSeries(ts: Node): ParsedTimeSeries {
-  const curveType = text(ts["curveType"]) ?? "A01";
-  if (curveType !== "A01" && curveType !== "A03") {
-    throw new Error(`Unsupported curveType ${JSON.stringify(curveType)} (allowed: A01, A03)`);
-  }
-  const unit = text(ts["quantity_Measure_Unit.name"]);
-  if (unit !== undefined && unit !== "MAW") {
-    throw new Error(`Unsupported unit ${JSON.stringify(unit)} (expected MAW)`);
-  }
   const steps: StepMap = new Map();
-  for (const p of asArray(ts["Period"])) expandPeriod(p as Node, curveType, steps);
+  const problems: string[] = [];
+  const curveType = text(ts["curveType"]) ?? "A01";
+  const unit = text(ts["quantity_Measure_Unit.name"]);
+  if (curveType !== "A01" && curveType !== "A03") {
+    problems.push(`unsupported curveType ${JSON.stringify(curveType)}; series left out`);
+  } else if (unit !== undefined && unit !== "MAW") {
+    problems.push(`unsupported unit ${JSON.stringify(unit)}; series left out`);
+  } else {
+    for (const p of asArray(ts["Period"])) expandPeriod(p as Node, curveType, steps, problems);
+  }
   const psr = (ts["MktPSRType"] as Node | undefined)?.["psrType"];
   return {
     inDomain: text(ts["in_Domain.mRID"]),
@@ -113,6 +125,7 @@ function parseTimeSeries(ts: Node): ParsedTimeSeries {
     contractType: text(ts["contract_MarketAgreement.type"]),
     psrType: text(psr),
     steps,
+    problems,
   };
 }
 

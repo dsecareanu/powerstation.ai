@@ -47,10 +47,9 @@ button:disabled {
   cursor: default;
 }
 
+/* Full browser width; the side gutter is 16 px at every width (DESIGN.md "Layout"). */
 .app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 12px 12px 0;
+  padding: var(--ps-space-3) var(--ps-space-4) 0;
 }
 .app-loading,
 .app-error {
@@ -75,7 +74,7 @@ button:disabled {
   display: grid;
   gap: 4px 12px;
   margin-top: 8px;
-  grid-template-areas: "map" "side" "legend";
+  grid-template-areas: "map" "side" "legend" "timeline";
 }
 .app__map {
   grid-area: map;
@@ -86,10 +85,20 @@ button:disabled {
 .app__legend {
   grid-area: legend;
 }
+.app__timeline {
+  grid-area: timeline;
+  /* Sticky works from the grid item, so the timeline stays in view while the page scrolls. */
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  min-width: 0;
+}
 @media (min-width: 900px) {
+  /* The side panel runs the full height, next to the map, the timeline and the legend. */
   .app__main {
     grid-template-columns: minmax(0, 1fr) 360px;
-    grid-template-areas: "map side" "legend side";
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "map side" "timeline side" "legend side";
     align-items: start;
   }
 }
@@ -344,8 +353,19 @@ button:disabled {
 .panel {
   padding: 12px 0;
 }
+/* Both pickers: label on its own line above a full-width select. */
+.panel__picker {
+  display: grid;
+  gap: var(--ps-space-1);
+}
+.panel__label {
+  font-weight: var(--ps-font-weight-bold);
+}
 .panel__picker select {
-  max-width: 100%;
+  width: 100%;
+}
+.panel__lead {
+  margin: var(--ps-space-1) 0 0;
 }
 .panel__title {
   margin: 10px 0 0;
@@ -413,7 +433,7 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* Planned vs measured chart */
+/* Panel charts */
 .chart {
   width: 100%;
   height: auto;
@@ -447,6 +467,12 @@ button:disabled {
   stroke-dasharray: 2 2;
   stroke-width: 3;
 }
+/* Offered capacity: thin solid line in the planned colour (planned trade is thick and dashed). */
+.chart__capacity {
+  fill: none;
+  stroke: var(--ps-state-planned);
+  stroke-width: 1.25;
+}
 .chart__cursor {
   stroke: var(--ps-color-accent);
   stroke-width: 1.5;
@@ -469,6 +495,9 @@ button:disabled {
 .key-line--planned {
   border-top: 2px dashed var(--ps-state-planned);
 }
+.key-line--capacity {
+  border-top: 1px solid var(--ps-state-planned);
+}
 .key-line--modelled {
   border-top: 3px dotted var(--ps-state-modelled);
 }
@@ -476,13 +505,18 @@ button:disabled {
 /* Timeline */
 .timeline {
   overflow-x: clip;
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  margin: 12px -12px 0;
-  padding: 8px 12px 10px;
+  margin: var(--ps-space-3) calc(-1 * var(--ps-space-4)) 0;
+  padding: var(--ps-space-2) var(--ps-space-4) 10px;
   background: var(--ps-color-surface);
   border-top: 1px solid var(--ps-color-border);
+}
+@media (min-width: 900px) {
+  /* Only as wide as the map column. */
+  .timeline {
+    margin: var(--ps-space-2) 0 0;
+    border: 1px solid var(--ps-color-border);
+    border-radius: var(--ps-radius-md);
+  }
 }
 .timeline__top {
   display: flex;

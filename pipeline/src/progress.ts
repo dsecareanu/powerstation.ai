@@ -11,6 +11,8 @@ export interface ProgressOptions {
   log?: (line: string) => void;
   /** Extra text for each line, for example the average response time. */
   details?: () => string;
+  /** Name of the counted items with data. Default "pairs with data". */
+  withDataLabel?: string;
 }
 
 export function formatDuration(ms: number): string {
@@ -30,6 +32,7 @@ export class Progress {
   private readonly clock: () => number;
   private readonly log: (line: string) => void;
   private readonly details: () => string;
+  private readonly withDataLabel: string;
   private readonly startedAt: number;
   private lastLineAt: number;
   private timer: ReturnType<typeof setInterval> | undefined;
@@ -41,6 +44,7 @@ export class Progress {
     this.clock = opts.clock ?? Date.now;
     this.log = opts.log ?? ((line) => console.log(line));
     this.details = opts.details ?? (() => "");
+    this.withDataLabel = opts.withDataLabel ?? "pairs with data";
     this.startedAt = this.clock();
     this.lastLineAt = this.startedAt;
   }
@@ -79,7 +83,7 @@ export class Progress {
     this.lastLineAt = now;
     const extra = this.details();
     this.log(
-      `[${this.done}/${this.total}] pairs with data: ${this.withData}, elapsed ${formatDuration(now - this.startedAt)}` +
+      `[${this.done}/${this.total}] ${this.withDataLabel}: ${this.withData}, elapsed ${formatDuration(now - this.startedAt)}` +
         (extra ? `, ${extra}` : "") +
         suffix,
     );

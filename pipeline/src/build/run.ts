@@ -23,12 +23,19 @@ import {
   type Series,
   type ZoneSeries,
 } from "./files";
+import { RateLimitStop } from "../entsoe/client";
+import { runPool } from "../pool";
+import { Progress } from "../progress";
 import { buildForecastGeneration, buildFuelSeries } from "./fuels";
-import { toHourly } from "./hourly";
+import { toHourly, type Hourly } from "./hourly";
 import { Warnings } from "./warnings";
 
 export interface RunOptions {
-  client: { fetchDocument(params: Params): Promise<ParsedDocument> };
+  client: {
+    fetchDocument(params: Params): Promise<ParsedDocument>;
+    /** Requests sent in the last minute, for the progress line. Optional. */
+    requestsLastMinute?(): number;
+  };
   zones: ZonesFile;
   /** Undirected neighbour pairs [a, b] with a < b. */
   pairs: [string, string][];
@@ -42,6 +49,10 @@ export interface RunOptions {
   includeRestricted: boolean;
   generatedAt: string;
   log?: (message: string) => void;
+  /** Requests waiting for a response at the same time. Default 3. The client keeps the rate limit. */
+  concurrency?: number;
+  /** A progress line every this many requests. Default 50. */
+  progressEvery?: number;
 }
 
 export type Dataset = "flows" | "capacity" | "generation" | "forecasts";
@@ -49,9 +60,19 @@ export type Dataset = "flows" | "capacity" | "generation" | "forecasts";
 export interface RunResult {
   files: Record<string, DataFile>;
   warnings: Warnings;
+  requests: number;
+  failedRequests: number;
 }
 
 const DAY_MS = 24 * HOUR_MS;
+/** The run fails when more than this share of requests fail. */
+export const MAX_FAILED_SHARE = 0.5;
+
+interface Task {
+  key: string;
+  label: string;
+  params: Params;
+}
 
 export async function runBackfill(opts: RunOptions): Promise<RunResult> {
   const { client, zones, pairs, nowMs, includeRestricted, generatedAt } = opts;
@@ -69,30 +90,135 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
     return e;
   };
 
-  const perPair =
-    2 * ((has("flows") ? 1 + (includeRestricted ? 1 : 0) : 0) + (has("capacity") ? 1 : 0));
-  const perZone =
-    (has("forecasts") ? 1 + (includeRestricted ? 1 : 0) : 0) +
-    (has("generation") && includeRestricted ? 2 : 0);
-  const total = pairs.length * perPair + zones.zones.length * perZone;
-  let n = 0;
-  const request = (dataset: string, label: string, params: Params) => {
-    log(`[${++n}/${total}] ${dataset} ${label}`);
-    return client.fetchDocument(params);
-  };
-
-  /** One direction of a border: hourly values, or null if ENTSO-E published nothing. */
-  async function direction(
+  // ---------- 1. list every request ----------
+  const flowKinds = [
+    { kind: "physical" as const, query: physicalFlowQuery, end: nowMs },
+    { kind: "scheduled" as const, query: scheduledQuery, end: end24 },
+  ].filter((k) => has("flows") && (k.kind === "physical" || includeRestricted));
+  const tasks: Task[] = [];
+  const dirKey = (dataset: string, from: string, to: string) => `${dataset} ${from} -> ${to}`;
+  const addDirection = (
     dataset: string,
     from: string,
     to: string,
     query: (out: string, inn: string, s: number, e: number) => Params,
     endMs: number,
+  ) => {
+    const key = dirKey(dataset, from, to);
+    tasks.push({ key, label: key, params: query(eicOf(from), eicOf(to), start30, endMs) });
+  };
+  for (const k of flowKinds) {
+    for (const [a, b] of pairs) {
+      addDirection(k.kind, a, b, k.query, k.end);
+      addDirection(k.kind, b, a, k.query, k.end);
+    }
+  }
+  for (const [a, b] of has("capacity") ? pairs : []) {
+    addDirection("capacity", a, b, capacityQuery, end24);
+    addDirection("capacity", b, a, capacityQuery, end24);
+  }
+  for (const z of zones.zones) {
+    const id = eicOf(z.id);
+    if (includeRestricted && has("generation")) {
+      tasks.push({
+        key: `generation ${z.id}`,
+        label: `generation ${z.id}`,
+        params: generationQuery(id, start30, nowMs),
+      });
+      tasks.push({
+        key: `load ${z.id}`,
+        label: `load ${z.id}`,
+        params: loadQuery(id, start30, nowMs),
+      });
+    }
+    if (has("forecasts")) {
+      tasks.push({
+        key: `load forecast ${z.id}`,
+        label: `load forecast ${z.id}`,
+        params: loadForecastQuery(id, nowMs, end24),
+      });
+      if (includeRestricted) {
+        tasks.push({
+          key: `wind/solar forecast ${z.id}`,
+          label: `wind/solar forecast ${z.id}`,
+          params: windSolarForecastQuery(id, nowMs, end24),
+        });
+      }
+    }
+  }
+
+  // ---------- 2. run them, a few at a time ----------
+  // A request that fails after the client's retries is recorded and the run goes on.
+  // RateLimitStop (second HTTP 429 ban) stops the whole run.
+  const docs = new Map<string, ParsedDocument>();
+  const failed = new Set<string>();
+  const progress = new Progress({
+    total: tasks.length,
+    every: opts.progressEvery ?? 50,
+    log,
+    withDataLabel: "requests with data",
+    details: () => {
+      const perMin = client.requestsLastMinute?.();
+      return (
+        `${failed.size} failed` + (perMin === undefined ? "" : `, ${perMin} req/min (last minute)`)
+      );
+    },
+  });
+  log(`${tasks.length} ENTSO-E requests, ${opts.concurrency ?? 3} at a time.`);
+  progress.start();
+  try {
+    await runPool(tasks, opts.concurrency ?? 3, async (task) => {
+      try {
+        const doc = await client.fetchDocument(task.params);
+        docs.set(task.key, doc);
+        progress.tick(doc.series.length > 0);
+      } catch (err) {
+        if (err instanceof RateLimitStop) throw err;
+        failed.add(task.key);
+        const reason = (err as Error).message;
+        log(`Request failed: ${task.label}: ${reason}`);
+        warnings.add(
+          `request-failed:${task.key}`,
+          `${task.label}: request failed (${reason}); hours kept from the previous file or missing`,
+        );
+        progress.tick(false);
+      }
+    });
+  } finally {
+    progress.stop();
+  }
+  if (tasks.length > 0 && failed.size / tasks.length > MAX_FAILED_SHARE) {
+    throw new Error(
+      `${failed.size} of ${tasks.length} ENTSO-E requests failed (more than ${MAX_FAILED_SHARE * 100}%). No files built.`,
+    );
+  }
+
+  /** The parsed document, or "failed". Logs one warning per series with left-out content. */
+  const result = (key: string): ParsedDocument | "failed" => {
+    if (failed.has(key)) return "failed";
+    const doc = docs.get(key)!;
+    doc.series.forEach((s, i) => {
+      if (s.problems.length === 0) return;
+      const message = `${key} (series ${i + 1}): ${s.problems.join("; ")}; those hours are missing`;
+      log(`Warning: ${message}`);
+      warnings.add(`bad-content:${key}:${i}`, message);
+    });
+    return doc;
+  };
+
+  /** One direction: hourly values, null if ENTSO-E published nothing, or "failed". */
+  function direction(
+    dataset: string,
+    from: string,
+    to: string,
+    endMs: number,
     keep: (s: ParsedTimeSeries) => boolean,
-  ) {
+  ): Hourly | null | "failed" {
+    const key = dirKey(dataset, from, to);
+    const doc = result(key);
+    if (doc === "failed") return "failed";
     const out = eicOf(from);
     const inn = eicOf(to);
-    const doc = await request(dataset, `${from} -> ${to}`, query(out, inn, start30, endMs));
     const kept = doc.series.filter((s) => {
       const rightPair =
         (s.outDomain === undefined || s.outDomain === out) &&
@@ -105,27 +231,35 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
     return steps.size === 0 ? null : toHourly(steps, start30, endMs);
   }
 
+  // ---------- 3. build the series ----------
   // ---------- flows ----------
   const flowBorders: FlowBorder[] = [];
-  const kinds = [
-    { kind: "physical" as const, query: physicalFlowQuery, end: nowMs, keep: () => true },
-    {
-      kind: "scheduled" as const,
-      query: scheduledQuery,
-      end: end24,
-      keep: (s: ParsedTimeSeries) => {
-        if (s.contractType !== "A01") {
-          warnings.add("sched-contract", "scheduled: series that are not day-ahead (A01) dropped");
-          return false;
-        }
-        return true;
-      },
-    },
-  ].filter((k) => has("flows") && (k.kind === "physical" || includeRestricted));
-  for (const k of kinds) {
+  const keepOf = (kind: "physical" | "scheduled") =>
+    kind === "physical"
+      ? () => true
+      : (s: ParsedTimeSeries) => {
+          if (s.contractType !== "A01") {
+            warnings.add(
+              "sched-contract",
+              "scheduled: series that are not day-ahead (A01) dropped",
+            );
+            return false;
+          }
+          return true;
+        };
+  for (const k of flowKinds) {
     for (const [a, b] of pairs) {
-      const ab = await direction(k.kind, a, b, k.query, k.end, k.keep);
-      const ba = await direction(k.kind, b, a, k.query, k.end, k.keep);
+      const ab = direction(k.kind, a, b, k.end, keepOf(k.kind));
+      const ba = direction(k.kind, b, a, k.end, keepOf(k.kind));
+      if (ab === "failed" || ba === "failed") {
+        // Netting one direction alone would give a wrong value: leave the border out of
+        // this run. The merge keeps the previous file's values; new hours stay missing.
+        warnings.add(
+          `failed-border:${k.kind}:${a}|${b}`,
+          `${k.kind} ${a}-${b}: a request failed; border not updated in this run`,
+        );
+        continue;
+      }
       const net = netBorder(ab, ba);
       if (!net) {
         warnings.add(
@@ -157,26 +291,32 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
       [a, b],
       [b, a],
     ] as const) {
-      const values = await direction(
+      const values = direction(
         "capacity",
         from,
         to,
-        capacityQuery,
         end24,
         (s) => s.contractType === undefined || s.contractType === "A01",
       );
-      if (values) capacity.push({ from, to, series: { start: start30, values } });
+      if (values && values !== "failed")
+        capacity.push({ from, to, series: { start: start30, values } });
     }
   }
 
   // ---------- generation and load (restricted) ----------
   const generation: ZoneSeries<FuelType>[] = [];
   const forecasts: ZoneSeries<"solar" | "wind_offshore" | "wind_onshore">[] = [];
+  const EMPTY: ParsedDocument = { empty: true, series: [] };
   for (const z of zones.zones) {
     if (includeRestricted && has("generation")) {
-      const gen = await request("generation", z.id, generationQuery(eicOf(z.id), start30, nowMs));
-      const load = await request("load", z.id, loadQuery(eicOf(z.id), start30, nowMs));
-      if (gen.series.length > 0 || load.series.length > 0) {
+      const gen = result(`generation ${z.id}`);
+      const load = result(`load ${z.id}`);
+      // A failed request leaves the zone out of this run; the merge keeps old values.
+      if (
+        gen !== "failed" &&
+        load !== "failed" &&
+        (gen.series.length > 0 || load.series.length > 0)
+      ) {
         const loadSteps = mergeSeries(load.series, warnings, `${z.id} load`);
         const fuels = buildFuelSeries(gen.series, start30, nowMs, warnings, z.id);
         generation.push({
@@ -190,14 +330,10 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
     }
     // Forecasts: load is open data. Wind and solar are restricted.
     if (!has("forecasts")) continue;
-    const lf = await request("load forecast", z.id, loadForecastQuery(eicOf(z.id), nowMs, end24));
-    const ws = includeRestricted
-      ? await request(
-          "wind/solar forecast",
-          z.id,
-          windSolarForecastQuery(eicOf(z.id), nowMs, end24),
-        )
-      : { empty: true, series: [] as ParsedTimeSeries[] };
+    const lf = result(`load forecast ${z.id}`);
+    const wsRaw = includeRestricted ? result(`wind/solar forecast ${z.id}`) : EMPTY;
+    const ws = wsRaw === "failed" ? EMPTY : wsRaw;
+    if (lf === "failed") continue; // no forecast for this zone in this run
     if (lf.series.length > 0 || ws.series.length > 0) {
       const loadSteps = mergeSeries(lf.series, warnings, `${z.id} load forecast`);
       const gens = buildForecastGeneration(ws.series, nowMs, end24, warnings, z.id);
@@ -230,5 +366,5 @@ export async function runBackfill(opts: RunOptions): Promise<RunResult> {
     files[DATA_PATHS.generation30d] = generationFile(generation, start30, nowMs, generatedAt);
   }
   files[DATA_PATHS.status] = statusFile(files, generatedAt, warnings);
-  return { files, warnings };
+  return { files, warnings, requests: tasks.length, failedRequests: failed.size };
 }
