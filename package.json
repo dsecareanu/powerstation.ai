@@ -17,7 +17,9 @@
     "fixtures": "pnpm --filter @powerstation/pipeline run fixtures",
     "validate": "pnpm --filter @powerstation/schema run validate",
     "validate:fixtures": "pnpm --filter @powerstation/schema run validate fixtures",
-    "test": "pnpm -r --if-present test"
+    "test": "pnpm -r --if-present test",
+    "build:site": "pnpm --filter @powerstation/site run build",
+    "build:site:demo": "pnpm --filter @powerstation/site run build:demo"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

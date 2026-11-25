@@ -47,9 +47,9 @@ export async function load30d(): Promise<Pick<DefaultData, "flows" | "generation
   return { flows, generation };
 }
 
-/** Current time. In dev it is fixed to the fixtures' "now"; `?now=<ISO>` overrides it. */
+/** Current time. In dev and demo builds it is fixed to the fixtures' "now"; `?now=<ISO>` overrides it. */
 export function clockNow(): number {
-  if (!import.meta.env.DEV) return Date.now();
+  if (!import.meta.env.DEV && !__DEV_NOW__) return Date.now();
   const param = new URLSearchParams(location.search).get("now");
   return toMs(param ?? __DEV_NOW__);
 }

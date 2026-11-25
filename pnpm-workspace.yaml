@@ -10,3 +10,5 @@ minimumReleaseAge: 10080
 # Packages allowed to run install scripts.
 allowBuilds:
   esbuild: true
+  # wrangler's runtime. Its install script only optimizes the binary lookup; not needed.
+  workerd: false

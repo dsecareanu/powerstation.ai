@@ -1,0 +1,84 @@
+<h1>About and sources</h1>
+<p>
+  powerstation.ai is a free, open-source tool. It shows how electricity moves across Europe, hour by
+  hour. You can also test a question such as "What happens to the grid if a 1 GW data center goes
+  here?"
+</p>
+
+<h2>Two steps</h2>
+<ol>
+  <li>
+    <a href="/">Watch the grid</a>: a map of electricity flows between European countries, for the
+    last 7 or 30 days.
+  </li>
+  <li>
+    <a href="/calculator/">Place a data center</a>: pick a grid zone and a size. See how the extra
+    demand compares with that zone's load, imports and electricity mix.
+  </li>
+</ol>
+
+<h2>How to read the numbers</h2>
+<p>Every value on this site has one of four labels:</p>
+<dl>
+  <dt>Measured</dt>
+  <dd>Reported by the grid operators after the hour.</dd>
+  <dt>Planned</dt>
+  <dd>
+    A plan made the day before, for example planned trade or planned transfer capacity between
+    zones. A plan is not a forecast of what will physically flow.
+  </dd>
+  <dt>Modelled</dt>
+  <dd>Our estimate. The method is shown next to the value.</dd>
+  <dt>No data</dt>
+  <dd>The value is missing. We do not fill the gap.</dd>
+</dl>
+<p>
+  Power is in megawatts (MW), as the average over one hour. Times are stored in UTC and shown in
+  your local time. If the newest data is more than 2 hours old, the page says "data delayed".
+</p>
+<p>
+  The calculator gives an estimate for a whole grid zone. It cannot judge a specific site, a local
+  grid connection or a permit.
+</p>
+
+<h2>Sources</h2>
+<dl>
+  <dt><a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a></dt>
+  <dd>
+    Physical flows between zones, day-ahead transfer capacity and the day-ahead load forecast.
+    License: CC BY 4.0. We publish only items on ENTSO-E's list of data that is free for re-use.
+    Other items, such as generation per fuel, appear only after ENTSO-E confirms that we may publish
+    them.
+  </dd>
+  <dt><a href="https://epoch.ai/data/ai-supercomputers">Epoch AI, "AI supercomputers"</a></dt>
+  <dd>
+    Data center sites. License: CC BY 4.0. We keep the sites in Europe and assign them to grid
+    zones.
+  </dd>
+  <dt><a href="https://ec.europa.eu/eurostat">Eurostat</a></dt>
+  <dd>
+    Electricity use per household (datasets <code>nrg_bal_c</code> and <code>lfst_hhnhtych</code>,
+    2024), for the "about as much as N homes" comparisons. This is our calculation from Eurostat
+    data. Eurostat is not responsible for this use of its data. Reuse terms:
+    <a href="https://ec.europa.eu/eurostat/help/copyright-notice">Eurostat copyright notice</a>.
+  </dd>
+  <dt><a href="https://www.ipcc.ch/">IPCC</a></dt>
+  <dd>
+    Life-cycle emission factors per fuel: AR5 Working Group III, Annex III, Table A.III.2 (2014),
+    and for oil SRREN Annex II, Table A.II.4 (2011).
+  </dd>
+  <dt><a href="https://www.naturalearthdata.com/">Natural Earth</a></dt>
+  <dd>Country shapes and zone label points. Public domain.</dd>
+</dl>
+<p>
+  Each data file names its source and license. Each page lists the files it uses in its sources
+  panel.
+</p>
+
+<h2>Code</h2>
+<p>
+  The code is open source under the
+  <a href="https://github.com/dsecareanu/powerstation.ai/blob/main/LICENSE">AGPL-3.0</a>
+  license. Read it or report a problem on
+  <a href="https://github.com/dsecareanu/powerstation.ai">GitHub</a>.
+</p>
