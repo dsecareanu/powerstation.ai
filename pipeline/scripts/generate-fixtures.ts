@@ -10,6 +10,8 @@ import {
   DATA_PATHS,
   SCHEMA_VERSION,
   type BorderSeries,
+  type DirectedCapacity,
+  type EmissionFactorsFile,
   type Datacenter,
   type DataState,
   type FuelType,
@@ -598,6 +600,82 @@ const DATACENTERS: Datacenter[] = [
   }),
 ];
 
+// ---------- capacity (day-ahead NTC per direction, 30 days back to 24 h ahead) ----------
+// Generated after everything else, so adding it did not change the other fixtures.
+// Mock values: a base NTC per direction, a small daily wiggle and short missing gaps.
+// ES -> PT has no entry, to show a direction without published capacity.
+const capacity30: DirectedCapacity[] = BORDERS.flatMap(([from, to, typical, swing]) =>
+  [
+    [from, to],
+    [to, from],
+  ]
+    .filter(([a, b]) => !(a === "ES" && b === "PT"))
+    .map(([a, b]) => {
+      const base = (Math.abs(typical) + swing) * (0.9 + rand() * 0.4);
+      const values = Array.from(
+        { length: hoursAll },
+        (_, i) => base * (0.95 + 0.05 * Math.sin((2 * Math.PI * i) / 24)) + noise(base * 0.02),
+      );
+      return {
+        from_zone: a!,
+        to_zone: b!,
+        series: series(start30, values, "planned", maybeGap(hoursAll, 0.3)),
+      };
+    }),
+);
+
+// ---------- emission factors ----------
+// Values are copied from IPCC AR5 WGIII Annex III, Table A.III.2, "Lifecycle emissions
+// (incl. albedo effect)", median column (checked against the PDF on 2026-11-25). The file is
+// still mock: true. Which proxies the real file uses is an open decision (session A report).
+const IPCC = "ipcc-ar5-wg3-annex-iii";
+const T = "Table A.III.2";
+const direct = (value: number, row: string) =>
+  ({ value, match: "direct", source_id: IPCC, table: T, row }) as const;
+const proxy = (value: number, row: string, note: string) =>
+  ({ value, match: "proxy", source_id: IPCC, table: T, row, note }) as const;
+const none = (note: string) =>
+  ({ value: null, match: "none", source_id: null, table: null, row: null, note }) as const;
+const emissionFactors: Omit<EmissionFactorsFile, keyof typeof envelope> = {
+  dataset: "emission_factors",
+  unit: "gCO2eq/kWh",
+  basis: "lifecycle",
+  sources: [
+    {
+      id: IPCC,
+      title:
+        "Climate Change 2014: Mitigation of Climate Change. Working Group III contribution to the IPCC Fifth Assessment Report. Annex III: Technology-specific Cost and Performance Parameters",
+      publisher: "Intergovernmental Panel on Climate Change (IPCC)",
+      year: 2014,
+      url: "https://www.ipcc.ch/site/assets/uploads/2018/02/ipcc_wg3_ar5_annex-iii.pdf",
+    },
+  ],
+  factors: {
+    nuclear: direct(12, "Nuclear"),
+    lignite: proxy(820, "Coal — PC", "No lignite row in the source. Uses pulverised hard coal."),
+    hard_coal: direct(820, "Coal — PC"),
+    gas: proxy(
+      490,
+      "Gas — Combined Cycle",
+      "The source has combined-cycle plants only. Open-cycle plants emit more.",
+    ),
+    oil: none("The source has no factor for oil-fired power."),
+    biomass: direct(230, "Biomass — dedicated"),
+    waste: none("The source has no factor for waste incineration."),
+    geothermal: direct(38, "Geothermal"),
+    hydro_run_of_river: direct(24, "Hydropower"),
+    hydro_reservoir: direct(24, "Hydropower"),
+    hydro_pumped_storage: none(
+      "Storage, not a primary source. Its emissions depend on the power used for pumping.",
+    ),
+    wind_onshore: direct(11, "Wind onshore"),
+    wind_offshore: direct(12, "Wind offshore"),
+    solar: proxy(48, "Solar PV — utility", "Solar mixes rooftop (41) and utility-scale (48) PV."),
+    other_renewable: none("Mixed category. The source has no single factor."),
+    other: none("Mixed category. The source has no single factor."),
+  },
+};
+
 // ---------- files ----------
 const window30 = { start: iso(start30), end: iso(nowMs + AHEAD * HOUR) };
 const window7 = { start: iso(start7), end: iso(nowMs + AHEAD * HOUR) };
@@ -628,6 +706,13 @@ const out: Record<string, object> = {
     zones: forecasts,
   },
   [DATA_PATHS.datacenters]: { ...envelope, dataset: "datacenters", datacenters: DATACENTERS },
+  [DATA_PATHS.capacity30d]: {
+    ...envelope,
+    dataset: "capacity",
+    window: window30,
+    borders: capacity30,
+  },
+  [DATA_PATHS.emissionFactors]: { ...envelope, ...emissionFactors },
 };
 const fileStatus = (path: string, dataset: string, measured: boolean) => ({
   path,
@@ -647,6 +732,8 @@ out[DATA_PATHS.status] = {
     fileStatus(DATA_PATHS.generation30d, "generation", true),
     fileStatus(DATA_PATHS.forecasts24h, "forecasts", false),
     fileStatus(DATA_PATHS.datacenters, "datacenters", false),
+    fileStatus(DATA_PATHS.capacity30d, "capacity", false),
+    fileStatus(DATA_PATHS.emissionFactors, "emission_factors", false),
   ],
   sources: [
     {

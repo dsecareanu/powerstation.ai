@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "generated_at": "2026-11-25T12:00:00Z",
   "mock": true,
   "source": "powerstation.ai mock data generator",
@@ -52,6 +52,20 @@
     {
       "path": "v1/datacenters/datacenters.json",
       "dataset": "datacenters",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": null,
+      "ok": true
+    },
+    {
+      "path": "v1/capacity/rolling-30d.json",
+      "dataset": "capacity",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": null,
+      "ok": true
+    },
+    {
+      "path": "v1/meta/emission-factors.json",
+      "dataset": "emission_factors",
       "updated_at": "2026-11-25T12:00:00Z",
       "newest_measured_at": null,
       "ok": true

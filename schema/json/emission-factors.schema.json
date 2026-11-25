@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/emission-factors.schema.json",
+  "title": "EmissionFactorsFile",
+  "description": "v1/meta/emission-factors.json. Life-cycle emission factor per fuel type, in gCO2eq per kWh of electricity. Every value cites a document, a table and a row. Used to estimate carbon intensity from generation by fuel.",
+  "type": "object",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/Envelope" }],
+  "required": ["dataset", "unit", "basis", "sources", "factors"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": { "const": "emission_factors" },
+    "unit": { "const": "gCO2eq/kWh" },
+    "basis": {
+      "description": "lifecycle = construction, fuel supply, operation and decommissioning, per kWh generated.",
+      "const": "lifecycle"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/FactorSource" }
+    },
+    "factors": {
+      "description": "One entry per fuel type in FUEL_TYPES. Every fuel type is present, also when no factor is known.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nuclear",
+        "lignite",
+        "hard_coal",
+        "gas",
+        "oil",
+        "biomass",
+        "waste",
+        "geothermal",
+        "hydro_run_of_river",
+        "hydro_reservoir",
+        "hydro_pumped_storage",
+        "wind_onshore",
+        "wind_offshore",
+        "solar",
+        "other_renewable",
+        "other"
+      ],
+      "properties": {
+        "nuclear": { "$ref": "#/$defs/EmissionFactor" },
+        "lignite": { "$ref": "#/$defs/EmissionFactor" },
+        "hard_coal": { "$ref": "#/$defs/EmissionFactor" },
+        "gas": { "$ref": "#/$defs/EmissionFactor" },
+        "oil": { "$ref": "#/$defs/EmissionFactor" },
+        "biomass": { "$ref": "#/$defs/EmissionFactor" },
+        "waste": { "$ref": "#/$defs/EmissionFactor" },
+        "geothermal": { "$ref": "#/$defs/EmissionFactor" },
+        "hydro_run_of_river": { "$ref": "#/$defs/EmissionFactor" },
+        "hydro_reservoir": { "$ref": "#/$defs/EmissionFactor" },
+        "hydro_pumped_storage": { "$ref": "#/$defs/EmissionFactor" },
+        "wind_onshore": { "$ref": "#/$defs/EmissionFactor" },
+        "wind_offshore": { "$ref": "#/$defs/EmissionFactor" },
+        "solar": { "$ref": "#/$defs/EmissionFactor" },
+        "other_renewable": { "$ref": "#/$defs/EmissionFactor" },
+        "other": { "$ref": "#/$defs/EmissionFactor" }
+      }
+    }
+  },
+  "$defs": {
+    "FactorSource": {
+      "title": "FactorSource",
+      "description": "A document that factors cite.",
+      "type": "object",
+      "required": ["id", "title", "publisher", "year", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "title": { "type": "string", "minLength": 1 },
+        "publisher": { "type": "string", "minLength": 1 },
+        "year": { "type": "integer", "minimum": 1900 },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "EmissionFactor": {
+      "title": "EmissionFactor",
+      "description": "match: direct = the cited row is this fuel type. proxy = the cited row is a similar technology; note says why. none = the sources have no factor; value and the citation fields are null, and the UI must say so.",
+      "type": "object",
+      "required": ["value", "match", "source_id", "table", "row"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "description": "Median life-cycle emissions in gCO2eq/kWh. null when match is none.",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "match": { "enum": ["direct", "proxy", "none"] },
+        "source_id": {
+          "description": "id of an entry in sources. null when match is none.",
+          "type": ["string", "null"]
+        },
+        "table": {
+          "description": "Table in the source, e.g. 'Table A.III.2'. null when match is none.",
+          "type": ["string", "null"]
+        },
+        "row": {
+          "description": "Row label in that table, as the source writes it. null when match is none.",
+          "type": ["string", "null"]
+        },
+        "note": {
+          "description": "Plain-English note. Required when match is proxy or none.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
