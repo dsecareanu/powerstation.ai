@@ -65,7 +65,12 @@ export interface CarbonResult {
 export interface CalcResult {
   zone: string;
   sizeMw: number;
-  /** Hours in the data window (generation file). */
+  /**
+   * True when the generation file is not available. Load, imports, carbon and extra source are
+   * then null or empty (state `missing`), never estimated.
+   */
+  generationMissing: boolean;
+  /** Hours in the data window (generation file, or flows file when generation is missing). */
   totalHours: number;
   /** Hours used in the results. */
   validHours: number;
@@ -94,10 +99,11 @@ export interface CalcResult {
   carbon: CarbonResult | null;
   /** Share of used hours per likely extra source (0..1). Only sources with hours are listed. */
   extraSource: { source: ExtraSource; hours: number; share: number }[];
+  /** Null when the data center file is not available. */
   datacenters: {
     withKnownPower: number;
     knownPowerMw: number;
     unknownPower: number;
     records: Datacenter[];
-  };
+  } | null;
 }

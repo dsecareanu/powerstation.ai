@@ -33,4 +33,7 @@ function devFixtures(): Plugin {
 
 export default defineConfig({
   plugins: [preact(), devFixtures()],
+  // @powerstation/ui has its own dev copy of preact. Two copies in one bundle drop the shared
+  // components from the page (for example the data-state badges), so use one copy.
+  resolve: { dedupe: ["preact"] },
 });

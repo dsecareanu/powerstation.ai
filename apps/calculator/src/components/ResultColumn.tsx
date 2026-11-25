@@ -2,6 +2,8 @@ import type { EmissionFactorsFile } from "@powerstation/schema";
 import { AnimatedNumber, DataStateBadge, HOUSEHOLD_SOURCE, formatPower } from "@powerstation/ui";
 import type { CalcResult } from "../calc/types";
 import {
+  DATACENTERS_MISSING_REASON,
+  GENERATION_MISSING_REASON,
   describePeakPressure,
   directionLabel,
   formatInt,
@@ -39,6 +41,48 @@ function Block(props: { title: string; method: string; children: preact.Componen
   );
 }
 
+/** A result that cannot be computed: the `missing` state, its label and a plain reason. */
+function MissingBlock(props: { title: string; reason: string }) {
+  return (
+    <section class="block missing">
+      <header class="block-head">
+        <h4>{props.title}</h4>
+        <DataStateBadge state="missing" />
+      </header>
+      <p class="hint">{props.reason}</p>
+    </section>
+  );
+}
+
+function DatacentersBlock(props: { datacenters: CalcResult["datacenters"]; mock: boolean }) {
+  const dc = props.datacenters;
+  const title = "Data centers already in this zone";
+  if (!dc) return <MissingBlock title={title} reason={DATACENTERS_MISSING_REASON} />;
+  return (
+    <section class="block">
+      <header class="block-head">
+        <h4>{title}</h4>
+      </header>
+      <p>
+        {dc.records.length === 0
+          ? "No data centers are listed for this zone."
+          : `${dc.withKnownPower} with known power, ${formatPower(dc.knownPowerMw)} in total. ${dc.unknownPower} with unknown power.`}
+        {props.mock && dc.records.length > 0 ? " These data centers are fictional." : ""}
+      </p>
+      {dc.records.length > 0 ? (
+        <ul class="plain-list">
+          {dc.records.map((d) => (
+            <li key={d.id}>
+              {d.name}: {d.power_mw === null ? "power unknown" : formatPower(d.power_mw)} (
+              {d.status.replace("_", " ")})
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
 export function ResultColumn(props: ResultColumnProps) {
   const { heading, countryCode, countryName, result: r, emissionFactors, mock } = props;
   if (!r) {
@@ -63,7 +107,21 @@ export function ResultColumn(props: ResultColumnProps) {
           : ""}
         {HOUSEHOLD_SOURCE.attribution}
       </p>
-      {r.validHours === 0 || !r.load || !r.imports || !r.dataWindow ? (
+      {r.generationMissing ? (
+        <>
+          <MissingBlock title="Share of the zone's load" reason={GENERATION_MISSING_REASON} />
+          <MissingBlock title="Hours that need imports" reason={GENERATION_MISSING_REASON} />
+          <Block
+            title="Pressure on interconnectors"
+            method="(net physical imports + data center) divided by planned import capacity. Worst case: all extra load is imported."
+          >
+            <PressureNote pressure={pressure} />
+          </Block>
+          <MissingBlock title="Carbon intensity" reason={GENERATION_MISSING_REASON} />
+          <MissingBlock title="Likely extra source" reason={GENERATION_MISSING_REASON} />
+          <DatacentersBlock datacenters={r.datacenters} mock={mock} />
+        </>
+      ) : r.validHours === 0 || !r.load || !r.imports || !r.dataWindow ? (
         <p class="error">
           No hour has complete data in this period, so there is no result.{" "}
           {hours(r.hoursWithoutData)} without data.
@@ -133,27 +191,7 @@ export function ResultColumn(props: ResultColumnProps) {
             </ul>
           </Block>
 
-          <section class="block">
-            <header class="block-head">
-              <h4>Data centers already in this zone</h4>
-            </header>
-            <p>
-              {r.datacenters.records.length === 0
-                ? "No data centers are listed for this zone."
-                : `${r.datacenters.withKnownPower} with known power, ${formatPower(r.datacenters.knownPowerMw)} in total. ${r.datacenters.unknownPower} with unknown power.`}
-              {mock && r.datacenters.records.length > 0 ? " These data centers are fictional." : ""}
-            </p>
-            {r.datacenters.records.length > 0 ? (
-              <ul class="plain-list">
-                {r.datacenters.records.map((d) => (
-                  <li key={d.id}>
-                    {d.name}: {d.power_mw === null ? "power unknown" : formatPower(d.power_mw)} (
-                    {d.status.replace("_", " ")})
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
+          <DatacentersBlock datacenters={r.datacenters} mock={mock} />
 
           <p class="data-notes">
             Data from {formatUtc(r.dataWindow.firstValidHour)} to{" "}

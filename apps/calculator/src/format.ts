@@ -72,3 +72,7 @@ export function homesInfo(
     isFallback: householdsFor(countryCode).isFallback,
   };
 }
+
+/** Plain reasons shown with the "No data" state when an optional file is not available. */
+export const GENERATION_MISSING_REASON = "Generation mix is not published yet.";
+export const DATACENTERS_MISSING_REASON = "The data center list is not published yet.";

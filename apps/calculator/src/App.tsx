@@ -35,7 +35,8 @@ import { AttributionPanel } from "@powerstation/ui";
 interface Base {
   status: StatusFile;
   zones: ZonesFile;
-  datacenters: DatacentersFile;
+  /** Undefined when the file could not be loaded. */
+  datacenters: DatacentersFile | undefined;
   /** Undefined when the file could not be loaded. */
   capacity: CapacityFile | undefined;
   /** Undefined when the file could not be loaded. */
@@ -137,13 +138,15 @@ function Calculator({ base }: { base: Base }) {
   const files = [
     status,
     zones,
-    datacenters,
+    ...(datacenters ? [datacenters] : []),
     ...(base.capacity ? [base.capacity] : []),
     ...(base.emissionFactors ? [base.emissionFactors] : []),
-    ...(period.state === "ready" ? [period.data.generation, period.data.flows] : []),
+    ...(period.state === "ready"
+      ? [...(period.data.generation ? [period.data.generation] : []), period.data.flows]
+      : []),
   ];
   const mock = files.some((f) => f.mock);
-  const attribution = buildAttribution(files, datacenters.datacenters, base.emissionFactors);
+  const attribution = buildAttribution(files, datacenters?.datacenters ?? [], base.emissionFactors);
   const periodLabel = state.period === "7d" ? "last 7 days" : "last 30 days";
   const getSummary = () =>
     summarise(
@@ -266,17 +269,23 @@ function Calculator({ base }: { base: Base }) {
   );
 }
 
-function runZone(zone: string, sizeMw: number, data: PeriodData, base: Base): CalcResult | null {
-  const generation = data.generation.zones.find((z) => z.zone === zone);
-  if (!generation) return null;
+export function runZone(
+  zone: string,
+  sizeMw: number,
+  data: PeriodData,
+  base: Pick<Base, "capacity" | "emissionFactors" | "datacenters">,
+): CalcResult | null {
+  // No generation file: calculate() marks the results that need it as missing.
+  const generation = data.generation?.zones.find((z) => z.zone === zone);
+  if (data.generation && !generation) return null;
   return calculate({
     zone,
     sizeMw,
     generation,
-    window: data.generation.window,
+    window: (data.generation ?? data.flows).window,
     borders: data.flows.borders,
     capacity: base.capacity?.borders,
     emissionFactors: base.emissionFactors?.factors,
-    datacenters: base.datacenters.datacenters.filter((d) => d.zone === zone),
+    datacenters: base.datacenters?.datacenters.filter((d) => d.zone === zone),
   });
 }
