@@ -231,6 +231,29 @@ No shadows. Depth comes from surface steps (paper → surface → sunken) and 1 
 - One ease-out curve, 120 ms for controls, 400 ms for values.
 - Under `prefers-reduced-motion` everything rests: flow dots stop and arrowheads show direction.
 
+## Logo
+
+The logo is the now line followed by the wordmark "powerstation.ai" in IBM Plex Sans 600, lowercase, converted to outlines. The square mark is the now line alone on an ink tile. Files are in `apps/site/public/brand/`:
+
+| File                                                                             | Use                                                                                                               |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `logo-light.svg`                                                                 | Wordmark on paper or white: ink text and line, yellow point with an ink ring                                      |
+| `logo-dark.svg`                                                                  | Wordmark on dark grounds: light text and line, yellow point with a dark ring                                      |
+| `logo-mono.svg`                                                                  | One colour (`currentColor`, black as a file): the point is an open ring. For print in one ink, stamps, embroidery |
+| `mark.svg`                                                                       | Square mark: ink tile, paper line, yellow point. Avatars, social profiles                                         |
+| `favicon.svg`, `favicon.ico` (16 and 32 px)                                      | Browser tabs                                                                                                      |
+| `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, `site.webmanifest` | Home screen and web manifest. Full-bleed ink square; the line stays inside the maskable safe zone                 |
+
+The site header uses the same drawing inline (`apps/site/src/logo.ts`), in `currentColor`, so it follows the light and dark themes. The link around it has `aria-label="powerstation.ai"`.
+
+- **Construction:** at a type size of 100 units, the line is 12 units thick (close to the stem of Plex Sans 600), sits on the middle of the x-height, and runs solid 42 units, the point (radius 16), then two dashes. The gap from line to text is 28 units.
+- **Clear space:** at least the x-height of the wordmark on every side. Nothing else (text, edges, other logos) inside it.
+- **Minimum size:** wordmark 16 px tall on screen (22 px in the header on phones, 24 px from 768 px), 12 mm in print. Square mark 16 px.
+- **Do** use the light file on paper and white, the dark file on ink and dark photos, the one-colour file when only one ink is possible.
+- **Do** keep the solid-point-dashed order: it is the measured → now → planned story.
+- **Don't** recolour the point (only yellow, or an open ring in one colour), stretch, rotate, add shadows or outlines, or set the wordmark in another face.
+- **Don't** use the lightning-bolt icon from the old "domain for sale" lander. It belongs to the shared `domain-landers` Worker, not to powerstation.ai.
+
 ## Do's and Don'ts
 
 - Do show every value's state with a pattern or label as well as colour.

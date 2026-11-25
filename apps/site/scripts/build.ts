@@ -71,6 +71,9 @@ const tokens = readFileSync(fileURLToPath(import.meta.resolve("@powerstation/ui/
 const shellCss = readFileSync(join(siteDir, "src", "shell.css"));
 writeFileSync(join(dist, "site.css"), `${fontsCss}\n${tokens}\n${shellCss}`);
 
+// Static files: logo, favicons, web manifest (public/brand/).
+cpSync(join(siteDir, "public"), dist, { recursive: true });
+
 // The site's own pages.
 mkdirSync(join(dist, "guide"), { recursive: true });
 writeFileSync(

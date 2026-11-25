@@ -36,9 +36,22 @@
   color: var(--ps-color-accent);
 }
 .site-header .site-logo {
-  font-weight: var(--ps-font-weight-display);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--ps-color-text);
   text-decoration: none;
+}
+/* Wordmark height 22px on phones, 24px from 768px. Clear space: see DESIGN.md. */
+.site-logo__mark {
+  display: block;
+  height: 22px;
+  width: auto;
+}
+@media (min-width: 768px) {
+  .site-logo__mark {
+    height: 24px;
+  }
 }
 .site-header nav a {
   display: inline-block;

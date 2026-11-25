@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
@@ -93,4 +93,31 @@ test("measurePageJs counts module scripts and preloads, and the budget flags big
   assert.ok(page!.gzipBytes > 0);
   assert.deepEqual(checkBudget([{ page: "index.html", gzipBytes: 100 }]), []);
   assert.equal(checkBudget([{ page: "index.html", gzipBytes: 300 * 1024 }]).length, 1);
+});
+
+test("injectShell adds the wordmark with a name, and the icon links", () => {
+  const html = injectShell(APP_HTML, { demo: false, active: "map" });
+  assert.match(html, /<a class="site-logo" href="\/" aria-label="powerstation.ai"><svg /);
+  assert.match(html, /<link rel="icon" href="\/brand\/favicon.svg" type="image\/svg\+xml" \/>/);
+  assert.match(html, /<link rel="icon" href="\/brand\/favicon.ico" sizes="32x32" \/>/);
+  assert.match(html, /<link rel="apple-touch-icon" href="\/brand\/apple-touch-icon.png" \/>/);
+  assert.match(html, /<link rel="manifest" href="\/brand\/site.webmanifest" \/>/);
+});
+
+test("every brand file the pages link to exists", () => {
+  const brand = resolve(import.meta.dirname, "..", "public", "brand");
+  for (const f of [
+    "favicon.svg",
+    "favicon.ico",
+    "apple-touch-icon.png",
+    "icon-192.png",
+    "icon-512.png",
+    "site.webmanifest",
+    "logo-light.svg",
+    "logo-dark.svg",
+    "logo-mono.svg",
+    "mark.svg",
+  ]) {
+    assert.ok(existsSync(join(brand, f)), f);
+  }
 });
