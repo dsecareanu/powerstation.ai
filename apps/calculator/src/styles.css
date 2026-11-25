@@ -35,7 +35,7 @@ h4 {
 .eyebrow {
   margin: 0;
   color: var(--ps-color-text-muted);
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 .lead {
   font-size: 1.05rem;
@@ -43,8 +43,8 @@ h4 {
   max-width: 42rem;
 }
 :focus-visible {
-  outline: 3px solid var(--ps-color-focus);
-  outline-offset: 2px;
+  outline: 2px solid transparent;
+  box-shadow: var(--ps-focus-ring);
 }
 .panel {
   background: var(--ps-color-surface);
@@ -76,7 +76,7 @@ h4 {
   gap: var(--ps-space-2);
 }
 label {
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 select,
 input[type="number"] {
@@ -126,11 +126,11 @@ input[type="number"] {
 }
 .error {
   color: var(--ps-color-warning-text);
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 .button {
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
   min-height: 2.75rem;
   padding: 0 var(--ps-space-4);
   background: var(--ps-color-accent);
@@ -144,7 +144,7 @@ input[type="number"] {
   border-radius: var(--ps-radius-md);
   border: 2px solid;
   margin: var(--ps-space-2) 0;
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 .banner-warn {
   background: var(--ps-color-warning-bg);
@@ -247,7 +247,7 @@ input[type="number"] {
 .scope-note {
   border-left: 4px solid var(--ps-color-accent);
   padding-left: var(--ps-space-4);
-  font-weight: 600;
+  font-weight: var(--ps-font-weight-bold);
 }
 a {
   color: var(--ps-color-accent);

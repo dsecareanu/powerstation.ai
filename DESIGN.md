@@ -1,0 +1,243 @@
+---
+version: alpha
+name: powerstation.ai
+description: Line diagram. Ink on cool paper, one high-voltage yellow, IBM Plex. Data states shown by line style as well as colour.
+colors:
+  primary: "#15191E"
+  paper: "#F5F6F3"
+  surface: "#FFFFFF"
+  sunken: "#ECEEE9"
+  line: "#D5D9D3"
+  field: "#80868F"
+  land: "#E3E6E0"
+  land-strong: "#CFD3CC"
+  ink: "#15191E"
+  ink-muted: "#555C66"
+  on-ink: "#F5F6F3"
+  signal: "#FFD21A"
+  signal-tint: "#FFF4C2"
+  state-measured: "#0072B2"
+  state-planned: "#C4520A"
+  state-planned-text: "#AD4708"
+  state-modelled: "#A2337A"
+  state-missing: "#6E7179"
+  dark-paper: "#0E1116"
+  dark-surface: "#171B21"
+  dark-line: "#2C323B"
+  dark-land: "#1F242C"
+  dark-ink: "#ECEEF0"
+  dark-ink-muted: "#A3AAB5"
+  dark-signal-tint: "#3A3110"
+typography:
+  display:
+    fontFamily: IBM Plex Sans
+    fontSize: 46px
+    fontWeight: 600
+    lineHeight: 1.08
+  h2:
+    fontFamily: IBM Plex Sans
+    fontSize: 25px
+    fontWeight: 600
+    lineHeight: 1.2
+  h3:
+    fontFamily: IBM Plex Sans
+    fontSize: 18px
+    fontWeight: 600
+    lineHeight: 1.3
+  body:
+    fontFamily: IBM Plex Sans
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.5
+  small:
+    fontFamily: IBM Plex Sans
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.5
+  caption:
+    fontFamily: IBM Plex Sans
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 1.4
+  readout:
+    fontFamily: IBM Plex Mono
+    fontSize: 52px
+    fontWeight: 600
+    lineHeight: 1
+  data:
+    fontFamily: IBM Plex Mono
+    fontSize: 13px
+    fontWeight: 400
+    lineHeight: 1.4
+rounded:
+  sm: 2px
+  md: 6px
+  lg: 10px
+spacing:
+  "1": 4px
+  "2": 8px
+  "3": 12px
+  "4": 16px
+  "5": 24px
+  "6": 32px
+  "7": 48px
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-ink}"
+    rounded: "{rounded.md}"
+    height: 44px
+    padding: 0 18px
+  button-secondary:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.md}"
+    height: 44px
+  button-secondary-hover:
+    backgroundColor: "{colors.sunken}"
+    textColor: "{colors.ink}"
+  panel:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.lg}"
+    padding: 24px
+  badge-measured:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.sm}"
+  notice:
+    backgroundColor: "{colors.signal-tint}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.md}"
+  now-marker:
+    backgroundColor: "{colors.signal}"
+    textColor: "{colors.ink}"
+    size: 16px
+  selected-country:
+    backgroundColor: "{colors.signal-tint}"
+    textColor: "{colors.ink}"
+  map-land:
+    backgroundColor: "{colors.land}"
+    textColor: "{colors.ink-muted}"
+  map-no-data:
+    backgroundColor: "{colors.land-strong}"
+    textColor: "{colors.ink}"
+  hairline:
+    backgroundColor: "{colors.line}"
+    height: 1px
+  form-field-border:
+    backgroundColor: "{colors.field}"
+    height: 1px
+  sunken-track:
+    backgroundColor: "{colors.sunken}"
+    textColor: "{colors.ink}"
+  data-measured:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.state-measured}"
+  data-planned:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.state-planned-text}"
+  data-planned-line:
+    backgroundColor: "{colors.state-planned}"
+    height: 3px
+  data-modelled:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.state-modelled}"
+  data-missing:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.state-missing}"
+  dark-page:
+    backgroundColor: "{colors.dark-paper}"
+    textColor: "{colors.dark-ink}"
+  dark-panel:
+    backgroundColor: "{colors.dark-surface}"
+    textColor: "{colors.dark-ink-muted}"
+  dark-hairline:
+    backgroundColor: "{colors.dark-line}"
+    height: 1px
+  dark-map-land:
+    backgroundColor: "{colors.dark-land}"
+    textColor: "{colors.dark-ink}"
+  dark-notice:
+    backgroundColor: "{colors.dark-signal-tint}"
+    textColor: "{colors.dark-ink}"
+---
+
+## Overview
+
+powerstation.ai is a free tool where anyone can watch electricity move between European countries and test what a large new load would do. The audience is the general public and journalists, not energy experts.
+
+- **Character:** instrument-like, candid, curious. It shows its working.
+- **World:** the single-line diagram and the transmission line. Ink on paper, high-voltage yellow, measured traces and planned schedules.
+- **Moments:** the map with its flows, and the calculator result. Colour and motion live there. Everything else stays quiet.
+- **Signature: the now line.** A solid line turns dashed at a yellow "now" point. It is the logo mark, the timeline, the chart rule and the map legend. It follows data rule 2: measured before now, planned trade after.
+
+Decided by Daniel on 2026-11-25 (direction A "Line diagram", IBM Plex). Proposal with research: https://claude.ai/artifact/TBE6bHhkGnRKymvetnXjzA. Code tokens: `packages/ui/src/tokens.css` (names `--ps-*`).
+
+## Colors
+
+- **Paper, surface, sunken, line:** the neutral ramp, cool with a slight green bias. Panels are surface on paper. Hairlines are `line`.
+- **Ink (primary):** text, buttons, links, measured flows on the map. 16.3:1 on paper.
+- **Ink muted:** secondary text, units after numbers. 6.2:1 on paper.
+- **Field:** borders of inputs and selects (3.4:1 on paper).
+- **Signal yellow `#FFD21A`:** the one brand colour. It marks now, the selected country, focus and one highlight per screen. It is never text and never sits alone on paper (1.3:1): it always has an ink outline or ink on top.
+- **Signal tint:** highlight fill behind ink text, notices, the selected country.
+- **Data states:** Okabe–Ito based, unchanged from the first `@powerstation/ui` release. Planned text uses `state-planned-text` (5.3:1); the brighter `state-planned` is for lines and fills only.
+- **No blue accent.** Blue means measured, so actions are ink.
+- **Fuel colours** (`--ps-fuel-*` in code) are for chart fills only, always with labels or a legend.
+- **Dark theme** changes only the semantic layer (the `dark-*` values above and the dark blocks in `tokens.css`). Yellow stays the same.
+
+## Typography
+
+- **IBM Plex Sans** for words, **IBM Plex Mono** for numbers you read off an instrument (readouts, times, MW values in tables). Both SIL OFL 1.1, self-hosted from `packages/ui/src/fonts/` (Latin subset, 400 and 600, about 77 KB in all).
+- Fallback is the system stack, with `font-display: swap`, so a slow font never blocks the map.
+- Two weights only: 400 and 600. Hierarchy comes from size and colour.
+- Sentence case everywhere. No uppercase tracked labels. No italic for emphasis.
+- Numbers use tabular figures (`font-variant-numeric: tabular-nums`). The unit follows the number in muted text: `2,140 MW`.
+
+## Layout
+
+- Mobile first. Test at 375 px. Side gutter 16 px at every width.
+- 4 px spacing grid (`--ps-space-1` to `--ps-space-7`). Small gaps inside a group, larger gaps between groups.
+- The map takes the most space on every screen where it appears. Panels sit beside it on wide screens and below it on phones.
+- Keep running text near 65 characters wide.
+
+## Elevation & Depth
+
+No shadows. Depth comes from surface steps (paper → surface → sunken) and 1 px hairlines. The only "glow" is the focus ring.
+
+## Shapes
+
+- 2 px: badges, swatches, small marks.
+- 6 px: buttons, inputs, selects, segmented controls, notices.
+- 10 px: panels and the map frame.
+- Full circle only for things that are circles: the now marker, step numbers, check marks. No pill buttons or pill badges.
+
+## Components
+
+- **Buttons:** primary is solid ink with paper text; secondary is ink outline on transparent. 44 px tall. Hover lifts 1 px, press moves 1 px down. One primary per screen.
+- **Segmented control and toggles:** ink outline group; the pressed item is solid ink.
+- **State badge:** 2 px radius, 1.5 px border in the state colour, a pattern swatch, the label in ink. Planned is dashed, missing is dotted, modelled has a hatch swatch and always a method line.
+- **Notice (data delayed, demo data):** signal tint ground, ink text, ink border with a 6 px left edge. Text first; colour is never the only signal.
+- **Readout:** Plex Mono 600 number, unit in muted Plex Sans, then one plain comparison ("about as much as 1.4 million homes").
+- **Map:** flat land shapes with paper-coloured borders, no basemap and no sea colour. Flow width scales with MW. Measured flows are ink with dots moving in the flow direction. Planned trade is a static dashed orange line. The selected country is signal tint with an ink outline. "No data" is `land-strong` or a hatch, with a label in the legend.
+- **Timeline:** solid ink track for the measured past, dashed planned track after now, the yellow now marker with a text label.
+- **Credit line:** under every chart and map, 13–14 px muted: source name, licence.
+- **Focus ring:** 2 px ink ring plus a 3 px signal halo (`--ps-focus-ring`). Visible on both themes.
+
+## Motion
+
+- Motion only where it explains something: flow dots show direction, numbers count when a value changes.
+- One ease-out curve, 120 ms for controls, 400 ms for values.
+- Under `prefers-reduced-motion` everything rests: flow dots stop and arrowheads show direction.
+
+## Do's and Don'ts
+
+- Do show every value's state with a pattern or label as well as colour.
+- Do label planned values "planned trade", never "forecast".
+- Do put the source and licence on every chart and map.
+- Don't use yellow for data, for text, or alone on paper.
+- Don't add a second accent colour, gradients, glows, shadows or glass.
+- Don't use violet or lavender in page design.
+- Don't use weights above 600 or uppercase labels.
+- Don't add a lightning bolt or plug icon to the logo. The mark is the now line.

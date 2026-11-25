@@ -1,0 +1,208 @@
+<h1>Power infrastructure for the AI era</h1>
+<p>
+  AI runs on electricity. In many places, power is now harder to secure than the chips. This guide
+  covers how much electricity AI needs, why grid connections take so long, and what developers,
+  utilities and power producers are building.
+</p>
+<p>
+  Want to see the grid itself? <a href="/">Watch electricity move across Europe on the map</a>, or
+  <a href="/calculator/">test what a data center would add to a grid zone</a>.
+</p>
+
+<nav aria-labelledby="guide-contents">
+  <h2 id="guide-contents">Contents</h2>
+  <ol>
+    <li><a href="#demand">How much power AI needs</a></li>
+    <li><a href="#grid">Why the grid is the bottleneck</a></li>
+    <li><a href="#supply">Where the power will come from</a></li>
+    <li><a href="#efficiency">Using less: cooling, chips and flexibility</a></li>
+    <li><a href="#builders">Who is building it</a></li>
+    <li><a href="#faq">Questions and answers</a></li>
+  </ol>
+</nav>
+
+<h2 id="demand">How much power AI needs</h2>
+<p>
+  Data centers have long used a steady, small share of electricity. AI changes this. Training and
+  running large models needs dense racks of GPUs and other accelerators. Each rack draws much more
+  power than a rack of ordinary servers. The largest new campuses are planned at hundreds of
+  megawatts, and some at more than a gigawatt.
+</p>
+<p>
+  The International Energy Agency (IEA) estimates that data centers used about 415 TWh in 2024. That
+  is about 1.5% of the world's electricity. In its base case, the IEA expects about 945 TWh by 2030,
+  with AI as the main driver. Source:
+  <a href="https://www.iea.org/reports/energy-and-ai">IEA, "Energy and AI", 2025</a>.
+</p>
+<p>
+  World averages hide where the pressure is. Demand gathers in a few regions where land, fiber and
+  power are all available. There, one campus can use as much power as a mid-sized city. Utilities
+  that planned for flat demand now have to plan for fast growth.
+</p>
+<p>
+  <a href="/calculator/">Try it: compare a 1 GW data center with a European grid zone's load.</a>
+</p>
+
+<h2 id="grid">Why the grid is the bottleneck</h2>
+<p>
+  A data center can be built in one to two years. The power connection for it often takes longer.
+</p>
+<h3>Connection queues</h3>
+<p>
+  New large loads and new power plants must be studied and approved before they connect. In many
+  markets, these queues now take years. So developers often choose a site by where power is
+  available, not by where land or customers are.
+</p>
+<h3>Transmission lines and equipment</h3>
+<p>
+  New transmission lines take a long time to get permits. Transformers, switchgear and turbines take
+  a long time to make, and supply has not kept up with orders.
+</p>
+<h3>Power every hour</h3>
+<p>
+  AI training needs steady power in every hour of the year. Firm sources can supply this. Wind and
+  solar can too, when they are paired with storage or backup. Grid operators and regulators also
+  have to decide how the cost of grid upgrades for one very large customer is shared.
+</p>
+<p>
+  <a href="/">See how much power European countries import and export, hour by hour.</a>
+</p>
+
+<h2 id="supply">Where the power will come from</h2>
+<div
+  class="site-table"
+  tabindex="0"
+  role="region"
+  aria-label="Power sources for AI loads (scrolls sideways)"
+>
+  <table>
+    <caption>
+      Power sources for AI loads
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Source</th>
+        <th scope="col">Role for AI loads</th>
+        <th scope="col">Typical time to add</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">Grid upgrades and existing plants</th>
+        <td>Lowest cost where spare capacity exists. Limited by queues and transmission.</td>
+        <td>Now to several years</td>
+      </tr>
+      <tr>
+        <th scope="row">Natural gas, often on site</th>
+        <td>Firm power that is fast to build. Emissions and turbine supply are the limits.</td>
+        <td>1 to 3 years</td>
+      </tr>
+      <tr>
+        <th scope="row">Solar and wind with batteries</th>
+        <td>Low-cost energy. Needs storage or backup for loads that run day and night.</td>
+        <td>1 to 3 years</td>
+      </tr>
+      <tr>
+        <th scope="row">Existing nuclear plants (restarts, upgrades, long contracts)</th>
+        <td>Firm, low-carbon power, bought under long-term contracts.</td>
+        <td>Now to a few years</td>
+      </tr>
+      <tr>
+        <th scope="row">Small modular reactors (SMRs)</th>
+        <td>
+          Firm, low-carbon power that can sit near a campus. Not yet built at commercial scale.
+        </td>
+        <td>Mostly the 2030s</td>
+      </tr>
+      <tr>
+        <th scope="row">Geothermal and other firm low-carbon power</th>
+        <td>Newer options, often backed by long-term purchase deals with large tech companies.</td>
+        <td>Late 2020s onward</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<p>
+  The largest cloud companies follow a similar pattern. They sign long-term power purchase
+  agreements for whatever can deliver soonest. They also invest in firm, low-carbon sources for the
+  next decade. Deals to restart a closed reactor and to buy power from SMR developers are now part
+  of this mix.
+</p>
+<p>
+  Some campuses produce power on site or next to the site, "behind the meter", instead of drawing it
+  from the grid. This used to be rare. It is now a common option where a grid connection is slow.
+</p>
+
+<h2 id="efficiency">Using less: cooling, chips and flexibility</h2>
+<dl>
+  <dt>Liquid cooling</dt>
+  <dd>
+    Direct-to-chip and immersion cooling can handle racks that are too dense for air cooling. They
+    also use less energy for cooling.
+  </dd>
+  <dt>More efficient chips</dt>
+  <dd>
+    Each new generation of accelerators does more work per watt. Total demand still rises, because
+    use grows faster.
+  </dd>
+  <dt>Flexible load</dt>
+  <dd>
+    Some AI work, such as training and batch jobs, can slow down or move when the grid is under
+    stress. Some grid operators now treat flexible data centers as a resource. This can make a
+    faster connection possible.
+  </dd>
+  <dt>Heat reuse</dt>
+  <dd>Waste heat can feed district heating networks where these networks exist.</dd>
+</dl>
+
+<h2 id="builders">Who is building it</h2>
+<p>Power for AI is becoming an industry of its own. Several groups work on it:</p>
+<ul>
+  <li>
+    Data center developers and large cloud companies, who secure land and power together, often
+    years ahead.
+  </li>
+  <li>
+    Utilities and grid operators, who update load forecasts, connection rules and tariffs for very
+    large loads.
+  </li>
+  <li>
+    Independent power producers, who build or convert power plants next to data center campuses.
+  </li>
+  <li>Nuclear and SMR developers, who sign long-term supply deals with technology companies.</li>
+  <li>
+    Makers of turbines, transformers, batteries, cooling and power electronics, who are growing
+    their supply.
+  </li>
+  <li>
+    "Power-first" AI campuses: companies that start with a power source and build computing around
+    it.
+  </li>
+</ul>
+
+<h2 id="faq">Questions and answers</h2>
+<h3>How much electricity do data centers use?</h3>
+<p>
+  The IEA estimates about 415 TWh in 2024, about 1.5% of the world's electricity. It expects about
+  945 TWh by 2030, with AI as the main driver (<a href="https://www.iea.org/reports/energy-and-ai"
+    >IEA, "Energy and AI", 2025</a
+  >).
+</p>
+<h3>Why is the grid connection the bottleneck for AI data centers?</h3>
+<p>
+  A large AI campus can need hundreds of megawatts or more, in every hour. New transmission lines,
+  substations and power plants take years to approve and build. In many markets, the wait for a
+  connection is now longer than the time to build the data center.
+</p>
+<h3>Will nuclear power supply AI data centers?</h3>
+<p>
+  Partly, over time. Large cloud companies have signed long-term deals to restart or extend existing
+  reactors, and to buy power from small modular reactors. Most new SMR capacity is not expected
+  before the 2030s. Until then, gas, renewables with storage, and grid upgrades supply most of the
+  new demand.
+</p>
+
+<p class="site-note">
+  powerstation.ai is an independent explainer. It is not linked to any company named here. Last
+  updated 25 November 2026.
+</p>

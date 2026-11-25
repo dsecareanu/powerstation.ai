@@ -1,6 +1,7 @@
 // Builds the whole static site into apps/site/dist:
 //   /             map (apps/map)
 //   /calculator/  calculator (apps/calculator)
+//   /guide/       Guide: power infrastructure for the AI era (apps/site/pages)
 //   /about/       About and sources (apps/site/pages)
 //   /404.html     not-found page
 //
@@ -19,6 +20,7 @@ import {
   JS_BUDGET_BYTES,
   measurePageJs,
 } from "../src/checks";
+import { GUIDE_DESCRIPTION, GUIDE_TITLE, guideHead } from "../src/guide-meta";
 import { FIXTURES_NOW, injectShell, sitePage, type NavKey } from "../src/shell";
 
 const siteDir = resolve(import.meta.dirname, "..");
@@ -54,12 +56,32 @@ rmSync(dist, { recursive: true, force: true });
 viteBuild("@powerstation/map", "/", dist);
 viteBuild("@powerstation/calculator", "/calculator/", join(dist, "calculator"));
 
-// One stylesheet for the shell: the shared tokens + the shell styles.
+// One stylesheet for the shell: the shared fonts + tokens + the shell styles.
+// Font files go to /fonts/; fonts.css points at them from the site root.
+const fontsCss = readFileSync(
+  fileURLToPath(import.meta.resolve("@powerstation/ui/fonts.css")),
+  "utf8",
+).replaceAll("./fonts/", "/fonts/");
+cpSync(
+  fileURLToPath(new URL("./fonts", import.meta.resolve("@powerstation/ui/fonts.css"))),
+  join(dist, "fonts"),
+  { recursive: true },
+);
 const tokens = readFileSync(fileURLToPath(import.meta.resolve("@powerstation/ui/tokens.css")));
 const shellCss = readFileSync(join(siteDir, "src", "shell.css"));
-writeFileSync(join(dist, "site.css"), `${tokens}\n${shellCss}`);
+writeFileSync(join(dist, "site.css"), `${fontsCss}\n${tokens}\n${shellCss}`);
 
 // The site's own pages.
+mkdirSync(join(dist, "guide"), { recursive: true });
+writeFileSync(
+  join(dist, "guide", "index.html"),
+  sitePage({
+    title: GUIDE_TITLE,
+    description: GUIDE_DESCRIPTION,
+    head: guideHead(),
+    body: readFileSync(join(siteDir, "pages", "guide.html"), "utf8"),
+  }),
+);
 mkdirSync(join(dist, "about"), { recursive: true });
 writeFileSync(
   join(dist, "about", "index.html"),
@@ -83,6 +105,7 @@ writeFileSync(
 const pages: [string, NavKey | null][] = [
   ["index.html", "map"],
   ["calculator/index.html", "calculator"],
+  ["guide/index.html", "guide"],
   ["about/index.html", "about"],
   ["404.html", null],
 ];

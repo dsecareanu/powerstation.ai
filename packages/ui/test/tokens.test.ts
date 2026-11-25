@@ -57,6 +57,14 @@ for (const [name, theme] of Object.entries({ light, dark })) {
         assert.ok(contrast(theme[v]!, bg) >= 3, `${v} on ${bgVar}: ${contrast(theme[v]!, bg)}`);
       }
     }
+    for (const bgVar of ["--ps-color-bg", "--ps-color-surface"]) {
+      const planned = contrast(theme["--ps-state-planned-text"]!, theme[bgVar]!);
+      assert.ok(planned >= 4.5, `planned text on ${bgVar}: ${planned}`);
+      const field = contrast(theme["--ps-color-field"]!, theme[bgVar]!);
+      assert.ok(field >= 3, `field border on ${bgVar}: ${field}`);
+    }
+    const signalInk = contrast(theme["--ps-color-text"]!, theme["--ps-color-signal-tint"]!);
+    assert.ok(signalInk >= 4.5, `text on signal tint: ${signalInk}`);
     const warn = contrast(theme["--ps-color-warning-text"]!, theme["--ps-color-warning-bg"]!);
     assert.ok(warn >= 4.5, `warning text: ${warn}`);
     const onAccent = contrast(theme["--ps-color-on-accent"]!, theme["--ps-color-accent"]!);
