@@ -20,7 +20,15 @@ import {
   JS_BUDGET_BYTES,
   measurePageJs,
 } from "../src/checks";
-import { GUIDE_DESCRIPTION, GUIDE_TITLE, guideHead } from "../src/guide-meta";
+import { DATA_PATHS } from "@powerstation/schema";
+import ts from "typescript";
+import {
+  GUIDE_DESCRIPTION,
+  GUIDE_TITLE,
+  guideHead,
+  NEWS_SCRIPT_TAG,
+  withNewsSource,
+} from "../src/guide-meta";
 import { FIXTURES_NOW, injectShell, sitePage, type NavKey } from "../src/shell";
 
 const siteDir = resolve(import.meta.dirname, "..");
@@ -81,10 +89,18 @@ writeFileSync(
   sitePage({
     title: GUIDE_TITLE,
     description: GUIDE_DESCRIPTION,
-    head: guideHead(),
-    body: readFileSync(join(siteDir, "pages", "guide.html"), "utf8"),
+    head: guideHead() + `    ${NEWS_SCRIPT_TAG}\n`,
+    body: withNewsSource(
+      readFileSync(join(siteDir, "pages", "guide.html"), "utf8"),
+      dataBase + DATA_PATHS.news,
+    ),
   }),
 );
+// "Latest news" script: src/news.ts has no runtime imports, so a plain transpile is enough.
+const newsJs = ts.transpileModule(readFileSync(join(siteDir, "src", "news.ts"), "utf8"), {
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+}).outputText;
+writeFileSync(join(dist, "site-news.js"), `${newsJs}\nstartNews();\n`);
 mkdirSync(join(dist, "about"), { recursive: true });
 writeFileSync(
   join(dist, "about", "index.html"),
