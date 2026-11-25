@@ -41,7 +41,15 @@
           "pattern": "^v1/[a-z0-9/_.-]+\\.json$"
         },
         "dataset": {
-          "enum": ["zones", "flows", "generation", "forecasts", "datacenters"]
+          "enum": [
+            "zones",
+            "flows",
+            "generation",
+            "forecasts",
+            "datacenters",
+            "capacity",
+            "emission_factors"
+          ]
         },
         "updated_at": {
           "$ref": "common.schema.json#/$defs/UtcTimestamp"

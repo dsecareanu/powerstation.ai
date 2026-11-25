@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.1.0",
+  "generated_at": "2026-11-25T12:00:00Z",
+  "mock": true,
+  "source": "powerstation.ai mock data generator",
+  "license": "AGPL-3.0-only",
+  "attribution": "Mock data for development and tests. This is not real grid data.",
+  "dataset": "emission_factors",
+  "unit": "gCO2eq/kWh",
+  "basis": "lifecycle",
+  "sources": [
+    {
+      "id": "ipcc-ar5-wg3-annex-iii",
+      "title": "Climate Change 2014: Mitigation of Climate Change. Working Group III contribution to the IPCC Fifth Assessment Report. Annex III: Technology-specific Cost and Performance Parameters",
+      "publisher": "Intergovernmental Panel on Climate Change (IPCC)",
+      "year": 2014,
+      "url": "https://www.ipcc.ch/site/assets/uploads/2018/02/ipcc_wg3_ar5_annex-iii.pdf"
+    }
+  ],
+  "factors": {
+    "nuclear": {
+      "value": 12,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Nuclear"
+    },
+    "lignite": {
+      "value": 820,
+      "match": "proxy",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Coal — PC",
+      "note": "No lignite row in the source. Uses pulverised hard coal."
+    },
+    "hard_coal": {
+      "value": 820,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Coal — PC"
+    },
+    "gas": {
+      "value": 490,
+      "match": "proxy",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Gas — Combined Cycle",
+      "note": "The source has combined-cycle plants only. Open-cycle plants emit more."
+    },
+    "oil": {
+      "value": null,
+      "match": "none",
+      "source_id": null,
+      "table": null,
+      "row": null,
+      "note": "The source has no factor for oil-fired power."
+    },
+    "biomass": {
+      "value": 230,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Biomass — dedicated"
+    },
+    "waste": {
+      "value": null,
+      "match": "none",
+      "source_id": null,
+      "table": null,
+      "row": null,
+      "note": "The source has no factor for waste incineration."
+    },
+    "geothermal": {
+      "value": 38,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Geothermal"
+    },
+    "hydro_run_of_river": {
+      "value": 24,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Hydropower"
+    },
+    "hydro_reservoir": {
+      "value": 24,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Hydropower"
+    },
+    "hydro_pumped_storage": {
+      "value": null,
+      "match": "none",
+      "source_id": null,
+      "table": null,
+      "row": null,
+      "note": "Storage, not a primary source. Its emissions depend on the power used for pumping."
+    },
+    "wind_onshore": {
+      "value": 11,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Wind onshore"
+    },
+    "wind_offshore": {
+      "value": 12,
+      "match": "direct",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Wind offshore"
+    },
+    "solar": {
+      "value": 48,
+      "match": "proxy",
+      "source_id": "ipcc-ar5-wg3-annex-iii",
+      "table": "Table A.III.2",
+      "row": "Solar PV — utility",
+      "note": "Solar mixes rooftop (41) and utility-scale (48) PV."
+    },
+    "other_renewable": {
+      "value": null,
+      "match": "none",
+      "source_id": null,
+      "table": null,
+      "row": null,
+      "note": "Mixed category. The source has no single factor."
+    },
+    "other": {
+      "value": null,
+      "match": "none",
+      "source_id": null,
+      "table": null,
+      "row": null,
+      "note": "Mixed category. The source has no single factor."
+    }
+  }
+}

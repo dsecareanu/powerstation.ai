@@ -1,6 +1,6 @@
 {
   "name": "@powerstation/schema",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Data contract for powerstation.ai: JSON Schema, generated TypeScript types and a validator.",
   "license": "AGPL-3.0-only",

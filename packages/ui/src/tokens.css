@@ -1,0 +1,151 @@
+/*
+ * powerstation.ai design tokens.
+ *
+ * Theme: light by default. Dark follows prefers-color-scheme, unless the page
+ * sets data-theme="light" or data-theme="dark" on <html>.
+ * The two dark blocks below must stay identical (test/tokens.test.ts checks it).
+ *
+ * Contrast (WCAG 2.2): text tokens >= 4.5:1, data-state colors >= 3:1 on
+ * --ps-color-bg and --ps-color-surface. test/tokens.test.ts checks it.
+ * Fuel colors are for chart fills. Always show a label or legend with them.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Base colors */
+  --ps-color-bg: #fbfaf7;
+  --ps-color-surface: #ffffff;
+  --ps-color-surface-sunken: #f1efe9;
+  --ps-color-border: #d6d3cb;
+  --ps-color-text: #1b1d21;
+  --ps-color-text-muted: #5a5f69;
+  --ps-color-accent: #0b57d0;
+  --ps-color-on-accent: #ffffff;
+  --ps-color-focus: #0b57d0;
+  --ps-color-warning-bg: #fff1cc;
+  --ps-color-warning-text: #5c3b00;
+  --ps-color-warning-border: #e0b44c;
+
+  /* Data states: color + pattern (see styles.css). Never color alone. */
+  --ps-state-measured: #0072b2;
+  --ps-state-planned: #c4520a;
+  --ps-state-modelled: #a2337a;
+  --ps-state-missing: #6e7179;
+
+  /* Fuel types (keys match FUEL_TYPES in @powerstation/schema) */
+  --ps-fuel-nuclear: #7b4fb8;
+  --ps-fuel-lignite: #6b4a2f;
+  --ps-fuel-hard-coal: #3d3d3d;
+  --ps-fuel-gas: #e07b39;
+  --ps-fuel-oil: #a32a2a;
+  --ps-fuel-biomass: #6a8f2b;
+  --ps-fuel-waste: #8d8a5c;
+  --ps-fuel-geothermal: #b5543c;
+  --ps-fuel-hydro-run-of-river: #4fa3d9;
+  --ps-fuel-hydro-reservoir: #1f5f9e;
+  --ps-fuel-hydro-pumped-storage: #5d7fb3;
+  --ps-fuel-wind-onshore: #2aa198;
+  --ps-fuel-wind-offshore: #15706a;
+  --ps-fuel-solar: #f2c12e;
+  --ps-fuel-other-renewable: #9bd16a;
+  --ps-fuel-other: #a7a9ae;
+
+  /* Type. System fonts only: no web font download. */
+  --ps-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ps-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ps-font-weight-regular: 400;
+  --ps-font-weight-bold: 650;
+  --ps-font-weight-display: 800;
+  --ps-text-xs: 0.75rem;
+  --ps-text-sm: 0.875rem;
+  --ps-text-md: 1rem;
+  --ps-text-lg: 1.25rem;
+  --ps-text-xl: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+  --ps-text-display: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+  --ps-line-height-tight: 1.15;
+  --ps-line-height-body: 1.5;
+
+  /* Spacing (4 px grid) */
+  --ps-space-1: 0.25rem;
+  --ps-space-2: 0.5rem;
+  --ps-space-3: 0.75rem;
+  --ps-space-4: 1rem;
+  --ps-space-5: 1.5rem;
+  --ps-space-6: 2rem;
+  --ps-space-7: 3rem;
+
+  /* Radius */
+  --ps-radius-sm: 4px;
+  --ps-radius-md: 8px;
+  --ps-radius-lg: 16px;
+  --ps-radius-pill: 999px;
+
+  /* Focus ring */
+  --ps-focus-ring: 0 0 0 2px var(--ps-color-bg), 0 0 0 4px var(--ps-color-focus);
+
+  /* Motion. Set to 0ms under prefers-reduced-motion. */
+  --ps-duration-fast: 120ms;
+  --ps-duration-slow: 400ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ps-color-bg: #111317;
+    --ps-color-surface: #1b1e24;
+    --ps-color-surface-sunken: #0b0c0f;
+    --ps-color-border: #3a3f47;
+    --ps-color-text: #eef0f3;
+    --ps-color-text-muted: #aab0ba;
+    --ps-color-accent: #8ab4ff;
+    --ps-color-on-accent: #0b1220;
+    --ps-color-focus: #8ab4ff;
+    --ps-color-warning-bg: #3a2c0a;
+    --ps-color-warning-text: #ffd98a;
+    --ps-color-warning-border: #8a6a1f;
+    --ps-state-measured: #56b4e9;
+    --ps-state-planned: #f0a04b;
+    --ps-state-modelled: #e58ac9;
+    --ps-state-missing: #9a9ea7;
+    --ps-fuel-lignite: #a07850;
+    --ps-fuel-hard-coal: #8c8c8c;
+    --ps-fuel-oil: #d9534f;
+    --ps-fuel-hydro-reservoir: #3f86cf;
+    --ps-fuel-wind-onshore: #4fd1c5;
+    --ps-fuel-wind-offshore: #2aa198;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ps-color-bg: #111317;
+  --ps-color-surface: #1b1e24;
+  --ps-color-surface-sunken: #0b0c0f;
+  --ps-color-border: #3a3f47;
+  --ps-color-text: #eef0f3;
+  --ps-color-text-muted: #aab0ba;
+  --ps-color-accent: #8ab4ff;
+  --ps-color-on-accent: #0b1220;
+  --ps-color-focus: #8ab4ff;
+  --ps-color-warning-bg: #3a2c0a;
+  --ps-color-warning-text: #ffd98a;
+  --ps-color-warning-border: #8a6a1f;
+  --ps-state-measured: #56b4e9;
+  --ps-state-planned: #f0a04b;
+  --ps-state-modelled: #e58ac9;
+  --ps-state-missing: #9a9ea7;
+  --ps-fuel-lignite: #a07850;
+  --ps-fuel-hard-coal: #8c8c8c;
+  --ps-fuel-oil: #d9534f;
+  --ps-fuel-hydro-reservoir: #3f86cf;
+  --ps-fuel-wind-onshore: #4fd1c5;
+  --ps-fuel-wind-offshore: #2aa198;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ps-duration-fast: 0ms;
+    --ps-duration-slow: 0ms;
+  }
+}
