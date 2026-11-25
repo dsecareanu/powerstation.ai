@@ -1,6 +1,6 @@
 // Choropleth layers: which value shades a country, and the colour bins.
-// Colours: hand-tuned, no green and no violet (DESIGN.md). Sequential: pale yellow to brown,
-// lighter = less (after ColorBrewer YlOrBr). Diverging: brown for exports, slate for imports, a
+// Colours: hand-tuned, no green and no violet (DESIGN.md). Renewables share: brown (low) to pale
+// yellow (high), lighter = more (after ColorBrewer YlOrBr, reversed). Expected demand: lighter = less. Diverging: brown for exports, slate for imports, a
 // light neutral for balanced. Checked with Machado (2009) protan/deutan/tritan simulation:
 // lightness stays in order and neighbouring bins differ by at least CIELAB delta E 12.8.
 import type { Point } from "./data/series";
@@ -31,11 +31,13 @@ export const LAYERS: Record<LayerId, Layer> = {
     explain:
       "Share of generation from wind, solar, hydro (not pumped storage), biomass, geothermal and other renewables. Measured hours only.",
     bins: [
-      { max: 0.2, color: "#fbe9a9", label: `under ${formatPercent(0.2)}` },
-      { max: 0.4, color: "#f6cf62", label: "20–40%" },
+      { max: 0.2, color: "#7c4a17", label: `under ${formatPercent(0.2)}` },
+      { max: 0.4, color: "#b8732a", label: "20–40%" },
       { max: 0.6, color: "#e3a33a", label: "40–60%" },
-      { max: 0.8, color: "#b8732a", label: "60–80%" },
-      { max: Infinity, color: "#7c4a17", label: "80% or more" },
+      { max: 0.8, color: "#f6cf62", label: "60–80%" },
+      // #f9e49c, not the YlOrBr #fbe9a9: a little more colour, so the top bin stands out from
+      // the paper background and from no-data land (CIELAB delta E 37 and 35, was 32 and 31).
+      { max: Infinity, color: "#f9e49c", label: "80% or more" },
     ],
   },
   netImport: {
