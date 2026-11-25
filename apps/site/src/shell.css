@@ -273,3 +273,14 @@ body.site-doc {
 .site-note {
   color: var(--ps-color-text-muted);
 }
+.site-news__list {
+  margin: 0 0 var(--ps-space-3);
+  padding-left: var(--ps-space-5);
+}
+.site-news__list li {
+  margin-bottom: var(--ps-space-3);
+}
+.site-news__meta {
+  display: block;
+  color: var(--ps-color-text-muted);
+}

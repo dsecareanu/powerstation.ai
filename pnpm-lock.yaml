@@ -262,6 +262,9 @@ importers:
       '@powerstation/map':
         specifier: workspace:*
         version: link:../map
+      '@powerstation/schema':
+        specifier: workspace:*
+        version: link:../../schema
       '@powerstation/ui':
         specifier: workspace:*
         version: link:../../packages/ui
