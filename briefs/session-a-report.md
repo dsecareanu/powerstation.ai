@@ -73,7 +73,7 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 4. Create an R2 API token and add it as secrets in the GitHub environment `data-publish` (see `pipeline/README.md`, Setup).
 5. ~~Merge the schema 1.1.0 PR~~ Done: PR #2 merged.
 6. Decide whether Epoch AI "AI supercomputers" is the right data-center source (see task 5).
-7. Decide on session C's request: an optional `centroid` on `countries[]` in zones.json (schema change, not built).
+7. ~~Session C's request: an optional `centroid` on `countries[]` in zones.json~~ Daniel skipped it (2026-11-25). Not built.
 
 ## Status of tasks 3, 4 and 5 (branch `ws/a-zones`)
 
