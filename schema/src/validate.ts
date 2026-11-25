@@ -3,8 +3,10 @@
 // series, references between files). Runs in Node and in the browser.
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import addFormatsModule from "ajv-formats";
+import capacity from "../json/capacity.schema.json" with { type: "json" };
 import common from "../json/common.schema.json" with { type: "json" };
 import datacenters from "../json/datacenters.schema.json" with { type: "json" };
+import emissionFactors from "../json/emission-factors.schema.json" with { type: "json" };
 import flows from "../json/flows.schema.json" with { type: "json" };
 import forecasts from "../json/forecasts.schema.json" with { type: "json" };
 import generation from "../json/generation.schema.json" with { type: "json" };
@@ -18,7 +20,16 @@ export interface ValidationResult {
   errors: string[];
 }
 
-const SCHEMAS = { status, zones, flows, generation, forecasts, datacenters } as const;
+const SCHEMAS = {
+  status,
+  zones,
+  flows,
+  generation,
+  forecasts,
+  datacenters,
+  capacity,
+  emission_factors: emissionFactors,
+} as const;
 
 // ajv-formats is CommonJS; its default export shape differs between bundlers.
 const addFormats = ((addFormatsModule as unknown as { default?: unknown }).default ??
@@ -143,6 +154,46 @@ function checkSemantics(file: DataFile, errors: string[]): void {
       }
       break;
     }
+    case "capacity": {
+      const seen = new Set<string>();
+      file.borders.forEach((b, i) => {
+        const p = `/borders/${i} (${b.from_zone}->${b.to_zone})`;
+        if (b.from_zone === b.to_zone) errors.push(`${p}: from_zone equals to_zone`);
+        const key = `${b.from_zone}|${b.to_zone}`;
+        if (seen.has(key)) errors.push(`${p}: direction appears twice`);
+        seen.add(key);
+        checkSeries(b.series, p, PLANNED_SERIES, errors);
+        b.series.values.forEach((v, j) => {
+          if (v !== null && v < 0) errors.push(`${p}[${j}]: capacity ${v} is negative`);
+        });
+      });
+      break;
+    }
+    case "emission_factors": {
+      const sourceIds = new Set<string>();
+      for (const s of file.sources) {
+        if (sourceIds.has(s.id)) errors.push(`/sources/${s.id}: duplicate id`);
+        sourceIds.add(s.id);
+      }
+      for (const [fuel, f] of Object.entries(file.factors)) {
+        const p = `/factors/${fuel}`;
+        const cited = [f.value, f.source_id, f.table, f.row];
+        if (f.match === "none") {
+          if (cited.some((x) => x !== null)) {
+            errors.push(`${p}: match none needs value, source_id, table and row all null`);
+          }
+        } else {
+          if (cited.some((x) => x === null)) {
+            errors.push(`${p}: match ${f.match} needs value, source_id, table and row`);
+          }
+          if (f.source_id !== null && !sourceIds.has(f.source_id)) {
+            errors.push(`${p}: source_id ${f.source_id} is not in sources`);
+          }
+        }
+        if (f.match !== "direct" && !f.note) errors.push(`${p}: match ${f.match} needs a note`);
+      }
+      break;
+    }
     case "status":
       break;
   }
@@ -172,6 +223,7 @@ export function validateDataFile(data: unknown): ValidationResult {
 function referencedZones(file: DataFile): { path: string; zone: string }[] {
   switch (file.dataset) {
     case "flows":
+    case "capacity":
       return file.borders.flatMap((b, i) => [
         { path: `/borders/${i}/from_zone`, zone: b.from_zone },
         { path: `/borders/${i}/to_zone`, zone: b.to_zone },
@@ -195,7 +247,7 @@ export function checkZoneReferences(file: DataFile, zonesFile: ZonesFile): strin
   const errors = referencedZones(file)
     .filter((r) => !zonesById.has(r.zone))
     .map((r) => `${r.path}: zone ${r.zone} is not in zones.json`);
-  if (file.dataset === "flows") {
+  if (file.dataset === "flows" || file.dataset === "capacity") {
     file.borders.forEach((b, i) => {
       const from = zonesById.get(b.from_zone);
       if (from && zonesById.has(b.to_zone) && !from.neighbours.includes(b.to_zone)) {

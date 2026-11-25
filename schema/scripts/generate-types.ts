@@ -9,7 +9,16 @@ import { compile, type JSONSchema } from "json-schema-to-typescript";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const jsonDir = join(root, "json");
 const outFile = join(root, "src", "generated.ts");
-const DATASETS = ["status", "zones", "flows", "generation", "forecasts", "datacenters"];
+const DATASETS = [
+  "status",
+  "zones",
+  "flows",
+  "generation",
+  "forecasts",
+  "datacenters",
+  "capacity",
+  "emission-factors",
+];
 
 // One root schema that references every file schema, so shared definitions
 // are emitted once.
