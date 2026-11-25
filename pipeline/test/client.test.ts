@@ -91,6 +91,56 @@ test("throttle: no more than 6 requests in one second", async () => {
   assert.ok(a.now() >= 2_000, `elapsed ${a.now()} ms`);
 });
 
+test("throttle holds when many requests run at the same time", async () => {
+  // Virtual time: parallel sleeps wait side by side, like real timers.
+  let clock = 0;
+  const timers: { at: number; wake: () => void }[] = [];
+  const sentAt: number[] = [];
+  const client = new EntsoeClient({
+    token: TOKEN,
+    fetchFn: async () => {
+      sentAt.push(clock);
+      return ok(xml);
+    },
+    sleep: (ms) => new Promise<void>((wake) => timers.push({ at: clock + ms, wake })),
+    clock: () => clock,
+    maxPerMinute: 1_000,
+  });
+  let finished = false;
+  const all = Promise.all(Array.from({ length: 30 }, (_, i) => client.get({ i: String(i) }))).then(
+    () => (finished = true),
+  );
+  while (!finished) {
+    await new Promise((r) => setImmediate(r));
+    if (timers.length === 0) continue;
+    clock = Math.min(...timers.map((x) => x.at));
+    for (const x of timers.filter((x) => x.at <= clock)) {
+      timers.splice(timers.indexOf(x), 1);
+      x.wake();
+    }
+  }
+  await all;
+  assert.equal(sentAt.length, 30);
+  for (const t of sentAt) {
+    const inWindow = sentAt.filter((s) => s > t - 1_000 && s <= t).length;
+    assert.ok(inWindow <= 6, `${inWindow} requests in one second at ${t} ms`);
+  }
+  // 30 requests at 6 per second need at least 4 seconds.
+  assert.ok(
+    Math.max(...sentAt) >= 4_000 && Math.max(...sentAt) < 6_000,
+    `last at ${Math.max(...sentAt)}`,
+  );
+});
+
+test("averageResponseMs counts finished responses", async () => {
+  const { client } = makeClient([ok(xml), ok(xml)]);
+  assert.equal(client.averageResponseMs(), null);
+  await client.get({});
+  await client.get({});
+  assert.equal(client.responses, 2);
+  assert.equal(client.averageResponseMs(), 0);
+});
+
 test("fetchDocument: an empty acknowledgement (999) is an empty result", async () => {
   const a = makeClient([ok(ackXml("999"))]);
   const doc = await a.client.fetchDocument({});

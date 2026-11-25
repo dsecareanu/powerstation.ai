@@ -3,6 +3,8 @@
 // - HTTP 429: waits 11 minutes, retries up to 2 times.
 // - HTTP 5xx and network errors: retries 3 times (2 s, 8 s, 30 s).
 // - HTTP 401: fails at once. HTTP 400: fails with the reason from ENTSO-E.
+// - Each request times out after 60 s (default fetch only) and counts as a network error.
+// - Several requests may run at the same time; the throttle is shared.
 // The token is never logged: it is removed from every message.
 import { parseDocument, type ParsedDocument } from "./parse";
 
@@ -18,6 +20,8 @@ export interface ClientOptions {
   log?: (message: string) => void;
   maxPerSecond?: number;
   maxPerMinute?: number;
+  /** Timeout per request for the default fetch, in ms. Default 60 000. */
+  timeoutMs?: number;
 }
 
 const BACKOFF_MS = [2_000, 8_000, 30_000];
@@ -43,11 +47,16 @@ export class EntsoeClient {
   private readonly maxPerMinute: number;
   private readonly sent: number[] = [];
   requestCount = 0;
+  /** Finished HTTP responses and their total time, for progress logs. */
+  responses = 0;
+  responseMs = 0;
 
   constructor(opts: ClientOptions) {
     if (!opts.token) throw new Error("ENTSOE_TOKEN is empty");
     this.token = opts.token;
-    this.fetchFn = opts.fetchFn ?? ((url) => fetch(url));
+    const timeoutMs = opts.timeoutMs ?? 60_000;
+    this.fetchFn =
+      opts.fetchFn ?? ((url) => fetch(url, { signal: AbortSignal.timeout(timeoutMs) }));
     this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.clock = opts.clock ?? Date.now;
     this.log = opts.log ?? (() => {});
@@ -83,8 +92,11 @@ export class EntsoeClient {
       await this.throttle();
       this.requestCount++;
       let res: { status: number; text(): Promise<string> };
+      let body: string;
+      const startedAt = this.clock();
       try {
         res = await this.fetchFn(url);
+        body = await res.text();
       } catch (err) {
         const reason = this.scrub((err as Error).message);
         if (serverErrors >= BACKOFF_MS.length) {
@@ -96,7 +108,8 @@ export class EntsoeClient {
         await this.sleep(BACKOFF_MS[serverErrors++]!);
         continue;
       }
-      const body = await res.text();
+      this.responses++;
+      this.responseMs += this.clock() - startedAt;
       if (res.status === 200) return body;
       if (res.status === 401) throw new Error("ENTSO-E rejected the token (HTTP 401)");
       if (res.status === 429) {
@@ -125,6 +138,11 @@ export class EntsoeClient {
       return this.scrub((err as Error).message);
     }
     return this.scrub(body.slice(0, 200).replace(/\s+/g, " "));
+  }
+
+  /** Average time of one HTTP response in ms, or null before the first response. */
+  averageResponseMs(): number | null {
+    return this.responses === 0 ? null : this.responseMs / this.responses;
   }
 
   /** Fetches and parses one query. "No data" gives an empty document. */
