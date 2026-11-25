@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { test } from "node:test";
 import { LAYERS } from "../src/layers";
 
@@ -31,9 +33,19 @@ test("no layer colour is violet or lavender", () => {
   }
 });
 
-test("renewables: each bin is darker than the one before", () => {
+test("renewables: each bin is lighter than the one before (more renewables = lighter)", () => {
   const l = LAYERS.renewables.bins.map((b) => lab(b.color).l);
-  for (let i = 1; i < l.length; i++) assert.ok(l[i]! < l[i - 1]!, `bin ${i}`);
+  for (let i = 1; i < l.length; i++) assert.ok(l[i]! > l[i - 1]!, `bin ${i}`);
+});
+
+test("no ramp colour is the brand signal yellow", () => {
+  const css = readFileSync(
+    join(import.meta.dirname, "../../../packages/ui/src/tokens.css"),
+    "utf8",
+  );
+  const signal = css.match(/--ps-color-signal:\s*(#[0-9a-fA-F]{6})/)![1]!.toLowerCase();
+  for (const layer of Object.values(LAYERS))
+    for (const bin of layer.bins) assert.notEqual(bin.color.toLowerCase(), signal, layer.id);
 });
 
 test("imports and exports: both arms get darker away from 'about balanced'", () => {

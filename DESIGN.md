@@ -182,7 +182,7 @@ Decided by Daniel on 2026-11-25 (direction A "Line diagram", IBM Plex). Proposal
 - **Field:** borders of inputs and selects (3.4:1 on paper).
 - **Signal yellow `#FFD21A`:** the one brand colour. It marks now, focus and one highlight per screen. It is never text and never sits alone on paper (1.3:1): it always has an ink outline or ink on top.
 - **Signal tint:** highlight fill behind ink text, notices.
-- **Map ramps** (`apps/map/src/layers.ts`): Renewables share runs from pale yellow (low) to brown (high); Imports and exports runs from brown (exports) through a light neutral (about balanced) to slate (imports). No green and no violet on the map: a green "renewables" ramp would judge the energy mix. The ramps are a scale of their own; signal yellow itself is never a data value.
+- **Map ramps** (`apps/map/src/layers.ts`): Renewables share runs from brown (low) to pale yellow (high); Imports and exports runs from brown (exports) through a light neutral (about balanced) to slate (imports). No green and no violet on the map: a green "renewables" ramp would judge the energy mix. The ramps are a scale of their own; signal yellow itself is never a data value.
 - **Data states:** Okabe–Ito based, unchanged from the first `@powerstation/ui` release. Planned text uses `state-planned-text` (5.3:1); the brighter `state-planned` is for lines and fills only.
 - **No blue accent.** Blue means measured, so actions are ink.
 - **Fuel colours** (`--ps-fuel-*` in code) are for chart fills only, always with labels or a legend. None is violet. Nuclear is sand `#CAB78B` (since 2026-11-25), chosen to stay apart from every other fuel colour also with colour-blind vision.
@@ -221,7 +221,7 @@ No shadows. Depth comes from surface steps (paper → surface → sunken) and 1 
 - **State badge:** 2 px radius, 1.5 px border in the state colour, a pattern swatch, the label in ink. Planned is dashed, missing is dotted, modelled has a hatch swatch and always a method line.
 - **Notice (data delayed, demo data):** signal tint ground, ink text. In a panel: ink border with a 6 px left edge. As the full-width demo banner above the site header: a 1.5 px ink rule below it. Text first; colour is never the only signal.
 - **Readout:** Plex Mono 600 number, unit in muted Plex Sans, then one plain comparison ("about as much as 1.4 million homes").
-- **Map:** flat land shapes with paper-coloured borders, no basemap and no sea colour. Flow width scales with MW. Measured flows are ink with dots moving in the flow direction. Planned trade is a static dashed orange line. The selected country keeps its data colour and gets a 2.5 px ink outline. A country with no value for the hour gets the dotted "no data" pattern (`#pat-missing`) over its fill, with a label in the legend.
+- **Map:** flat land shapes with paper-coloured borders, no basemap and no sea colour. Flows are shown only by round dots that move from the exporting to the importing country; no arrows. Dot size scales with MW (area-true: radius ∝ √MW, 2 to 8 px), not line width. A faint guide line under the dots repeats the data state: solid for measured (ink dots), dashed for planned trade (hollow orange dots), short dash for modelled. A flow with no data has no dots, only a dotted line and a "?" mark. The selected country keeps its data colour and gets a 2.5 px ink outline. A country with no value for the hour gets the dotted "no data" pattern (`#pat-missing`) over its fill, with a label in the legend.
 - **Timeline:** solid ink track for the measured past, dashed planned track after now, the yellow now marker with a text label.
 - **Credit line:** under every chart and map, 13–14 px muted: source name, licence.
 - **Focus ring:** 2 px ink ring plus a 3 px signal halo (`--ps-focus-ring`). Visible on both themes.
@@ -236,7 +236,7 @@ No shadows. Depth comes from surface steps (paper → surface → sunken) and 1 
 
 - Motion only where it explains something: flow dots show direction, numbers count when a value changes.
 - One ease-out curve, 120 ms for controls, 400 ms for values.
-- Under `prefers-reduced-motion` everything rests: flow dots stop and arrowheads show direction.
+- Under `prefers-reduced-motion` everything rests: flow dots stay still and a small direction mark past the last dot shows direction.
 
 ## Logo
 
@@ -266,7 +266,7 @@ The site header uses the same drawing inline (`apps/site/src/logo.ts`), in `curr
 These tests guard the rules above. Keep them passing; extend them with new colours.
 
 - `packages/ui/test/tokens.test.ts`: text contrast 4.5:1 and data-state contrast 3:1 on paper and surface, both themes; field borders 3:1; no violet fuel colour; nuclear at least delta E 15 from every other fuel under normal, protan, deutan and tritan vision.
-- `apps/map/test/layers.test.ts`: no violet in the map ramps; lightness in order on each ramp.
+- `apps/map/test/layers.test.ts`: no violet in the map ramps; lightness in order on each ramp (renewables gets lighter as the share rises); no ramp colour is signal yellow.
 - `apps/site/test/site.test.ts`: the header wordmark keeps its accessible name; every page links the favicon set; every brand file exists.
 - `DESIGN.md` itself: `npx @google/design.md lint DESIGN.md` with 0 errors and 0 warnings.
 
