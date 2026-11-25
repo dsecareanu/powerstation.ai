@@ -42,3 +42,14 @@ test("imports and exports: both arms get darker away from 'about balanced'", () 
   for (let i = mid; i > 0; i--) assert.ok(l[i - 1]! < l[i]!, `export bin ${i - 1}`);
   for (let i = mid; i < l.length - 1; i++) assert.ok(l[i + 1]! < l[i]!, `import bin ${i + 1}`);
 });
+
+test("expected demand: each bin is darker than the one before", () => {
+  const l = LAYERS.loadForecast.bins.map((b) => lab(b.color).l);
+  for (let i = 1; i < l.length; i++) assert.ok(l[i]! < l[i - 1]!, `bin ${i}`);
+});
+
+test("expected demand is labelled as a forecast, never as measured", () => {
+  const L = LAYERS.loadForecast;
+  assert.match(L.name, /forecast/i);
+  assert.match(L.explain, /not a measurement/);
+});
