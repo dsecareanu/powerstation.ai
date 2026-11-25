@@ -1,5 +1,7 @@
 // Legend: layer colours, plus how each data state looks on the map.
 import { LAYERS, type LayerId } from "./layers";
+import { DOT_LEGEND_MW, DOT_R_MAX, dotRadius } from "./map/flowDots";
+import { formatPower } from "@powerstation/ui";
 
 export function Legend(props: {
   layer: LayerId;
@@ -55,30 +57,40 @@ export function Legend(props: {
           </li>
         ))}
       </ul>
+      <div class="legend__sizes">
+        <span>Flow size</span>
+        <ul>
+          {DOT_LEGEND_MW.map((mw) => {
+            const r = dotRadius(mw);
+            return (
+              <li key={mw}>
+                <svg width={2 * DOT_R_MAX + 4} height={2 * DOT_R_MAX + 4} aria-hidden="true">
+                  <circle cx={DOT_R_MAX + 2} cy={DOT_R_MAX + 2} r={r} class="key-dot" />
+                </svg>
+                {formatPower(mw)}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
       <ul class="legend__states">
         <li>
-          <svg width="44" height="14" aria-hidden="true">
-            <line x1="2" y1="7" x2="42" y2="7" class="key key--measured" />
-          </svg>
-          Measured flow
+          <FlowKey state="measured" />
+          Measured flow (dots move in the flow direction)
         </li>
         {props.hasPlanned ? (
           <li>
-            <svg width="44" height="14" aria-hidden="true">
-              <line x1="2" y1="7" x2="42" y2="7" class="key key--planned" />
-            </svg>
-            Planned trade (not measured)
+            <FlowKey state="planned" />
+            Planned trade (not measured): hollow dots
           </li>
         ) : null}
         <li>
-          <svg width="44" height="14" aria-hidden="true">
-            <line x1="2" y1="7" x2="42" y2="7" class="key key--modelled" />
-          </svg>
+          <FlowKey state="modelled" />
           Modelled (estimated; method in the label)
         </li>
         <li>
-          <svg width="44" height="14" aria-hidden="true">
-            <line x1="2" y1="7" x2="42" y2="7" class="key key--missing" />
+          <svg width="44" height="16" aria-hidden="true">
+            <line x1="2" y1="8" x2="42" y2="8" class="key key--missing" />
           </svg>
           No data (?)
         </li>
@@ -90,5 +102,17 @@ export function Legend(props: {
         </li>
       </ul>
     </section>
+  );
+}
+
+/** Legend key for a flow state: three still dots on a faint guide line in the state's pattern. */
+function FlowKey(props: { state: "measured" | "planned" | "modelled" }) {
+  return (
+    <svg width="44" height="16" aria-hidden="true" class={`flow-key flow-key--${props.state}`}>
+      <line x1="2" y1="8" x2="42" y2="8" class="flow-key__guide" />
+      {[8, 22, 36].map((cx) => (
+        <circle key={cx} cx={cx} cy="8" r="4" class="flow-key__dot" />
+      ))}
+    </svg>
   );
 }
