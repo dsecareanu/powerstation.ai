@@ -2,7 +2,10 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { gzipSync } from "node:zlib";
-import { DEMO_BANNER_TEXT, FIXTURES_NOW } from "./shell";
+import { DEMO_BANNER_TEXT, FIXTURES_NOW, NOINDEX_TAG } from "./shell";
+
+/** Built pages that must carry noindex in a demo build (map and calculator). */
+export const DEMO_NOINDEX_PAGES = ["index.html", "calculator/index.html"];
 
 /** Initial JS per page, gzipped (CLAUDE.md quality budget). */
 export const JS_BUDGET_BYTES = 200 * 1024;
@@ -38,6 +41,9 @@ export function checkProduction(dist: string): string[] {
     if (file.endsWith(".html") && textOf(text).includes(DEMO_BANNER_TEXT)) {
       problems.push(`${rel} has the demo banner`);
     }
+    if (file.endsWith(".html") && text.includes(NOINDEX_TAG)) {
+      problems.push(`${rel} has a noindex tag`);
+    }
     if (file.endsWith(".js") && text.includes(FIXTURES_NOW)) {
       problems.push(`${rel} has the demo clock (${FIXTURES_NOW})`);
     }
@@ -45,16 +51,22 @@ export function checkProduction(dist: string): string[] {
   return problems;
 }
 
-/** A demo build must show the banner on every page and hold the fixtures. */
+/**
+ * A demo build must show the banner on every page and hold the fixtures.
+ * Map and calculator carry noindex; the other pages must not.
+ */
 export function checkDemo(dist: string): string[] {
   const problems: string[] = [];
   if (!existsSync(join(dist, "demo-data", "v1", "meta", "status.json"))) {
     problems.push("demo-data/v1/meta/status.json is missing");
   }
   for (const file of listFiles(dist).filter((f) => f.endsWith(".html"))) {
-    if (!textOf(readFileSync(file, "utf8")).includes(DEMO_BANNER_TEXT)) {
-      problems.push(`${relative(dist, file)} has no demo banner`);
-    }
+    const rel = relative(dist, file);
+    const html = readFileSync(file, "utf8");
+    if (!textOf(html).includes(DEMO_BANNER_TEXT)) problems.push(`${rel} has no demo banner`);
+    const mustNoindex = DEMO_NOINDEX_PAGES.includes(rel);
+    if (mustNoindex && !html.includes(NOINDEX_TAG)) problems.push(`${rel} has no noindex tag`);
+    if (!mustNoindex && html.includes(NOINDEX_TAG)) problems.push(`${rel} has a noindex tag`);
   }
   return problems;
 }

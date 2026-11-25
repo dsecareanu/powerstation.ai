@@ -29,7 +29,7 @@ Output: `apps/site/dist`.
 | Production | `VITE_DATA_BASE_URL`, default `https://data.powerstation.ai/` | real                            | no     | none                            |
 | Demo       | `/demo-data/` (fixtures copied to `/demo-data/v1/`)           | fixed at `2026-11-25T12:30:00Z` | yes    | `fixtures/v1`, all `mock: true` |
 
-Demo mode: pass `--demo` or set `VITE_DEMO=1`. Demo pages also carry `<meta name="robots" content="noindex">`.
+Demo mode: pass `--demo` or set `VITE_DEMO=1`. In demo builds the map and calculator pages carry `<meta name="robots" content="noindex" />`, so search engines skip the made-up numbers. The guide, About and 404 stay indexable. The build fails if a production page has the tag, or if a demo map or calculator page lacks it.
 
 The build fails when:
 
