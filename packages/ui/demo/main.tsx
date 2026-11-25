@@ -14,7 +14,12 @@ import {
   formatEnergy,
   formatPower,
   fuelColorVar,
-  HOUSEHOLD_ELECTRICITY,
+  HOUSEHOLD_SOURCE,
+  Missions,
+  Mystery,
+  ScoreBar,
+  StepRail,
+  useScore,
 } from "../src/index";
 import "../src/styles.css";
 
@@ -24,6 +29,10 @@ const flows = flowsJson as unknown as FlowsFile;
 function Demo() {
   const [theme, setTheme] = useState<"system" | "light" | "dark">("system");
   const [delayed, setDelayed] = useState(true);
+  const { points, addPoints, resetPoints } = useScore("powerstation:demo-score");
+  const [step, setStep] = useState("watch");
+  const [found, setFound] = useState<Record<string, boolean>>({});
+  const toggleMission = (id: string) => setFound((f) => ({ ...f, [id]: !f[id] }));
 
   const setDocTheme = (t: typeof theme) => {
     setTheme(t);
@@ -64,6 +73,68 @@ function Demo() {
       </header>
 
       <section>
+        <h2>ScoreBar + AnimatedNumber</h2>
+        <ScoreBar points={points} />
+        <p style={{ display: "flex", gap: "var(--ps-space-2)" }}>
+          <button type="button" onClick={() => addPoints(40)}>
+            +40 points
+          </button>
+          <button type="button" onClick={resetPoints}>
+            Reset
+          </button>
+        </p>
+        <p>
+          Points are saved in localStorage (key <code>powerstation:demo-score</code>).
+        </p>
+      </section>
+
+      <section>
+        <h2>StepRail</h2>
+        <StepRail
+          steps={[
+            { id: "watch", label: "Watch the grid" },
+            { id: "place", label: "Place a data center" },
+            { id: "predict", label: "Predict" },
+          ]}
+          current={step}
+          onSelect={setStep}
+        />
+      </section>
+
+      <section>
+        <h2>Missions</h2>
+        <Missions
+          missions={[
+            { id: "planned", title: "Find a planned trade on the map", done: !!found.planned },
+            {
+              id: "clean",
+              title: "Find the zone where 1 GW runs cleanest",
+              description: "Use the lab in step 2.",
+              done: !!found.clean,
+            },
+          ]}
+        />
+        <p style={{ display: "flex", gap: "var(--ps-space-2)" }}>
+          <button type="button" onClick={() => toggleMission("planned")}>
+            Toggle mission 1
+          </button>
+          <button type="button" onClick={() => toggleMission("clean")}>
+            Toggle mission 2
+          </button>
+        </p>
+      </section>
+
+      <section>
+        <h2>Mystery</h2>
+        <Mystery question="Why can planned trade differ from the measured flow?">
+          <p style={{ margin: 0 }}>
+            Planned trade is a commercial schedule made the day before. Power follows physics, so
+            the measured flow can take other paths.
+          </p>
+        </Mystery>
+      </section>
+
+      <section>
         <h2>DataStateBadge</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--ps-space-2)" }}>
           {DATA_STATES.map((s) => (
@@ -101,16 +172,22 @@ function Demo() {
         <ul>
           {[100, 500, 1000].map((mw) => (
             <li key={mw}>
-              {formatPower(mw)}: {describePowerInHomes(mw)}
+              {formatPower(mw)}:{" "}
+              {describePowerInHomes(mw, { countryCode: "RO", countryName: "Romania" })}
             </li>
           ))}
           <li>
-            {formatEnergy(876_000)}: {describeEnergyInHomes(876_000)}
+            {formatPower(1000)} (country with no figure, e.g. CH):{" "}
+            {describePowerInHomes(1000, { countryCode: "CH" })}
+          </li>
+          <li>
+            {formatEnergy(876_000)}:{" "}
+            {describeEnergyInHomes(876_000, { countryCode: "DE", countryName: "Germany" })}
           </li>
         </ul>
         <p style={{ color: "var(--ps-color-text-muted)", fontSize: "var(--ps-text-sm)" }}>
-          Source: <a href={HOUSEHOLD_ELECTRICITY.sourceUrl}>{HOUSEHOLD_ELECTRICITY.source}</a>,{" "}
-          {HOUSEHOLD_ELECTRICITY.scope}: {HOUSEHOLD_ELECTRICITY.mwhPerYear} MWh per year.
+          {HOUSEHOLD_SOURCE.method} Source:{" "}
+          <a href={HOUSEHOLD_SOURCE.url}>{HOUSEHOLD_SOURCE.name}</a>, {HOUSEHOLD_SOURCE.dataYear}.
         </p>
       </section>
 
