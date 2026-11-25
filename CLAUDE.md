@@ -70,6 +70,12 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 - Accessibility: keyboard use for all controls, visible focus, color is never the only signal (data states need a pattern or label too), respect `prefers-reduced-motion`.
 - Browser storage (`localStorage`) only for personal settings and scores. Wrap reads and writes in try/catch.
 
+## Domain and launch
+
+- Today `powerstation.ai` serves a "domain for sale" page with a guide ("Power infrastructure for the AI era") and a news feed. It runs on the Cloudflare Worker `domain-landers`, which also serves 12 other domains. Never redeploy, change or delete `domain-landers`.
+- Backup of that page and Worker (2026-11-25): `~/RevTechAgency/PowerstationAI-site-backup-2026-11-25/` (outside the repo).
+- Launch = move the `powerstation.ai` and `www.powerstation.ai` custom domains from `domain-landers` to the app's Worker. Rollback = move them back. Only Daniel launches.
+
 ## Secrets and licensing
 
 - No API keys or tokens in the repo. The ENTSO-E token and the R2 API token live in GitHub Actions secrets only (repository environment `data-publish`). Never print them in logs.
@@ -83,7 +89,7 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 
 - One session = one git worktree = one branch: `ws/<session-letter>-<short-name>` (e.g. `ws/b-calculator`).
 - Small commits with clear messages.
-- Open a pull request to `main`. Daniel (or the orchestrator on his instruction) merges one branch at a time.
+- Open a pull request to `main`. The orchestrator thread merges each PR, one at a time, after it verifies the PR (Daniel's instruction, 2026-11-25). Sessions do not merge their own PRs.
 - Do not edit files owned by another workstream. If you need a change there, write it in your PR description.
 - `main` is protected (ruleset "Protect main"): PR only, CI check `check` must pass on an up-to-date branch, no force push. Never merge with `--admin` or another bypass.
 - Never edit, commit or switch branches in the main checkout (`~/RevTechAgency/PowerstationAI`). If your session starts there, first run `git worktree add -b ws/<letter>-<name> ../PowerstationAI-worktrees/ws-<letter>-<name> main` and work only in that folder.
