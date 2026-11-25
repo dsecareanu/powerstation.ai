@@ -41,6 +41,10 @@ test("injectShell adds header, footer and, in demo, the banner", () => {
   assert.match(prod, /<header class="site-header">/);
   assert.match(prod, /<a href="\/" aria-current="page">Map<\/a>/);
   assert.match(prod, /<footer class="site-footer">.*AGPL-3.0/);
+  assert.match(
+    prod,
+    /Created by <a href="https:\/\/bio.link\/dsecareanu" rel="noopener">Daniel Secareanu<\/a>/,
+  );
   assert.match(prod, /href="\/site.css"/);
   assert.doesNotMatch(prod, /site-demo/);
   assert.doesNotMatch(prod, /noindex/);

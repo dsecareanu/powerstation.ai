@@ -34,7 +34,7 @@ export function header(active: NavKey | null): string {
 }
 
 export function footer(): string {
-  return `<footer class="site-footer"><p>Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a> (CC BY 4.0), <a href="https://epoch.ai/data/ai-supercomputers">Epoch AI</a> (CC BY 4.0), <a href="https://ec.europa.eu/eurostat">Eurostat</a>, <a href="https://www.ipcc.ch/">IPCC</a> and <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Each page lists the sources it uses. <a href="/about/">All sources and licenses</a>.</p><p>Free and open source. Code: <a href="${REPO_URL}">GitHub</a>, license <a href="${REPO_URL}/blob/main/LICENSE">AGPL-3.0</a>.</p></footer>`;
+  return `<footer class="site-footer"><p>Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a> (CC BY 4.0), <a href="https://epoch.ai/data/ai-supercomputers">Epoch AI</a> (CC BY 4.0), <a href="https://ec.europa.eu/eurostat">Eurostat</a>, <a href="https://www.ipcc.ch/">IPCC</a> and <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Each page lists the sources it uses. <a href="/about/">All sources and licenses</a>.</p><p>Free and open source. Code: <a href="${REPO_URL}">GitHub</a>, license <a href="${REPO_URL}/blob/main/LICENSE">AGPL-3.0</a>.</p><p>Created by <a href="https://bio.link/dsecareanu" rel="noopener">Daniel Secareanu</a>.</p></footer>`;
 }
 
 /** Favicon, touch icon and manifest links, for every page. Files: public/brand/. */
