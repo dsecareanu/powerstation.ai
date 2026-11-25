@@ -18,6 +18,8 @@ body {
   color: var(--ps-color-text);
   font-family: var(--ps-font-sans);
   line-height: 1.45;
+  /* Native sliders, radios and checkboxes in ink, not the browser's blue. */
+  accent-color: var(--ps-color-accent);
 }
 :focus-visible {
   outline: 2px solid transparent;
