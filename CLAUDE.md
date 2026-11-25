@@ -79,11 +79,11 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 
 ## Domain and launch
 
-- Preview: every merge to `main` deploys the site to `https://powerstation-site.danielsecareanu.workers.dev` (demo data).
+- Every merge to main deploys the site to https://powerstation.ai (data mode: repo variable SITE_DATA_MODE).
 
 - Today `powerstation.ai` serves a "domain for sale" page with a guide ("Power infrastructure for the AI era") and a news feed. It runs on the Cloudflare Worker `domain-landers`, which also serves 12 other domains. Never redeploy, change or delete `domain-landers`.
 - Backup of that page and Worker (2026-11-25): `~/RevTechAgency/PowerstationAI-site-backup-2026-11-25/` (outside the repo).
-- Launch = move the `powerstation.ai` and `www.powerstation.ai` custom domains from `domain-landers` to the app's Worker. Rollback = move them back. Only Daniel launches.
+- Launched 2026-11-25: the custom domain powerstation.ai points to the Worker powerstation-site; www.powerstation.ai stays on domain-landers as a 301 to powerstation.ai. Rollback = point powerstation.ai back to domain-landers (Cloudflare Workers custom domains).
 
 ## Secrets and licensing
 
