@@ -23,3 +23,17 @@ export {
   homesForEnergyPerYear,
   homesForPower,
 } from "./units";
+export { AnimatedNumber, type AnimatedNumberProps } from "./components/AnimatedNumber";
+export { Missions, type Mission, type MissionsProps } from "./components/Missions";
+export { Mystery, type MysteryProps } from "./components/Mystery";
+export { ScoreBar, type ScoreBarProps } from "./components/ScoreBar";
+export { StepRail, type Step, type StepRailProps } from "./components/StepRail";
+export {
+  getLevel,
+  LEVELS,
+  SCORE_STORAGE_KEY,
+  useScore,
+  type Level,
+  type LevelProgress,
+} from "./score";
+export { readStorage, writeStorage } from "./storage";
