@@ -21,9 +21,12 @@ const res = await fetch(URL);
 if (!res.ok) throw new Error(`Download failed: ${res.status} ${URL}`);
 writeFileSync(input, Buffer.from(await res.arrayBuffer()));
 
+// mapshaper runs through npx, pinned, so its native build-script deps stay out of the workspace.
 execFileSync(
-  join(app, "node_modules", ".bin", "mapshaper"),
+  "npx",
   [
+    "--yes",
+    "mapshaper@0.8.5",
     input,
     "-clip",
     `bbox=${BBOX}`,
@@ -53,6 +56,8 @@ for (const f of geo.features) {
   for (const poly of polys) for (const ring of poly) ring.reverse();
 }
 writeFileSync(out, JSON.stringify(geo));
+// Same formatting as the repo check (pnpm format:check), so a rebuild gives no diff.
+execFileSync("npx", ["prettier", "--write", out], { stdio: "inherit" });
 console.log(
   `${geo.features.length} countries: ${geo.features.map((f) => f.properties.code).join(" ")}`,
 );
