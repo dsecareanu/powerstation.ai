@@ -19,7 +19,7 @@ jobs:
   discover:
     runs-on: ubuntu-latest
     environment: data-publish
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -28,7 +28,20 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Pick the cache key (one per UTC day)
+        id: day
+        run: echo "day=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      # The cache holds finished pairs only (no token). A cancelled or failed run saves it,
+      # so a rerun on the same UTC day resumes. Cache keys cannot be overwritten, so each
+      # run saves under its own key and restores the newest key of the day.
+      - name: Restore the discover cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: pipeline/out/discover-cache.json
+          key: discover-cache-${{ steps.day.outputs.day }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: discover-cache-${{ steps.day.outputs.day }}-
       - name: Query physical flows for every zone pair (about 2,350 requests)
+        timeout-minutes: 75
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
         run: |
@@ -37,6 +50,12 @@ jobs:
             exit 1
           fi
           pnpm --filter @powerstation/pipeline run discover-borders
+      - name: Save the discover cache
+        if: ${{ always() && hashFiles('pipeline/out/discover-cache.json') != '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: pipeline/out/discover-cache.json
+          key: discover-cache-${{ steps.day.outputs.day }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Format the result
         run: pnpm exec prettier --write pipeline/reference/borders.json
       - name: Commit to a new branch and open a pull request

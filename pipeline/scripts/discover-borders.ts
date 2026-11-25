@@ -1,7 +1,10 @@
 // Finds which zone pairs have published physical flows and writes reference/borders.json.
-// Usage: tsx scripts/discover-borders.ts [--now <ISO>] [--fresh]
+// Usage: tsx scripts/discover-borders.ts [--now <ISO>] [--fresh] [--concurrency <n>]
 // Needs ENTSOE_TOKEN. One request per ordered pair (about 2,350). It can be resumed:
 // finished pairs are cached in out/discover-cache.json. --fresh ignores the cache.
+// Up to --concurrency requests (default 6) wait for a response at the same time.
+// The client keeps the rate limit (6 per second, 350 per minute; ENTSO-E allows 400 per minute).
+// A progress line is written every 100 pairs, and a heartbeat line after 60 s of silence.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,13 +16,20 @@ import { EntsoeClient } from "../src/entsoe/client";
 import { loadDotEnv, requireEnv } from "../src/entsoe/env";
 import { HOUR_MS, mergeSeries } from "../src/entsoe/parse";
 import { physicalFlowQuery } from "../src/entsoe/queries";
+import { runPool } from "../src/pool";
+import { Progress } from "../src/progress";
 import { ZONE_REFERENCE } from "../reference/zones";
 import type { BordersReference } from "../src/zones";
 
 loadDotEnv();
 const { values: args } = parseArgs({
-  options: { now: { type: "string" }, fresh: { type: "boolean", default: false } },
+  options: {
+    now: { type: "string" },
+    fresh: { type: "boolean", default: false },
+    concurrency: { type: "string", default: "6" },
+  },
 });
+const concurrency = Number(args.concurrency);
 const token = requireEnv("ENTSOE_TOKEN");
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -64,23 +74,42 @@ console.log(
   `Discover borders: ${pairs.length} pairs, window ${cache.window.start} to ${cache.window.end}`,
 );
 
-let done = 0;
-for (const { a, b } of pairs) {
-  const key = `${a.id}>${b.id}`;
-  done++;
-  if (key in cache.results) continue;
-  const doc = await client.fetchDocument(physicalFlowQuery(a.eic, b.eic, startMs, nowMs));
-  const series = doc.series.filter(
-    (s) =>
-      (s.outDomain === undefined || s.outDomain === a.eic) &&
-      (s.inDomain === undefined || s.inDomain === b.eic),
-  );
-  const hours = toHourly(mergeSeries(series, warnings, key), startMs, nowMs).filter(
-    (v) => v !== null,
-  ).length;
-  cache.results[key] = hours;
-  saveCache();
-  if (done % 50 === 0 || hours > 0) console.log(`[${done}/${pairs.length}] ${key}: ${hours} hours`);
+const todo = pairs.filter(({ a, b }) => !(`${a.id}>${b.id}` in cache.results));
+const progress = new Progress({
+  total: pairs.length,
+  details: () => {
+    const avg = client.averageResponseMs();
+    return (
+      `${client.requestCount} requests` +
+      (avg === null ? "" : `, avg response ${Math.round(avg)} ms`)
+    );
+  },
+});
+const cachedWithData = Object.values(cache.results).filter((h) => h > 0).length;
+progress.skip(pairs.length - todo.length, cachedWithData);
+console.log(
+  `${pairs.length - todo.length} pairs from the cache, ${todo.length} to query, ${concurrency} at a time.`,
+);
+progress.start();
+try {
+  await runPool(todo, concurrency, async ({ a, b }) => {
+    const key = `${a.id}>${b.id}`;
+    const doc = await client.fetchDocument(physicalFlowQuery(a.eic, b.eic, startMs, nowMs));
+    const series = doc.series.filter(
+      (s) =>
+        (s.outDomain === undefined || s.outDomain === a.eic) &&
+        (s.inDomain === undefined || s.inDomain === b.eic),
+    );
+    const hours = toHourly(mergeSeries(series, warnings, key), startMs, nowMs).filter(
+      (v) => v !== null,
+    ).length;
+    cache.results[key] = hours;
+    saveCache();
+    if (hours > 0) console.log(`${key}: ${hours} hours`);
+    progress.tick(hours > 0);
+  });
+} finally {
+  progress.stop();
 }
 
 const directed = Object.entries(cache.results)
