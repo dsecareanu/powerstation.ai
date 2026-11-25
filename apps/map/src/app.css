@@ -184,70 +184,93 @@ button:disabled {
 .flow:focus-visible {
   outline: none;
 }
-.flow:focus-visible .flow__halo,
-.flow--selected .flow__halo {
-  stroke: var(--ps-color-focus);
-}
 .flow__hit {
   stroke: transparent;
   stroke-width: 24;
 }
-.flow__halo {
+/* Faint guide line: its pattern repeats the data state (colour is never the only signal). */
+.flow__guide {
+  fill: none;
+  stroke-width: calc(1.25px * var(--px));
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.flow--measured .flow__guide {
+  stroke: var(--flow-measured);
+  opacity: 0.3;
+}
+.flow--planned .flow__guide {
+  stroke: var(--ps-state-planned);
+  stroke-dasharray: calc(6px * var(--px)) calc(4px * var(--px));
+  stroke-linecap: butt;
+}
+.flow--modelled .flow__guide {
+  stroke: var(--ps-state-modelled);
+  stroke-dasharray: calc(2px * var(--px)) calc(2px * var(--px));
+  stroke-linecap: butt;
+}
+.flow--missing .flow__guide {
+  stroke: var(--ps-state-missing);
+  stroke-width: calc(2px * var(--px));
+  stroke-dasharray: 0.01 calc(5px * var(--px));
+  opacity: 1;
+}
+.flow:focus-visible .flow__guide,
+.flow--selected .flow__guide {
+  stroke: var(--ps-color-focus);
+  stroke-width: calc(2.5px * var(--px));
+  opacity: 1;
+}
+/* Dots: a round-capped dash pattern; the width sets the dot size (inline style). */
+.flow__dots {
+  fill: none;
+  stroke-linecap: round;
+  pointer-events: none;
+  animation: flow-dots linear infinite;
+}
+.flow__dots--halo {
   stroke: var(--map-halo);
-  stroke-linecap: round;
-  fill: none;
 }
-.flow__line {
-  fill: none;
-  stroke-linecap: round;
-}
-.flow--measured .flow__line {
+.flow--measured .flow__dots--fill {
   stroke: var(--flow-measured);
 }
-.flow--planned .flow__line {
+.flow--planned .flow__dots--fill {
   stroke: var(--ps-state-planned);
-  stroke-dasharray: 10 7;
-  stroke-linecap: butt;
 }
-.flow--modelled .flow__line {
+.flow--modelled .flow__dots--fill {
   stroke: var(--ps-state-modelled);
-  stroke-dasharray: 3 3;
-  stroke-linecap: butt;
-  opacity: 0.8;
 }
-.flow--missing .flow__line {
-  stroke: var(--ps-state-missing);
-  stroke-dasharray: 1 5;
+/* Planned trade: hollow dots. */
+.flow__dots--hole {
+  stroke: var(--ps-color-bg);
 }
-.flow__head {
-  stroke: var(--map-halo);
-  stroke-width: 1.5;
-}
-.flow--measured .flow__head {
-  fill: var(--flow-measured);
-}
-.flow--planned .flow__head {
-  fill: var(--ps-state-planned);
-}
-.flow--modelled .flow__head {
-  fill: var(--ps-state-modelled);
-}
-.flow__pulse {
-  fill: none;
-  stroke: var(--map-halo);
-  stroke-linecap: round;
-  stroke-dasharray: 0.1 22;
-  animation: flow-pulse 1.4s linear infinite;
-  pointer-events: none;
-}
-@keyframes flow-pulse {
+@keyframes flow-dots {
   to {
-    stroke-dashoffset: -22.1;
+    stroke-dashoffset: calc(var(--gap) * -1);
   }
 }
+/* Direction mark: only when motion is off. */
+.flow__dir {
+  display: none;
+  pointer-events: none;
+}
+.flow__dir path {
+  fill: none;
+  stroke: var(--ps-color-text);
+  stroke-width: calc(2px * var(--px));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.flow__dir .flow__dir-halo {
+  stroke: var(--map-halo);
+  stroke-width: calc(4.5px * var(--px));
+}
 @media (prefers-reduced-motion: reduce) {
-  .flow__pulse {
-    display: none;
+  .flow__dots {
+    animation: none;
+  }
+  .flow__dir {
+    display: inline;
   }
 }
 .flow__nodata circle {
@@ -260,12 +283,10 @@ button:disabled {
   fill: var(--ps-color-text);
 }
 .flow__value {
-  font-size: 15px;
   font-weight: var(--ps-font-weight-bold);
   fill: var(--ps-color-text);
   paint-order: stroke;
   stroke: var(--map-halo);
-  stroke-width: 4px;
 }
 .zoom {
   position: absolute;
@@ -322,21 +343,60 @@ button:disabled {
 .key {
   stroke-width: 4;
 }
-.key--measured {
-  stroke: var(--flow-measured);
-}
-.key--planned {
-  stroke: var(--ps-state-planned);
-  stroke-dasharray: 10 7;
-}
-.key--modelled {
-  stroke: var(--ps-state-modelled);
-  stroke-dasharray: 3 3;
-}
 .key--missing {
   stroke: var(--ps-state-missing);
   stroke-dasharray: 1 5;
   stroke-linecap: round;
+}
+.legend__sizes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ps-space-1) var(--ps-space-3);
+  margin: var(--ps-space-2) 0;
+  font-size: 0.85rem;
+}
+.legend__sizes ul {
+  display: flex;
+  gap: var(--ps-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.legend__sizes li {
+  display: flex;
+  align-items: center;
+  gap: var(--ps-space-1);
+}
+.key-dot {
+  fill: var(--flow-measured);
+}
+.flow-key__guide {
+  stroke-width: 1.25;
+  opacity: 0.55;
+}
+.flow-key--measured .flow-key__guide {
+  stroke: var(--flow-measured);
+  opacity: 0.3;
+}
+.flow-key--measured .flow-key__dot {
+  fill: var(--flow-measured);
+}
+.flow-key--planned .flow-key__guide {
+  stroke: var(--ps-state-planned);
+  stroke-dasharray: 6 4;
+}
+.flow-key--planned .flow-key__dot {
+  fill: var(--ps-color-bg);
+  stroke: var(--ps-state-planned);
+  stroke-width: 1.5;
+}
+.flow-key--modelled .flow-key__guide {
+  stroke: var(--ps-state-modelled);
+  stroke-dasharray: 2 2;
+}
+.flow-key--modelled .flow-key__dot {
+  fill: var(--ps-state-modelled);
 }
 .key-box {
   stroke: var(--ps-color-border);
