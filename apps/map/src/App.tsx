@@ -9,7 +9,7 @@ import type { LayerId } from "./layers";
 import { Legend } from "./Legend";
 import { MapView } from "./map/MapView";
 import { toggleNode } from "./selection";
-import { buildModel, flowsAt, fullestPair, loadForecastAt, pairKey } from "./model";
+import { buildModel, flowsAt, fullestPair, loadForecastAt, openingHour, pairKey } from "./model";
 import { AttributionPanel, type AttributionSource, DataDelayedBanner } from "@powerstation/ui";
 import { Timeline } from "./Timeline";
 import "./app.css";
@@ -66,11 +66,12 @@ export function App() {
     [files?.zones, files?.flows, files?.generation, files?.capacity, files?.forecasts],
   );
 
-  // Defaults once the data is in: newest measured hour, fullest border, and renewables only when
+  // Defaults once the data is in: the newest hour that is (almost) fully reported, fullest border,
+  // and renewables only when
   // generation data is published (it is restricted ENTSO-E data).
   useEffect(() => {
     if (!model) return;
-    if (hourMs === null) setHourMs(model.measuredEnd - 3_600_000);
+    if (hourMs === null) setHourMs(openingHour(model));
     if (layer === null) setLayer(model.hasGeneration ? "renewables" : "netImport");
     if (pair === null) {
       const p = fullestPair(model);
@@ -82,7 +83,7 @@ export function App() {
     if (r === "30d" && !data30) {
       setLoading30d(true);
       try {
-        setData30(await load30d());
+        setData30(await load30d(data!.status));
       } catch (e) {
         setError((e as Error).message);
         setLoading30d(false);

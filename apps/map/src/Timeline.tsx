@@ -1,7 +1,7 @@
 // Hourly timeline: slider, play/pause, step buttons, 7/30-day toggle.
 // Measured hours sit left of the "latest measured" mark, planned trade to the right.
 import { useEffect } from "preact/hooks";
-import { dayTicks, formatDay, formatHour } from "./format";
+import { dayTicks, formatClock, formatDay, formatHour } from "./format";
 
 interface Props {
   hours: number[];
@@ -56,6 +56,14 @@ export function Timeline(props: Props) {
               : "measured"}
           </span>
         </p>
+        {index < props.latestIndex ? (
+          <p class="timeline__behind">
+            Not the newest hour.{" "}
+            <button type="button" onClick={() => props.onIndex(props.latestIndex)}>
+              Go to latest hour ({formatClock(hours[props.latestIndex]!)})
+            </button>
+          </p>
+        ) : null}
         <div class="timeline__range" role="group" aria-label="Time range">
           {(["7d", "30d"] as const).map((r) => (
             <button
@@ -132,7 +140,7 @@ export function Timeline(props: Props) {
           class="timeline__jump"
           onClick={() => props.onIndex(props.latestIndex)}
         >
-          Latest
+          Latest hour
         </button>
       </div>
     </section>

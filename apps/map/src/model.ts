@@ -20,7 +20,7 @@ import {
   timelineHours,
 } from "./data/metrics";
 import { type NodeIndex, aggregateBorders, buildNodes } from "./data/nodes";
-import { MISSING, type Point, combine, pointAt, sumSeries, toMs } from "./data/series";
+import { HOUR_MS, MISSING, type Point, combine, pointAt, sumSeries, toMs } from "./data/series";
 import type { LayerId } from "./layers";
 
 export interface Model {
@@ -159,6 +159,36 @@ export function fullestPair(m: Model): BorderPair | undefined {
     if (score > bestScore) [best, bestScore] = [p, score];
   }
   return best ?? m.pairs[0];
+}
+
+/**
+ * Share of borders that must have a measured flow for the map to open on an hour. The newest
+ * hours are often still incomplete, because grid operators report with a delay.
+ */
+export const OPENING_COVERAGE = 0.9;
+
+/** Share (0–1) of borders with a measured physical flow at one hour. null if no border has a series. */
+export function measuredCoverageAt(m: Model, hour: number): number | null {
+  const withSeries = m.pairs.filter((p) => p.physical);
+  if (!withSeries.length) return null;
+  const measured = withSeries.filter((p) => pointAt(p.physical!.series, hour).state === "measured");
+  return measured.length / withSeries.length;
+}
+
+/**
+ * Hour the map opens on: the newest measured hour where at least OPENING_COVERAGE of borders
+ * have a measured flow. Searches the measured past only, never planned hours. If no hour in the
+ * window reaches the threshold, it is the newest measured hour.
+ */
+export function openingHour(m: Model): number {
+  const newest = m.measuredEnd - HOUR_MS;
+  for (let i = m.hours.length - 1; i >= 0; i--) {
+    const h = m.hours[i]!;
+    if (h > newest) continue;
+    const c = measuredCoverageAt(m, h);
+    if (c !== null && c >= OPENING_COVERAGE) return h;
+  }
+  return newest;
 }
 
 export const flowsAt = (m: Model, hour: number): FlowAt[] =>

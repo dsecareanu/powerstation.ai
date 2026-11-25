@@ -12,6 +12,9 @@ const dateTime = new Intl.DateTimeFormat("en-GB", {
 const dayOnly = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric" });
 
 export const formatHour = (ms: number): string => dateTime.format(ms);
+const clock = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
+/** "21:00", local time. */
+export const formatClock = (ms: number): string => clock.format(ms);
 export const formatDay = (ms: number): string => dayOnly.format(ms);
 
 /** Local midnights to label: every day for a week, every 7th day for longer ranges. */
