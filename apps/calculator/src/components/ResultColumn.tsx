@@ -1,17 +1,27 @@
+import type { EmissionFactorsFile } from "@powerstation/schema";
+import { AnimatedNumber, DataStateBadge, HOUSEHOLD_SOURCE, formatPower } from "@powerstation/ui";
 import type { CalcResult } from "../calc/types";
-import { formatHomes, formatInt, formatMw, formatShare, formatUtc, hours } from "../format";
+import {
+  describePeakPressure,
+  directionLabel,
+  formatInt,
+  formatShare,
+  formatUtc,
+  fuelLabel,
+  homesInfo,
+  hours,
+} from "../format";
 import { sourceLabel } from "../state/summary";
-import { StateBadge } from "../ui-standins/StateBadge";
-import { AnimatedNumber } from "./AnimatedNumber";
 import { CarbonChart } from "./CarbonChart";
 
 export interface ResultColumnProps {
   heading: string;
-  /** Plain-English name of the country used for the homes comparison. */
+  /** Country used for the homes comparison. */
+  countryCode: string;
   countryName: string;
   result: CalcResult | null;
-  /** Homes equivalent of the size, or null when no sourced figure exists. */
-  homes: number | null;
+  /** The emission-factors file, or undefined when it could not be loaded. */
+  emissionFactors: EmissionFactorsFile | undefined;
   /** True when any loaded file is mock data. */
   mock: boolean;
 }
@@ -21,7 +31,7 @@ function Block(props: { title: string; method: string; children: preact.Componen
     <section class="block modelled">
       <header class="block-head">
         <h4>{props.title}</h4>
-        <StateBadge state="modelled" />
+        <DataStateBadge state="modelled" />
       </header>
       {props.children}
       <p class="method">Method: {props.method}</p>
@@ -30,7 +40,7 @@ function Block(props: { title: string; method: string; children: preact.Componen
 }
 
 export function ResultColumn(props: ResultColumnProps) {
-  const { heading, countryName, result: r, homes, mock } = props;
+  const { heading, countryCode, countryName, result: r, emissionFactors, mock } = props;
   if (!r) {
     return (
       <article class="column">
@@ -40,27 +50,19 @@ export function ResultColumn(props: ResultColumnProps) {
     );
   }
   const pressure = r.pressure;
+  const homes = homesInfo(r.sizeMw, countryCode, countryName);
   return (
     <article class="column" aria-label={heading}>
       <h3>{heading}</h3>
       <p class="size-line">
-        {homes !== null ? (
-          <>
-            A <strong>{formatMw(r.sizeMw)}</strong> data center uses about as much electricity as{" "}
-            <strong>{formatHomes(homes)}</strong> homes.
-          </>
-        ) : (
-          <>
-            Data center size: <strong>{formatMw(r.sizeMw)}</strong>.
-          </>
-        )}
+        A <strong>{formatPower(r.sizeMw)}</strong> data center would use {homes.text}.
       </p>
-      {homes === null ? (
-        <p class="hint">
-          Home comparison hidden: we have no sourced household figure for {countryName} yet.
-        </p>
-      ) : null}
-
+      <p class="hint">
+        {homes.isFallback
+          ? `No household figure for ${countryName}: this uses the average EU household. `
+          : ""}
+        {HOUSEHOLD_SOURCE.attribution}
+      </p>
       {r.validHours === 0 || !r.load || !r.imports || !r.dataWindow ? (
         <p class="error">
           No hour has complete data in this period, so there is no result.{" "}
@@ -80,14 +82,14 @@ export function ResultColumn(props: ResultColumnProps) {
               <span class="big-label">of the average load</span>
             </p>
             <p>
-              Average load {formatMw(r.load.meanMw)}. Peak load {formatMw(r.load.maxMw)}. The data
-              center would be {formatShare(r.load.shareOfMax)} of the peak.
+              Average load {formatPower(r.load.meanMw)}. Peak load {formatPower(r.load.maxMw)}. The
+              data center would be {formatShare(r.load.shareOfMax)} of the peak.
             </p>
           </Block>
 
           <Block
             title="Hours that need imports"
-            method="load plus data center minus the zone's own generation. A positive result means imports."
+            method="load plus data center minus the zone's own generation. A positive result means imports. Pressure on interconnectors: (net imports + data center) divided by planned import capacity."
           >
             <p class="big">
               <AnimatedNumber
@@ -100,48 +102,14 @@ export function ResultColumn(props: ResultColumnProps) {
               Without the data center, the zone would need imports in{" "}
               {hours(r.imports.hoursWithout)}.
             </p>
-            {pressure ? (
-              <p>
-                Interconnectors (worst case: all extra load is imported): above{" "}
-                {Math.round(pressure.threshold * 100)}% of capacity in{" "}
-                {hours(pressure.hoursAboveThreshold)}
-                {pressure.maxPressure !== null
-                  ? `, at most ${formatShare(pressure.maxPressure)}`
-                  : ""}
-                .{" "}
-                {pressure.hoursWithoutBorderData > 0
-                  ? `${hours(pressure.hoursWithoutBorderData)} left out here: a border has no data.`
-                  : ""}
-              </p>
-            ) : (
-              <p class="hint">Interconnector capacity data is not available yet.</p>
-            )}
+            <PressureNote pressure={pressure} />
           </Block>
 
           <Block
             title="Carbon intensity"
-            method="average mix of the zone's own power plants, weighted by output. Imports are not included."
+            method="life-cycle emission factors weighted by output, for fuels that have a factor. Imports are not included."
           >
-            {r.carbon &&
-            r.carbon.mean !== null &&
-            r.carbon.min !== null &&
-            r.carbon.max !== null ? (
-              <>
-                <p class="big">
-                  <AnimatedNumber value={r.carbon.mean} format={(n) => formatInt(n)} />{" "}
-                  <span class="big-label">gCO2/kWh on average</span>
-                </p>
-                <p>
-                  Lowest {formatInt(r.carbon.min)}, highest {formatInt(r.carbon.max)} gCO2/kWh.{" "}
-                  {r.carbon.excludedHours > 0
-                    ? `${hours(r.carbon.excludedHours)} left out: no emission factor.`
-                    : ""}
-                </p>
-                <CarbonChart hourly={r.carbon.hourly} />
-              </>
-            ) : (
-              <p class="hint">Carbon intensity data is not available yet.</p>
-            )}
+            <CarbonNote carbon={r.carbon} file={emissionFactors} />
             <p class="hint">
               Average mix of the zone's own power plants, modelled. Imports are not included.
             </p>
@@ -172,14 +140,14 @@ export function ResultColumn(props: ResultColumnProps) {
             <p>
               {r.datacenters.records.length === 0
                 ? "No data centers are listed for this zone."
-                : `${r.datacenters.withKnownPower} with known power, ${formatMw(r.datacenters.knownPowerMw)} in total. ${r.datacenters.unknownPower} with unknown power.`}
+                : `${r.datacenters.withKnownPower} with known power, ${formatPower(r.datacenters.knownPowerMw)} in total. ${r.datacenters.unknownPower} with unknown power.`}
               {mock && r.datacenters.records.length > 0 ? " These data centers are fictional." : ""}
             </p>
             {r.datacenters.records.length > 0 ? (
               <ul class="plain-list">
                 {r.datacenters.records.map((d) => (
                   <li key={d.id}>
-                    {d.name}: {d.power_mw === null ? "power unknown" : formatMw(d.power_mw)} (
+                    {d.name}: {d.power_mw === null ? "power unknown" : formatPower(d.power_mw)} (
                     {d.status.replace("_", " ")})
                   </li>
                 ))}
@@ -197,5 +165,83 @@ export function ResultColumn(props: ResultColumnProps) {
         </>
       )}
     </article>
+  );
+}
+
+function PressureNote(props: { pressure: CalcResult["pressure"] }) {
+  const { pressure } = props;
+  if (!pressure) return <p class="hint">Interconnector capacity data is not available.</p>;
+  if (!pressure.available) {
+    return pressure.missingDirections.length === 0 ? (
+      <p class="hint">
+        Interconnector pressure is not calculated: this zone has no physical borders in the data.
+      </p>
+    ) : (
+      <p class="hint">
+        Interconnector pressure is not calculated. Capacity is not published for{" "}
+        {pressure.missingDirections.map(directionLabel).join(", ")}. Some borders use flow-based
+        market coupling, which publishes no single capacity figure.
+      </p>
+    );
+  }
+  return (
+    <p>
+      Interconnectors (worst case: all extra load is imported): above{" "}
+      {Math.round(pressure.threshold * 100)}% of capacity in {hours(pressure.hoursAboveThreshold)}
+      {describePeakPressure(pressure.maxPressure)}.{" "}
+      {pressure.meanCapacityMw !== null
+        ? `Planned import capacity: about ${formatPower(pressure.meanCapacityMw)} on average. `
+        : ""}
+      {pressure.hoursLeftOut > 0
+        ? `${hours(pressure.hoursLeftOut)} left out here: a flow or capacity value is missing.`
+        : ""}{" "}
+      <DataStateBadge state="planned" label="Planned capacity" />
+    </p>
+  );
+}
+
+function CarbonNote(props: {
+  carbon: CalcResult["carbon"];
+  file: EmissionFactorsFile | undefined;
+}) {
+  const { carbon, file } = props;
+  if (!carbon || !file) return <p class="hint">Carbon intensity data is not available.</p>;
+  if (carbon.mean === null || carbon.min === null || carbon.max === null) {
+    return (
+      <p class="hint">No hour has generation with an emission factor, so there is no result.</p>
+    );
+  }
+  const sources = file.sources.map((s) => `${s.publisher}, ${s.year}`).join("; ");
+  const names = carbon.noFactor.fuels.map((f) => fuelLabel(f.fuel).toLowerCase()).join(", ");
+  return (
+    <>
+      <p class="big">
+        <AnimatedNumber value={carbon.mean} format={(n) => formatInt(n)} />{" "}
+        <span class="big-label">{file.unit} on average</span>
+      </p>
+      <p>
+        Lowest {formatInt(carbon.min)}, highest {formatInt(carbon.max)} {file.unit}. Life-cycle
+        factors from {sources}.{" "}
+        {carbon.excludedHours > 0
+          ? `${hours(carbon.excludedHours)} left out: no generation with an emission factor.`
+          : ""}
+      </p>
+      {carbon.noFactor.fuels.length > 0 ? (
+        <p>
+          No emission factor: {names}. They are {formatShare(carbon.noFactor.share)} of generation
+          and are left out of this average.
+        </p>
+      ) : null}
+      {carbon.proxyFuels.length > 0 ? (
+        <ul class="plain-list hint">
+          {carbon.proxyFuels.map((f) => (
+            <li key={f.fuel}>
+              {fuelLabel(f.fuel)} (proxy, {formatInt(f.value)} {file.unit}): {f.note}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <CarbonChart hourly={carbon.hourly} />
+    </>
   );
 }

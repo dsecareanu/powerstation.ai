@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { formatMw } from "../format";
+import { formatPower } from "@powerstation/ui";
 import { MAX_SIZE_MW, MIN_SIZE_MW } from "../state/url";
 
 const PRESETS = [100, 500, 1000] as const;
@@ -26,7 +26,7 @@ export function SizePicker(props: { value: number; onChange: (mw: number) => voi
                 onChange(mw);
               }}
             />
-            <span>{formatMw(mw)}</span>
+            <span>{formatPower(mw)}</span>
           </label>
         ))}
         <label class="radio">

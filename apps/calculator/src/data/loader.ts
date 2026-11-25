@@ -1,13 +1,14 @@
 import {
   DATA_PATHS,
+  type CapacityFile,
   type DataFile,
   type DatacentersFile,
+  type EmissionFactorsFile,
   type FlowsFile,
   type GenerationFile,
   type StatusFile,
   type ZonesFile,
 } from "@powerstation/schema";
-import type { EmissionFactors, ImportCapacity } from "../calc/types";
 import type { Period } from "../state/url";
 
 export function dataBaseUrl(): string {
@@ -79,14 +80,23 @@ export async function loadPeriod(period: Period): Promise<PeriodData> {
   return { generation, flows };
 }
 
-// TODO(A): replace with schema 1.1.0 capacity file
-/** Import capacity per zone. Not in the schema yet, so this is always undefined. */
-export async function loadImportCapacities(): Promise<ImportCapacity[] | undefined> {
-  return undefined;
+/**
+ * Day-ahead capacity per direction (30-day file). Undefined when the file cannot be loaded:
+ * the page then says "not available" for interconnector pressure and works for the rest.
+ */
+export async function loadCapacity(): Promise<CapacityFile | undefined> {
+  try {
+    return await loadFile(DATA_PATHS.capacity30d, "capacity");
+  } catch {
+    return undefined;
+  }
 }
 
-// TODO(A): replace with schema 1.1.0 emission factors
-/** Emission factors per fuel. Not in the schema yet, so this is always undefined. */
-export async function loadEmissionFactors(): Promise<EmissionFactors | undefined> {
-  return undefined;
+/** Emission factors per fuel. Undefined when the file cannot be loaded (carbon is then "not available"). */
+export async function loadEmissionFactors(): Promise<EmissionFactorsFile | undefined> {
+  try {
+    return await loadFile(DATA_PATHS.emissionFactors, "emission_factors");
+  } catch {
+    return undefined;
+  }
 }

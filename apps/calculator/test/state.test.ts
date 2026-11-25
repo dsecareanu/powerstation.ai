@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { StatusFile, ZonesFile } from "@powerstation/schema";
-import { annualKwhPerHousehold, homesEquivalent } from "../src/constants/households";
-import { isDataDelayed } from "../src/data/freshness";
+import { DATA_PATHS, type StatusFile, type ZonesFile } from "@powerstation/schema";
+import { getFreshness, householdsFor } from "@powerstation/ui";
 import { buildSearch, parseUrlState, type UrlState } from "../src/state/url";
 import { readFixture } from "./helpers";
 
@@ -78,35 +77,32 @@ test("a zone with a mismatched country gets a valid country", () => {
   assert.deepEqual([parsed.zone, parsed.country], ["FR", "FR"]);
 });
 
+const paths = [DATA_PATHS.generation7d, DATA_PATHS.flows7d];
+const delayedAt = (ms: number, st: StatusFile = status) =>
+  getFreshness(st, { paths, now: new Date(ms) }).delayed;
+
 test("data delayed: fixtures are fresh at the fixed time, delayed with a later clock", () => {
-  assert.equal(isDataDelayed(status, NOW), false);
-  assert.equal(isDataDelayed(status, NOW + 2 * 3_600_000), false);
-  assert.equal(isDataDelayed(status, NOW + 2 * 3_600_000 + 1), true);
-  assert.equal(isDataDelayed(status, Date.parse("2027-01-01T00:00:00Z")), true);
+  assert.equal(delayedAt(NOW), false);
+  assert.equal(delayedAt(NOW + 2 * 3_600_000), false);
+  assert.equal(delayedAt(NOW + 2 * 3_600_000 + 1), true);
+  assert.equal(delayedAt(Date.parse("2027-01-01T00:00:00Z")), true);
 });
 
-test("data delayed when no file has a measured time", () => {
+test("data delayed when no checked file has a measured time", () => {
   const empty: StatusFile = {
     ...status,
     files: status.files.map((f) => ({ ...f, newest_measured_at: null })),
   };
-  assert.equal(isDataDelayed(empty, NOW), true);
+  assert.equal(delayedAt(NOW, empty), true);
 });
 
-test("homes equivalent: no value without a sourced figure", () => {
-  assert.equal(annualKwhPerHousehold("CH"), undefined);
-  assert.equal(homesEquivalent(1000, undefined), null);
-});
-
-test("homes equivalent: size x 8760 h x 1000 / kWh per year", () => {
-  assert.equal(homesEquivalent(1, 8760), 1000);
-  assert.equal(annualKwhPerHousehold("XX", { XX: { kwhPerYear: 3000, year: 2000 } }), 3000);
-});
-
-test("household table has sourced figures for every fixture country", () => {
+test("household table has a figure for every fixture country, and CH falls back to the EU", () => {
   for (const c of ["DE", "LU", "FR", "NL", "BE", "PL", "CZ", "AT", "HU", "RO", "ES", "PT"]) {
-    const kwh = annualKwhPerHousehold(c);
-    assert.ok(kwh !== undefined && kwh > 1000 && kwh < 20000, `${c}: ${kwh}`);
+    const h = householdsFor(c);
+    assert.equal(h.isFallback, false, c);
+    assert.ok(h.mwhPerYear > 1 && h.mwhPerYear < 20, `${c}: ${h.mwhPerYear}`);
   }
-  assert.equal(annualKwhPerHousehold("CH"), undefined);
+  const ch = householdsFor("CH");
+  assert.equal(ch.isFallback, true);
+  assert.equal(ch.area, "EU");
 });
