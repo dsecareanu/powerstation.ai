@@ -21,6 +21,11 @@ const NAV: { key: NavKey; href: string; label: string }[] = [
   { key: "about", href: "/about/", label: "About" },
 ];
 
+export const NOINDEX_TAG = `<meta name="robots" content="noindex" />`;
+
+/** Pages that show demo numbers. In demo builds they carry NOINDEX_TAG; the guide, About and 404 stay indexable. */
+export const NOINDEX_IN_DEMO: readonly NavKey[] = ["map", "calculator"];
+
 export function demoBanner(): string {
   return `<div class="site-demo" role="note"><strong>Demo data:</strong> these numbers are made up for testing. Real data from ENTSO-E is coming.</div>`;
 }
@@ -34,7 +39,7 @@ export function header(active: NavKey | null): string {
 }
 
 export function footer(): string {
-  return `<footer class="site-footer"><p>Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a> (CC BY 4.0), <a href="https://epoch.ai/data/ai-supercomputers">Epoch AI</a> (CC BY 4.0), <a href="https://ec.europa.eu/eurostat">Eurostat</a>, <a href="https://www.ipcc.ch/">IPCC</a> and <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Each page lists the sources it uses. <a href="/about/">All sources and licenses</a>.</p><p>Free and open source. Code: <a href="${REPO_URL}">GitHub</a>, license <a href="${REPO_URL}/blob/main/LICENSE">AGPL-3.0</a>.</p></footer>`;
+  return `<footer class="site-footer"><p>Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a> (CC BY 4.0), <a href="https://epoch.ai/data/ai-supercomputers">Epoch AI</a> (CC BY 4.0), <a href="https://ec.europa.eu/eurostat">Eurostat</a>, <a href="https://www.ipcc.ch/">IPCC</a> and <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Each page lists the sources it uses. <a href="/about/">All sources and licenses</a>.</p><p>Free and open source. Code: <a href="${REPO_URL}">GitHub</a>, license <a href="${REPO_URL}/blob/main/LICENSE">AGPL-3.0</a>.</p><p>Created by <a href="https://bio.link/dsecareanu" rel="noopener">Daniel Secareanu</a>.</p></footer>`;
 }
 
 /** Favicon, touch icon and manifest links, for every page. Files: public/brand/. */
@@ -55,7 +60,7 @@ export function injectShell(html: string, opts: ShellOptions): string {
   const head =
     `<link rel="stylesheet" href="/site.css" />` +
     ICON_LINKS +
-    (opts.demo ? `<meta name="robots" content="noindex" />` : "");
+    (opts.demo && opts.active !== null && NOINDEX_IN_DEMO.includes(opts.active) ? NOINDEX_TAG : "");
   const top = (opts.demo ? demoBanner() : "") + header(opts.active);
   if (!html.includes("</head>") || !/<body[^>]*>/.test(html) || !html.includes("</body>")) {
     throw new Error("Cannot add the site shell: the page has no <head> or <body>.");
