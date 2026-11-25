@@ -22,6 +22,7 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 - TypeScript everywhere. Vite and Preact for the apps. The map is SVG with d3-geo and Natural Earth country shapes, with no basemap (MapLibre GL measured 292 KB gzipped, over the JS budget).
 - Static site on Cloudflare (Pages or Workers static assets), deployed from GitHub.
 - Data: JSON files in Cloudflare R2, written by a scheduled GitHub Actions workflow (hourly) that runs the `/pipeline` scripts. Decided by Daniel 2026-11-25: free, one codebase. If Actions proves unreliable (late or skipped runs), move the same code to a Cloudflare Worker with a Cron Trigger. n8n is not used in v1.
+- Start of the hourly run (Daniel, 2026-11-25): GitHub never fired the workflow's own schedule. The Cloudflare Worker `powerstation-data-cron` (`/workers/data-cron`, cron `17 * * * *`, no public address) starts the workflow through the GitHub API, with the secret `GH_DISPATCH_TOKEN` (fine-grained, this repo, Actions read and write) set in the Cloudflare dashboard. It skips when a run began in the last 50 minutes. If manual starts also fail, port the pipeline into a Worker.
 - **No backend in v1.** The browser reads public JSON files only.
 - Package manager: pnpm workspaces.
 
@@ -36,6 +37,7 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 /pipeline        Scripts: backfill, validation, back-tests
 /n8n             Not used in v1 (kept for possible later templates)
 /briefs          One brief per Claude Code session
+/workers         Small Cloudflare Workers outside the site (data-cron: starts the hourly data run)
 ```
 
 ## Data rules (mandatory)
