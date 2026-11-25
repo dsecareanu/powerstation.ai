@@ -10,4 +10,6 @@ if (problems.length > 0) {
   console.error(`Worker guard failed for ${file}:\n- ${problems.join("\n- ")}`);
   process.exit(1);
 }
-console.log('Worker guard: OK (name "powerstation-site", assets only, no routes).');
+console.log(
+  'Worker guard: OK (name "powerstation-site", assets only, no routes, workers.dev off).',
+);

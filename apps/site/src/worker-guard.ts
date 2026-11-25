@@ -22,9 +22,11 @@ export function checkWorkerConfig(config: Record<string, unknown>): string[] {
     );
   }
   for (const key of ["routes", "route", "env", "main", "services", "durable_objects"]) {
-    if (key in config) problems.push(`"${key}" is not allowed (assets-only preview Worker)`);
+    if (key in config) problems.push(`"${key}" is not allowed (assets only, no routes in config)`);
   }
-  if (config.workers_dev !== true) problems.push('"workers_dev" must be true');
+  if (config.workers_dev !== false) {
+    problems.push('"workers_dev" must be false (powerstation.ai is the only public address)');
+  }
   const assets = config.assets as { directory?: unknown } | undefined;
   if (!assets || typeof assets.directory !== "string") {
     problems.push('"assets.directory" must be set');

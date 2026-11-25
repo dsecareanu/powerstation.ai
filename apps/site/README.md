@@ -1,6 +1,6 @@
 # Site (`@powerstation/site`)
 
-The site shell and the build that puts the apps together into one static site. It deploys to the Cloudflare Worker `powerstation-site`, on its preview URL `https://powerstation-site.danielsecareanu.workers.dev` only.
+The site shell and the build that puts the apps together into one static site. It deploys to the Cloudflare Worker `powerstation-site`, which serves `https://powerstation.ai`. There is no preview address: the `workers.dev` URL is off (`workers_dev: false`). Every merge to `main` deploys to the live site. The data mode comes from the repo variable `SITE_DATA_MODE` (`demo` or `live`, see Setup step 3).
 
 ## Routes
 
@@ -61,11 +61,11 @@ Workflow: `.github/workflows/deploy-site.yml`.
 
 - has the name `powerstation-site`;
 - has no `routes`, `route`, `env`, `main`, `services` or `durable_objects`;
-- has `workers_dev: true` and an `assets.directory`.
+- has `workers_dev: false` and an `assets.directory`.
 
 The same Cloudflare account hosts the Worker `domain-landers`, which serves 13 domains. Never deploy to it. Never pass `--name` to `wrangler deploy`.
 
-The launch (moving `powerstation.ai` and `www.powerstation.ai` to this Worker) is Daniel's step only, in the Cloudflare dashboard. This config never adds routes or custom domains.
+The custom domain `powerstation.ai` is attached to this Worker through the Cloudflare API (launched 2026-11-25), not in this config. `www.powerstation.ai` stays on `domain-landers` as a 301 to `powerstation.ai`. `wrangler deploy` changes routes and custom domains only when the config lists them; this config lists none, so a deploy leaves the domain attached. Never add routes or custom domains here.
 
 ### Setup (Daniel, once)
 
@@ -101,4 +101,4 @@ Unset counts as `demo`. Any other value fails the deploy.
 
 1. Merge the pull request that adds the workflow.
 2. Go to **Actions** > **Deploy site (preview)** > **Run workflow** (or wait for the run on the merge to `main`).
-3. Open `https://powerstation-site.danielsecareanu.workers.dev`. Every page shows the demo banner.
+3. Open `https://powerstation.ai`. In demo mode every page shows the demo banner.
