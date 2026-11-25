@@ -1,9 +1,16 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
-import { checkBudget, checkDemo, checkProduction, measurePageJs } from "../src/checks";
+import {
+  checkBudget,
+  checkDemo,
+  checkFontsOnce,
+  checkProduction,
+  dropAppFonts,
+  measurePageJs,
+} from "../src/checks";
 import { DEMO_BANNER_TEXT, injectShell, NOINDEX_TAG, sitePage } from "../src/shell";
 import { checkWorkerConfig, readWorkerConfig } from "../src/worker-guard";
 
@@ -150,4 +157,27 @@ test("every brand file the pages link to exists", () => {
   ]) {
     assert.ok(existsSync(join(brand, f)), f);
   }
+});
+
+test("dropAppFonts leaves one copy of each font, in /fonts/ via site.css", () => {
+  const face = (url: string) =>
+    `@font-face{font-family:IBM Plex Sans;font-weight:400;src:url(${url})format("woff2")}`;
+  const dir = tempSite({
+    "site.css": face("/fonts/ibm-plex-sans-latin-400-normal.woff2") + "body{color:red}",
+    "fonts/ibm-plex-sans-latin-400-normal.woff2": "font",
+    "assets/index-a.css":
+      face("/assets/ibm-plex-sans-latin-400-normal-Ab12.woff2") + ".map{fill:red}",
+    "assets/ibm-plex-sans-latin-400-normal-Ab12.woff2": "font",
+    "calculator/assets/index-b.css": face(
+      "/calculator/assets/ibm-plex-mono-latin-400-normal-Cd34.woff2",
+    ),
+    "calculator/assets/ibm-plex-mono-latin-400-normal-Cd34.woff2": "font",
+  });
+  assert.equal(checkFontsOnce(dir).length, 4);
+  assert.equal(dropAppFonts(dir), 4);
+  assert.deepEqual(checkFontsOnce(dir), []);
+  assert.ok(existsSync(join(dir, "fonts", "ibm-plex-sans-latin-400-normal.woff2")));
+  assert.ok(!existsSync(join(dir, "assets", "ibm-plex-sans-latin-400-normal-Ab12.woff2")));
+  assert.equal(readFileSync(join(dir, "assets", "index-a.css"), "utf8"), ".map{fill:red}");
+  assert.match(readFileSync(join(dir, "site.css"), "utf8"), /@font-face/);
 });

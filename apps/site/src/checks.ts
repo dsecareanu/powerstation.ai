@@ -1,5 +1,5 @@
 // Checks on a built site folder. The build fails if any check returns a problem.
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { gzipSync } from "node:zlib";
 import { DEMO_BANNER_TEXT, FIXTURES_NOW, NOINDEX_TAG } from "./shell";
@@ -100,4 +100,50 @@ export function checkBudget(pages: PageJs[]): string[] {
   return pages
     .filter((p) => p.gzipBytes > JS_BUDGET_BYTES)
     .map((p) => `${p.page} loads ${(p.gzipBytes / 1024).toFixed(1)} KB of JS (gzip), over 200 KB`);
+}
+
+/** An app's own copy of the IBM Plex fonts: hashed files in an assets folder. */
+const APP_FONT_FILE = /\/assets\/ibm-plex-[^/]*\.woff2$/;
+
+/**
+ * Every page links /site.css, which loads the fonts from /fonts/. The map and calculator bundles
+ * also hold the fonts (with hashed names), so a browser downloaded each font twice. Remove the
+ * apps' @font-face rules and font files; /site.css then serves the fonts for the whole site.
+ * Returns the number of files changed or removed.
+ */
+export function dropAppFonts(dist: string): number {
+  let changed = 0;
+  for (const file of listFiles(dist)) {
+    if (APP_FONT_FILE.test(file.replaceAll("\\", "/"))) {
+      rmSync(file);
+      changed++;
+    } else if (file.endsWith(".css") && relative(dist, file) !== "site.css") {
+      const css = readFileSync(file, "utf8");
+      const out = css.replace(/@font-face\s*\{[^}]*ibm-plex[^}]*\}/g, "");
+      if (out !== css) {
+        writeFileSync(file, out);
+        changed++;
+      }
+    }
+  }
+  return changed;
+}
+
+/** Fonts load once: only from /fonts/, declared only in /site.css. */
+export function checkFontsOnce(dist: string): string[] {
+  const problems: string[] = [];
+  for (const file of listFiles(dist)) {
+    const rel = relative(dist, file).replaceAll("\\", "/");
+    if (rel.endsWith(".woff2") && !rel.startsWith("fonts/")) {
+      problems.push(`${rel} is a second copy of a font (fonts live in /fonts/)`);
+    }
+    if (
+      rel.endsWith(".css") &&
+      rel !== "site.css" &&
+      readFileSync(file, "utf8").includes("@font-face")
+    ) {
+      problems.push(`${rel} declares fonts; only /site.css may`);
+    }
+  }
+  return problems;
 }
