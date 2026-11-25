@@ -12,7 +12,9 @@
     "backfill": "tsx scripts/backfill.ts",
     "discover-borders": "tsx scripts/discover-borders.ts",
     "update": "tsx scripts/update.ts",
-    "upload": "tsx scripts/upload.ts"
+    "upload": "tsx scripts/upload.ts",
+    "datacenters": "tsx scripts/datacenters.ts",
+    "centroids": "tsx scripts/compute-centroids.ts"
   },
   "dependencies": {
     "@powerstation/schema": "workspace:*",

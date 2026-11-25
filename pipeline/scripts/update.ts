@@ -14,6 +14,7 @@ import {
   type DataFile,
   type FlowsFile,
   type GenerationFile,
+  type StatusFile,
 } from "@powerstation/schema";
 import { iso, statusFile } from "../src/build/files";
 import {
@@ -25,6 +26,7 @@ import {
   parseExisting,
 } from "../src/build/merge";
 import { validateAll, writeFiles } from "../src/build/output";
+import { mergeStatus } from "../src/build/status-merge";
 import { runBackfill, type Dataset } from "../src/build/run";
 import { Warnings } from "../src/build/warnings";
 import { EntsoeClient } from "../src/entsoe/client";
@@ -142,7 +144,14 @@ async function main(): Promise<void> {
     files[DATA_PATHS.generation7d] = cutGeneration(gen30, start7);
     files[DATA_PATHS.generation30d] = gen30;
   }
-  files[DATA_PATHS.status] = statusFile(files, generatedAt, warnings);
+  // Keep entries of files this job does not write (e.g. data centers, monthly job).
+  const oldStatus = parseExisting<StatusFile>(
+    await downloadFile(r2, DATA_PATHS.status),
+    "status",
+    DATA_PATHS.status,
+    log,
+  );
+  files[DATA_PATHS.status] = mergeStatus(statusFile(files, generatedAt, warnings), oldStatus);
 
   const errors = validateAll(files, zones);
   if (errors.length > 0) {

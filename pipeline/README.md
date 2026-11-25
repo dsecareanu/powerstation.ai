@@ -117,6 +117,76 @@ Use `pnpm run update`. The short form `pnpm update` is a different pnpm command.
 
 ## Setup (Daniel)
 
+Do these steps once, in this order. Sources: ENTSO-E help page "How to get security token?" (updated 2026-11-25); Cloudflare R2 docs (public buckets, CORS, S3 API tokens); GitHub Actions docs (schedule, disabling and enabling a workflow, notifications). All checked 2026-11-25.
+
+### 1. ENTSO-E token
+
+1. Go to https://transparency.entsoe.eu/ and select **Sign In**, then **Register**.
+2. Confirm the account with the link in the email.
+3. Send an email to transparency@entsoe.eu. Subject: `RESTful API access`. Body: the email address of the account.
+4. Wait for the confirmation email. ENTSO-E says this takes up to 3 working days.
+5. Sign in, open **My Account** and select **Generate a new token**.
+6. Keep the token secret. Do not put it in the repo.
+
+### 2. Find the borders (once, on your machine)
+
+1. Put the token in `pipeline/.env` as `ENTSOE_TOKEN=...`. Git ignores this file.
+2. Run `pnpm --filter @powerstation/pipeline run discover-borders`. It takes about 7 minutes.
+3. Check `pipeline/reference/borders.json`, then commit it in a pull request. It holds only zone pairs and hour counts of open data (physical flows).
+
+### 3. R2 bucket
+
+1. In the Cloudflare dashboard, go to **R2 object storage** and select **Create bucket**. Proposed name: `powerstation-data`.
+2. Open the bucket, select **Settings**. Under **Custom Domains**, select **Add**. Enter the data domain (proposal: `data.powerstation.ai`). The domain must be a zone in the same Cloudflare account. Wait until the status is **Active**.
+3. Do not turn on the public development URL (`r2.dev`). It is rate-limited and for tests only.
+4. Under **CORS Policy**, select **Add CORS policy**. On the **JSON** tab, paste this policy, with the real site domain:
+
+   ```json
+   [
+     {
+       "AllowedOrigins": ["https://powerstation.ai"],
+       "AllowedMethods": ["GET", "HEAD"],
+       "AllowedHeaders": ["*"],
+       "MaxAgeSeconds": 3600
+     }
+   ]
+   ```
+
+   Add `http://localhost:5173` only if you want the local dev server to read live data.
+
+5. Everything in this bucket is public through the custom domain. Put nothing else in it.
+
+### 4. R2 API token
+
+1. Go to **R2 object storage** > **Overview**. Next to **API Tokens**, select **Manage**.
+2. Select **Create Account API token**.
+3. Permission: **Object Read & Write**. Select **Apply to specific buckets only** and select the data bucket.
+4. Select **Create API Token**. Copy the **Access Key ID** and the **Secret Access Key** now; Cloudflare does not show the secret again.
+5. Copy your account ID. It is the first part of the S3 endpoint `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`.
+
+### 5. GitHub environment and secrets
+
+1. In the repo, go to **Settings** > **Environments** and select **New environment**. Name: `data-publish`.
+2. Optional: under **Deployment branches and tags**, allow only `main`.
+3. Add 5 environment secrets: `ENTSOE_TOKEN`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`.
+4. Do not add `ENTSOE_RESTRICTED_PUBLISH_OK`. It stays unset until ENTSO-E gives written permission.
+
+### 6. First run
+
+1. Merge the pull request that adds the workflows. GitHub runs scheduled workflows only from the default branch, and the **Run workflow** button shows only for workflow files on the default branch.
+2. Go to **Actions** > **Hourly data update** > **Run workflow**. The first run finds no files on R2, so it fetches 30 days. This takes a few minutes.
+3. Check the run log. If a secret is missing, the log says `Missing secret <NAME> (add it to the GitHub environment "data-publish")` and nothing is uploaded.
+4. Open `https://<data domain>/v1/meta/status.json` in a browser.
+5. Go to **Actions** > **Monthly data-center update** > **Run workflow**. It needs the `zones.json` that the hourly run wrote.
+
+### Things to know about GitHub Actions
+
+- **Delays:** GitHub can delay scheduled runs at busy times, mostly at the start of each hour, and can drop some. The job runs at minute 17 to lower this risk. The site shows "data delayed" when the newest data is more than 2 hours old.
+- **60-day stop:** in a public repository, GitHub disables scheduled workflows when the repository has no activity for 60 days. To start them again: **Actions** > select the workflow > **Enable workflow**, or run `gh workflow enable data-hourly.yml` (and `data-monthly.yml`).
+- **Failure emails:** GitHub sends notifications for scheduled workflows to the user who created the workflow. If another user changes the `cron` line, that user gets them. If a user enables a disabled workflow again, that user gets them.
+- **Public signal:** the "data delayed" banner on the site is the public sign that the job has stopped.
+- **Overlap:** both workflows use the concurrency group `data-publish`, so they never write to R2 at the same time.
+
 ## Rate limits
 
 ENTSO-E allows 400 requests per minute per token. The client stays below this: at most 6 requests per second and 350 per minute.
