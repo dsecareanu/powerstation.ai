@@ -70,7 +70,16 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 - Accessibility: keyboard use for all controls, visible focus, color is never the only signal (data states need a pattern or label too), respect `prefers-reduced-motion`.
 - Browser storage (`localStorage`) only for personal settings and scores. Wrap reads and writes in try/catch.
 
+## Design
+
+- `DESIGN.md` (repo root) holds the design rules: direction "Line diagram", decided by Daniel 2026-11-25. Read it before any UI change.
+- Use the `--ps-*` tokens from `packages/ui/src/tokens.css`. No raw colours, fonts or radii in app CSS. Exception: the choropleth ramps in `apps/map/src/layers.ts` (tests check: no violet, lightness in order).
+- Fonts: IBM Plex Sans and Mono, self-hosted in `packages/ui/src/fonts/`. No font CDN.
+- Signal yellow (`--ps-color-signal`) is the brand colour only: never a data value, never text.
+
 ## Domain and launch
+
+- Preview: every merge to `main` deploys the site to `https://powerstation-site.danielsecareanu.workers.dev` (demo data).
 
 - Today `powerstation.ai` serves a "domain for sale" page with a guide ("Power infrastructure for the AI era") and a news feed. It runs on the Cloudflare Worker `domain-landers`, which also serves 12 other domains. Never redeploy, change or delete `domain-landers`.
 - Backup of that page and Worker (2026-11-25): `~/RevTechAgency/PowerstationAI-site-backup-2026-11-25/` (outside the repo).
@@ -95,6 +104,7 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 - Never edit, commit or switch branches in the main checkout (`~/RevTechAgency/PowerstationAI`). If your session starts there, first run `git worktree add -b ws/<letter>-<name> ../PowerstationAI-worktrees/ws-<letter>-<name> main` and work only in that folder.
 - `pnpm-lock.yaml` conflict: take main's version, run `pnpm install`, commit. Never hand-edit it.
 - Stacked PR (base = another `ws/` branch): after the base merges, change the base to `main`. Branches are not deleted on merge.
+- After any merge to `main`, open PRs fall behind and cannot merge. Update the branch (GitHub "Update branch", or `gh api -X PUT repos/dsecareanu/powerstation.ai/pulls/<n>/update-branch`), then wait for `check`. The API can return a GraphQL error and still succeed: read the branch head before you retry.
 - Local-only ignores (drafts, notes): add them to `.git/info/exclude`, not `.gitignore`.
 
 ## Checks (same as CI)
