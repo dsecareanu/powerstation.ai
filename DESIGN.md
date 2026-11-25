@@ -185,7 +185,7 @@ Decided by Daniel on 2026-11-25 (direction A "Line diagram", IBM Plex). Proposal
 - **Map ramps** (`apps/map/src/layers.ts`): Renewables share runs from pale yellow (low) to brown (high); Imports and exports runs from brown (exports) through a light neutral (about balanced) to slate (imports). No green and no violet on the map: a green "renewables" ramp would judge the energy mix. The ramps are a scale of their own; signal yellow itself is never a data value.
 - **Data states:** Okabe–Ito based, unchanged from the first `@powerstation/ui` release. Planned text uses `state-planned-text` (5.3:1); the brighter `state-planned` is for lines and fills only.
 - **No blue accent.** Blue means measured, so actions are ink.
-- **Fuel colours** (`--ps-fuel-*` in code) are for chart fills only, always with labels or a legend.
+- **Fuel colours** (`--ps-fuel-*` in code) are for chart fills only, always with labels or a legend. None is violet. Nuclear is sand `#CAB78B` (since 2026-11-25), chosen to stay apart from every other fuel colour also with colour-blind vision.
 - **Dark theme** changes only the semantic layer (the `dark-*` values above and the dark blocks in `tokens.css`). Yellow stays the same.
 
 ## Typography
@@ -219,12 +219,18 @@ No shadows. Depth comes from surface steps (paper → surface → sunken) and 1 
 - **Buttons:** primary is solid ink with paper text; secondary is ink outline on transparent. 44 px tall. Hover lifts 1 px, press moves 1 px down. One primary per screen.
 - **Segmented control and toggles:** ink outline group; the pressed item is solid ink.
 - **State badge:** 2 px radius, 1.5 px border in the state colour, a pattern swatch, the label in ink. Planned is dashed, missing is dotted, modelled has a hatch swatch and always a method line.
-- **Notice (data delayed, demo data):** signal tint ground, ink text, ink border with a 6 px left edge. Text first; colour is never the only signal.
+- **Notice (data delayed, demo data):** signal tint ground, ink text. In a panel: ink border with a 6 px left edge. As the full-width demo banner above the site header: a 1.5 px ink rule below it. Text first; colour is never the only signal.
 - **Readout:** Plex Mono 600 number, unit in muted Plex Sans, then one plain comparison ("about as much as 1.4 million homes").
-- **Map:** flat land shapes with paper-coloured borders, no basemap and no sea colour. Flow width scales with MW. Measured flows are ink with dots moving in the flow direction. Planned trade is a static dashed orange line. The selected country keeps its data colour and gets a 2.5 px ink outline. "No data" is `land-strong` or a hatch, with a label in the legend.
+- **Map:** flat land shapes with paper-coloured borders, no basemap and no sea colour. Flow width scales with MW. Measured flows are ink with dots moving in the flow direction. Planned trade is a static dashed orange line. The selected country keeps its data colour and gets a 2.5 px ink outline. A country with no value for the hour gets the dotted "no data" pattern (`#pat-missing`) over its fill, with a label in the legend.
 - **Timeline:** solid ink track for the measured past, dashed planned track after now, the yellow now marker with a text label.
 - **Credit line:** under every chart and map, 13–14 px muted: source name, licence.
 - **Focus ring:** 2 px ink ring plus a 3 px signal halo (`--ps-focus-ring`). Visible on both themes.
+- **Native controls** (range slider, radios, checkboxes): `accent-color: var(--ps-color-accent)` on the app body, so they are ink, never the browser's blue.
+- **Links:** ink, 1 px underline 3 px below the text, 2 px on hover.
+- **Site header** (`apps/site/src/shell.ts`, `shell.css`): surface band with a hairline below, the wordmark on the left, nav links on the right in ink at 15 px, each 44 px tall. The current page is bold with a solid 2 px underline.
+- **Site footer:** 14 px muted text above a hairline: sources with licences, code licence.
+- **Text pages** (About, Guide, 404): one 44 rem column, headings at 600 on the token scale, a hairline above each `h2`, definition lists as rows between hairlines, the guide's contents in a quiet panel.
+- **Data-state labels in text** (About, "How to read the numbers"): each label shows the same line as the map: solid measured, dashed planned, hatched modelled, dotted no data (`.site-state--*`).
 
 ## Motion
 
@@ -255,6 +261,15 @@ The site header uses the same drawing inline (`apps/site/src/logo.ts`), in `curr
 - **Don't** recolour the point (only yellow, or an open ring in one colour), stretch, rotate, add shadows or outlines, or set the wordmark in another face.
 - **Don't** use the lightning-bolt icon from the old "domain for sale" lander. It belongs to the shared `domain-landers` Worker, not to powerstation.ai.
 
+## Checks in code
+
+These tests guard the rules above. Keep them passing; extend them with new colours.
+
+- `packages/ui/test/tokens.test.ts`: text contrast 4.5:1 and data-state contrast 3:1 on paper and surface, both themes; field borders 3:1; no violet fuel colour; nuclear at least delta E 15 from every other fuel under normal, protan, deutan and tritan vision.
+- `apps/map/test/layers.test.ts`: no violet in the map ramps; lightness in order on each ramp.
+- `apps/site/test/site.test.ts`: the header wordmark keeps its accessible name; every page links the favicon set; every brand file exists.
+- `DESIGN.md` itself: `npx @google/design.md lint DESIGN.md` with 0 errors and 0 warnings.
+
 ## Do's and Don'ts
 
 - Do show every value's state with a pattern or label as well as colour.
@@ -263,6 +278,6 @@ The site header uses the same drawing inline (`apps/site/src/logo.ts`), in `curr
 - Don't use signal yellow `#FFD21A` as a data value, as text, or alone on paper. The map's yellow-to-brown ramp is a separate scale.
 - Don't use green to mean "renewable" or "good". Describe the data; do not judge energy sources.
 - Don't add a second accent colour, gradients, glows, shadows or glass.
-- Don't use violet or lavender in page design.
+- Don't use violet or lavender anywhere: page design, map ramps or fuel colours.
 - Don't use weights above 600 or uppercase labels.
 - Don't add a lightning bolt or plug icon to the logo. The mark is the now line.
