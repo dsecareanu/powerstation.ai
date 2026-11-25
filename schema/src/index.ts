@@ -1,7 +1,9 @@
 // Public entry point of the data contract.
 // Types are generated from json/*.schema.json (see src/generated.ts).
 import type {
+  CapacityFile,
   DatacentersFile,
+  EmissionFactorsFile,
   ForecastsFile,
   FlowsFile,
   GenerationFile,
@@ -13,11 +15,18 @@ import type {
 export type * from "./generated";
 
 /** Version of the data contract this package describes. */
-export const SCHEMA_VERSION = "1.0.0" as const;
+export const SCHEMA_VERSION = "1.1.0" as const;
 
 /** Any published data file. Narrow it with the `dataset` field. */
 export type DataFile =
-  StatusFile | ZonesFile | FlowsFile | GenerationFile | ForecastsFile | DatacentersFile;
+  | StatusFile
+  | ZonesFile
+  | FlowsFile
+  | GenerationFile
+  | ForecastsFile
+  | DatacentersFile
+  | CapacityFile
+  | EmissionFactorsFile;
 
 export type Dataset = DataFile["dataset"];
 
@@ -31,6 +40,8 @@ export const DATA_PATHS = {
   generation30d: "v1/generation/rolling-30d.json",
   forecasts24h: "v1/forecasts/next-24h.json",
   datacenters: "v1/datacenters/datacenters.json",
+  capacity30d: "v1/capacity/rolling-30d.json",
+  emissionFactors: "v1/meta/emission-factors.json",
 } as const;
 
 export type FuelType = keyof ZoneGeneration["generation"];

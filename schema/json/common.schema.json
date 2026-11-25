@@ -7,7 +7,7 @@
     "SchemaVersion": {
       "title": "SchemaVersion",
       "description": "Version of the data contract. Bump it on every schema change.",
-      "const": "1.0.0"
+      "const": "1.1.0"
     },
     "DataState": {
       "title": "DataState",
@@ -94,7 +94,16 @@
         "schema_version": { "$ref": "#/$defs/SchemaVersion" },
         "dataset": {
           "description": "Kind of file. Selects the schema.",
-          "enum": ["status", "zones", "flows", "generation", "forecasts", "datacenters"]
+          "enum": [
+            "status",
+            "zones",
+            "flows",
+            "generation",
+            "forecasts",
+            "datacenters",
+            "capacity",
+            "emission_factors"
+          ]
         },
         "generated_at": { "$ref": "#/$defs/UtcTimestamp" },
         "mock": {
