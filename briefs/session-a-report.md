@@ -68,9 +68,9 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 ## What Daniel must do
 
 1. Decide on task 1 (options 1–4 above).
-2. Register on the ENTSO-E Transparency Platform and request API access. Give me the token for local backfill (I keep it in `.env`, which git ignores). Add it as an n8n credential.
+2. Register on the ENTSO-E Transparency Platform and request API access. Give me the token for local runs (I keep it in `pipeline/.env`, which git ignores). Add it as a secret in the GitHub environment `data-publish`.
 3. Create the R2 bucket, public access on a custom domain (proposal: `data.powerstation.ai`) and CORS for the site domain.
-4. Create an R2 API token and add it as an n8n S3 credential.
+4. Create an R2 API token and add it as secrets in the GitHub environment `data-publish` (see `pipeline/README.md`, Setup).
 5. Merge the schema 1.1.0 PR (after session D's first PR, as in `briefs/README.md`).
 
 ## Status of tasks 3 and 4 (branch `ws/a-zones`, not pushed as a PR)
@@ -82,4 +82,4 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 
 - Task 3: check EIC codes and centroids against ENTSO-E reference data; list all bidding zones that publish flows.
 - Task 4: backfill script with throttling (≤ 6 requests per second), netting and hourly aggregation; tests on saved sample XML. No upload until the R2 bucket exists and Daniel decides on task 1.
-- Task 5: draft n8n workflow JSON locally in `/n8n`. I will not create or change workflows on the instance without asking.
+- Task 5 (replaced, Daniel 2026-11-25): no n8n in v1. The hourly job is a scheduled GitHub Actions workflow (`.github/workflows/data-hourly.yml`) that runs the `/pipeline` code. Fallback, only if Actions is unreliable: the same code in a Cloudflare Worker with a Cron Trigger. The monthly data-center job is `.github/workflows/data-monthly.yml`.
