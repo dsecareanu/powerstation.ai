@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
   DATA_PATHS,
+  SCHEMA_VERSION,
   type CapacityFile,
   type DataFile,
   type FlowsFile,
@@ -27,6 +28,7 @@ import {
 } from "../src/build/merge";
 import { validateAll, writeFiles } from "../src/build/output";
 import { mergeStatus } from "../src/build/status-merge";
+import { emissionFactorsFile } from "../src/emission-factors";
 import { runBackfill, type Dataset } from "../src/build/run";
 import { Warnings } from "../src/build/warnings";
 import { EntsoeClient } from "../src/entsoe/client";
@@ -135,6 +137,8 @@ async function main(): Promise<void> {
     ctx,
   );
   files[DATA_PATHS.forecasts24h] = recentRun.files[DATA_PATHS.forecasts24h]!;
+  // Static reference data, written every run so it never goes missing on R2.
+  files[DATA_PATHS.emissionFactors] = emissionFactorsFile(SCHEMA_VERSION, generatedAt);
   if (includeRestricted) {
     const gen30 = mergeGeneration(
       oldGeneration,

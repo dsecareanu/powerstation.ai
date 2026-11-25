@@ -136,15 +136,26 @@ Do these steps once, in this order. Sources: ENTSO-E help page "How to get secur
 
 ### 3. R2 bucket
 
-1. In the Cloudflare dashboard, go to **R2 object storage** and select **Create bucket**. Proposed name: `powerstation-data`.
-2. Open the bucket, select **Settings**. Under **Custom Domains**, select **Add**. Enter the data domain (proposal: `data.powerstation.ai`). The domain must be a zone in the same Cloudflare account. Wait until the status is **Active**.
+Deploy plan (Daniel, 2026-11-25):
+
+| Item                  | Value                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Bucket                | `powerstation-data`                                                                                             |
+| Public access         | custom domain `data.powerstation.ai` only                                                                       |
+| CORS                  | `GET` (and `HEAD`) from `https://powerstation.ai` and the preview `workers.dev` URL                             |
+| Base URL for the apps | `https://data.powerstation.ai` (paths `v1/...`, for example `https://data.powerstation.ai/v1/meta/status.json`) |
+
+R2 is not enabled on the Cloudflare account yet (API error 403, code 10042). Enable R2 first: dashboard > **R2 object storage** > follow the steps to turn it on.
+
+1. In the Cloudflare dashboard, go to **R2 object storage** and select **Create bucket**. Name: `powerstation-data`.
+2. Open the bucket, select **Settings**. Under **Custom Domains**, select **Add**. Enter `data.powerstation.ai`. The domain must be a zone in the same Cloudflare account. Wait until the status is **Active**.
 3. Do not turn on the public development URL (`r2.dev`). It is rate-limited and for tests only.
-4. Under **CORS Policy**, select **Add CORS policy**. On the **JSON** tab, paste this policy, with the real site domain:
+4. Under **CORS Policy**, select **Add CORS policy**. On the **JSON** tab, paste this policy. Replace `<preview>` with the real preview URL of the site Worker:
 
    ```json
    [
      {
-       "AllowedOrigins": ["https://powerstation.ai"],
+       "AllowedOrigins": ["https://powerstation.ai", "https://<preview>.workers.dev"],
        "AllowedMethods": ["GET", "HEAD"],
        "AllowedHeaders": ["*"],
        "MaxAgeSeconds": 3600

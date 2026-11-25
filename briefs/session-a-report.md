@@ -59,6 +59,13 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 
 **Decision (Daniel, 2026-11-25):** lignite uses the hard-coal row ("Coal — PC", 820) as a proxy, as in the fixture. Oil stays `none`.
 
+**Update (Daniel, 2026-11-25, via the orchestrator): second source for lignite and oil, and a license field.**
+
+- Oil: 840 gCO2eq/kWh, IPCC SRREN (2011) Annex II, Table A.II.4, 50th percentile, life cycle. Read from the IPCC PDF. NREL's fact sheet NREL/FS-6A50-80580 (2021), Table 1, gives the same value and cites this table. Oil is now `direct`.
+- Lignite: no source gives lignite separately (IPCC AR5 Annex III, IPCC SRREN Annex II and the NREL fact sheet all checked). It stays a proxy of "Coal — PC" (820). The UNECE 2021 LCA report could not be read: unece.org and un-ilibrary.org returned HTTP 403 to automated access.
+- License field of the real file: "Values cited from IPCC AR5 WG III Annex III (© IPCC 2014) and IPCC SRREN Annex II (© IPCC 2011) with attribution; no IPCC figure or table is reproduced." This is Daniel's proposed text, extended to the second IPCC report. **[Unverified]** I could not read the IPCC copyright page (HTTP 403), and the PDFs carry no notice, so I cannot quote IPCC's terms. The view that a few cited numbers are facts, not reproduced material, is a legal view I have not checked.
+- The real file is `pipeline/src/emission-factors.ts`. The hourly job writes it on every run. The fixture uses the same table (still `mock: true`).
+
 ## What other sessions must know
 
 - **Session B (calculator):** rebase on this PR. Handle `match: "none"` (no factor: show it, do not count it as 0). Capacity is directional: use the entry whose `from_zone` is the exporting zone.
@@ -74,6 +81,10 @@ Open decision for the real emission-factor file: IPCC Table A.III.2 has no row f
 5. ~~Merge the schema 1.1.0 PR~~ Done: PR #2 merged.
 6. Decide whether Epoch AI "AI supercomputers" is the right data-center source (see task 5).
 7. ~~Session C's request: an optional `centroid` on `countries[]` in zones.json~~ Daniel skipped it (2026-11-25). Not built.
+
+## Deploy plan (Daniel, 2026-11-25)
+
+R2 bucket `powerstation-data`, public only through the custom domain `data.powerstation.ai`. CORS: `GET` from `https://powerstation.ai` and the preview `workers.dev` URL. Base URL for the apps: `https://data.powerstation.ai` (paths `v1/...`). R2 is not enabled on the Cloudflare account yet (API 403, code 10042); Daniel enables it. I created nothing. Steps: `pipeline/README.md` → "Setup (Daniel)".
 
 ## Status of tasks 3, 4 and 5 (branch `ws/a-zones`)
 

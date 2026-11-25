@@ -11,7 +11,6 @@ import {
   SCHEMA_VERSION,
   type BorderSeries,
   type DirectedCapacity,
-  type EmissionFactorsFile,
   type Datacenter,
   type DataState,
   type FuelType,
@@ -20,6 +19,7 @@ import {
   type ZoneForecast,
   type ZoneGeneration,
 } from "@powerstation/schema";
+import { EMISSION_FACTORS } from "../src/emission-factors";
 
 // ---------- options ----------
 const HOUR = 3_600_000;
@@ -625,56 +625,8 @@ const capacity30: DirectedCapacity[] = BORDERS.flatMap(([from, to, typical, swin
 );
 
 // ---------- emission factors ----------
-// Values are copied from IPCC AR5 WGIII Annex III, Table A.III.2, "Lifecycle emissions
-// (incl. albedo effect)", median column (checked against the PDF on 2026-11-25). The file is
-// still mock: true. Which proxies the real file uses is an open decision (session A report).
-const IPCC = "ipcc-ar5-wg3-annex-iii";
-const T = "Table A.III.2";
-const direct = (value: number, row: string) =>
-  ({ value, match: "direct", source_id: IPCC, table: T, row }) as const;
-const proxy = (value: number, row: string, note: string) =>
-  ({ value, match: "proxy", source_id: IPCC, table: T, row, note }) as const;
-const none = (note: string) =>
-  ({ value: null, match: "none", source_id: null, table: null, row: null, note }) as const;
-const emissionFactors: Omit<EmissionFactorsFile, keyof typeof envelope> = {
-  dataset: "emission_factors",
-  unit: "gCO2eq/kWh",
-  basis: "lifecycle",
-  sources: [
-    {
-      id: IPCC,
-      title:
-        "Climate Change 2014: Mitigation of Climate Change. Working Group III contribution to the IPCC Fifth Assessment Report. Annex III: Technology-specific Cost and Performance Parameters",
-      publisher: "Intergovernmental Panel on Climate Change (IPCC)",
-      year: 2014,
-      url: "https://www.ipcc.ch/site/assets/uploads/2018/02/ipcc_wg3_ar5_annex-iii.pdf",
-    },
-  ],
-  factors: {
-    nuclear: direct(12, "Nuclear"),
-    lignite: proxy(820, "Coal — PC", "No lignite row in the source. Uses pulverised hard coal."),
-    hard_coal: direct(820, "Coal — PC"),
-    gas: proxy(
-      490,
-      "Gas — Combined Cycle",
-      "The source has combined-cycle plants only. Open-cycle plants emit more.",
-    ),
-    oil: none("The source has no factor for oil-fired power."),
-    biomass: direct(230, "Biomass — dedicated"),
-    waste: none("The source has no factor for waste incineration."),
-    geothermal: direct(38, "Geothermal"),
-    hydro_run_of_river: direct(24, "Hydropower"),
-    hydro_reservoir: direct(24, "Hydropower"),
-    hydro_pumped_storage: none(
-      "Storage, not a primary source. Its emissions depend on the power used for pumping.",
-    ),
-    wind_onshore: direct(11, "Wind onshore"),
-    wind_offshore: direct(12, "Wind offshore"),
-    solar: proxy(48, "Solar PV — utility", "Solar mixes rooftop (41) and utility-scale (48) PV."),
-    other_renewable: none("Mixed category. The source has no single factor."),
-    other: none("Mixed category. The source has no single factor."),
-  },
-};
+// The real values and citations (pipeline/src/emission-factors.ts). The file is still mock: true.
+const emissionFactors = EMISSION_FACTORS;
 
 // ---------- files ----------
 const window30 = { start: iso(start30), end: iso(nowMs + AHEAD * HOUR) };
