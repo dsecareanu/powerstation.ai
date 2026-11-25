@@ -2,6 +2,8 @@
 // The build (scripts/build.ts) adds the shell to the map and calculator pages after Vite builds them,
 // so the apps stay unchanged and keep working on their own.
 
+import { LOGO_SVG } from "./logo";
+
 export const REPO_URL = "https://github.com/dsecareanu/powerstation.ai";
 
 /** The fixtures' "now" (see briefs/session-0-report.md). Demo builds fix the clock here. */
@@ -28,12 +30,20 @@ export function header(active: NavKey | null): string {
     (n) =>
       `<li><a href="${n.href}"${n.key === active ? ' aria-current="page"' : ""}>${n.label}</a></li>`,
   ).join("");
-  return `<header class="site-header"><a class="site-logo" href="/">powerstation.ai</a><nav aria-label="Site"><ul>${links}</ul></nav></header>`;
+  return `<header class="site-header"><a class="site-logo" href="/" aria-label="powerstation.ai">${LOGO_SVG}</a><nav aria-label="Site"><ul>${links}</ul></nav></header>`;
 }
 
 export function footer(): string {
   return `<footer class="site-footer"><p>Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a> (CC BY 4.0), <a href="https://epoch.ai/data/ai-supercomputers">Epoch AI</a> (CC BY 4.0), <a href="https://ec.europa.eu/eurostat">Eurostat</a>, <a href="https://www.ipcc.ch/">IPCC</a> and <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Each page lists the sources it uses. <a href="/about/">All sources and licenses</a>.</p><p>Free and open source. Code: <a href="${REPO_URL}">GitHub</a>, license <a href="${REPO_URL}/blob/main/LICENSE">AGPL-3.0</a>.</p></footer>`;
 }
+
+/** Favicon, touch icon and manifest links, for every page. Files: public/brand/. */
+export const ICON_LINKS =
+  `<link rel="icon" href="/brand/favicon.ico" sizes="32x32" />` +
+  `<link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />` +
+  `<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />` +
+  `<link rel="manifest" href="/brand/site.webmanifest" />` +
+  `<meta name="theme-color" content="#15191E" />`;
 
 export interface ShellOptions {
   demo: boolean;
@@ -44,6 +54,7 @@ export interface ShellOptions {
 export function injectShell(html: string, opts: ShellOptions): string {
   const head =
     `<link rel="stylesheet" href="/site.css" />` +
+    ICON_LINKS +
     (opts.demo ? `<meta name="robots" content="noindex" />` : "");
   const top = (opts.demo ? demoBanner() : "") + header(opts.active);
   if (!html.includes("</head>") || !/<body[^>]*>/.test(html) || !html.includes("</body>")) {
