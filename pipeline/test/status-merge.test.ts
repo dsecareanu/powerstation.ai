@@ -6,7 +6,7 @@ import { validateDataFile } from "@powerstation/schema/validate";
 import { mergeStatus } from "../src/build/status-merge";
 
 const base = {
-  schema_version: "1.1.0",
+  schema_version: "1.2.0",
   dataset: "status",
   mock: false,
   source: "test",

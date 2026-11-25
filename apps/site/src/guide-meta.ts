@@ -56,3 +56,13 @@ export function guideHead(): string {
     .map((line) => `    ${line}\n`)
     .join("");
 }
+
+/** Script tag for the "Latest news" block (src/news.ts, built to /site-news.js). */
+export const NEWS_SCRIPT_TAG = `<script type="module" src="/site-news.js"></script>`;
+
+/** Sets the news.json URL on the guide's news block. Fails if the block is missing. */
+export function withNewsSource(guideBody: string, newsUrl: string): string {
+  const marker = 'data-news-src=""';
+  if (!guideBody.includes(marker)) throw new Error(`guide.html has no ${marker} block`);
+  return guideBody.replace(marker, `data-news-src="${newsUrl}"`);
+}

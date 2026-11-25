@@ -28,7 +28,7 @@ test("the capacity and emission-factors fixtures exist and validate", () => {
       path.replace(/^v1\//, ""),
     );
     assert.equal(file.dataset, dataset);
-    assert.equal(file.schema_version, "1.1.0");
+    assert.equal(file.schema_version, "1.2.0");
     assert.deepEqual(validateDataFile(file).errors, [], path);
   }
 });

@@ -1,0 +1,47 @@
+name: News headlines update
+
+# Reads public RSS and Atom feeds (pipeline/src/news.ts) and uploads v1/meta/news.json
+# to R2: title, link, publisher name and date only. status.json is not touched.
+# A feed that fails is skipped. With zero matching headlines, nothing is uploaded and
+# the previous news.json stays.
+
+on:
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Own group, not data-publish: GitHub keeps one pending run per group, so a queued news
+# run would cancel a queued hourly run. This job writes only news.json.
+concurrency:
+  group: data-news
+  cancel-in-progress: false
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    environment: data-publish
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Read the feeds and build news.json
+        run: pnpm --filter @powerstation/pipeline run news --out pipeline/out/news
+      - name: Validate the file for deploy
+        if: ${{ hashFiles('pipeline/out/news/v1/meta/news.json') != '' }}
+        run: pnpm validate --deploy pipeline/out/news/v1
+      - name: Upload news.json to R2
+        if: ${{ hashFiles('pipeline/out/news/v1/meta/news.json') != '' }}
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: pnpm --filter @powerstation/pipeline run upload pipeline/out/news

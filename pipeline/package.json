@@ -14,6 +14,7 @@
     "update": "tsx scripts/update.ts",
     "upload": "tsx scripts/upload.ts",
     "datacenters": "tsx scripts/datacenters.ts",
+    "news": "tsx scripts/news.ts",
     "centroids": "tsx scripts/compute-centroids.ts"
   },
   "dependencies": {

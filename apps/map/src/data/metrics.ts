@@ -81,7 +81,7 @@ export interface NodeGeneration {
 }
 
 /** Generation series of the node's zones, indexed once per file. */
-export function generationIndex(file: GenerationFile, index: NodeIndex) {
+export function generationIndex(file: Pick<GenerationFile, "zones">, index: NodeIndex) {
   const byNode = new Map<string, { load: TimeSeries[]; fuels: Map<FuelType, TimeSeries[]> }>();
   for (const z of file.zones) {
     const nodeId = index.nodeOfZone.get(z.zone);

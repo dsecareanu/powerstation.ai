@@ -1,5 +1,12 @@
 // Derived data for the views. Built once per loaded data set, then read per hour.
-import type { FlowsFile, GenerationFile, ZonesFile } from "@powerstation/schema";
+import type {
+  CapacityFile,
+  FlowsFile,
+  ForecastsFile,
+  GenerationFile,
+  TimeSeries,
+  ZonesFile,
+} from "@powerstation/schema";
 import {
   type BorderPair,
   type FlowAt,
@@ -13,7 +20,7 @@ import {
   timelineHours,
 } from "./data/metrics";
 import { type NodeIndex, aggregateBorders, buildNodes } from "./data/nodes";
-import { MISSING, type Point, pointAt } from "./data/series";
+import { MISSING, type Point, combine, pointAt, sumSeries, toMs } from "./data/series";
 import type { LayerId } from "./layers";
 
 export interface Model {
@@ -25,9 +32,23 @@ export interface Model {
   measuredEnd: number;
   /** Largest absolute flow in the window, for stable arrow widths. */
   maxAbsFlow: number;
+  /** Day-ahead capacity per node direction. Key "A>B": power from A to B. */
+  capacity: Map<string, TimeSeries>;
+  /** Day-ahead load forecast per node: one series per zone, only when every zone has one. */
+  loadForecast: Map<string, TimeSeries[]>;
+  /** False when the generation file is not published (restricted data). */
+  hasGeneration: boolean;
+  /** True when at least one hour of planned trade (scheduled exchanges) is published. */
+  hasPlanned: boolean;
 }
 
-export function buildModel(zones: ZonesFile, flows: FlowsFile, generation: GenerationFile): Model {
+export function buildModel(
+  zones: ZonesFile,
+  flows: FlowsFile,
+  generation: GenerationFile | null,
+  capacity: CapacityFile | null = null,
+  forecasts: ForecastsFile | null = null,
+): Model {
   const index = buildNodes(zones);
   const pairs = pairBorders(aggregateBorders(flows, index));
   let maxAbsFlow = 1;
@@ -35,14 +56,117 @@ export function buildModel(zones: ZonesFile, flows: FlowsFile, generation: Gener
     for (const b of [p.physical, p.scheduled])
       for (const v of b?.series.values ?? [])
         if (v !== null) maxAbsFlow = Math.max(maxAbsFlow, Math.abs(v));
+  // The timeline reaches 24 h ahead when the forecast does, even if no planned trade is published.
+  const end =
+    forecasts && toMs(forecasts.window.end) > toMs(flows.window.end)
+      ? forecasts.window.end
+      : flows.window.end;
   return {
     index,
     pairs,
-    gen: generationIndex(generation, index),
-    hours: timelineHours(flows.window.start, flows.window.end),
+    gen: generationIndex(generation ?? { zones: [] }, index),
+    hours: timelineHours(flows.window.start, end),
     measuredEnd: measuredEndMs(flows),
     maxAbsFlow,
+    capacity: aggregateCapacity(capacity, index),
+    loadForecast: forecastIndex(forecasts, index),
+    hasGeneration: (generation?.zones.length ?? 0) > 0,
+    hasPlanned: pairs.some((p) => p.scheduled?.series.states.some((s) => s !== "missing")),
   };
+}
+
+/** Sum the zone directions of a capacity file into node directions; borders inside a node drop. */
+export function aggregateCapacity(
+  file: CapacityFile | null,
+  index: NodeIndex,
+): Map<string, TimeSeries> {
+  const acc = new Map<string, TimeSeries[]>();
+  for (const b of file?.borders ?? []) {
+    const a = index.nodeOfZone.get(b.from_zone);
+    const z = index.nodeOfZone.get(b.to_zone);
+    if (!a || !z || a === z) continue;
+    const list = acc.get(`${a}>${z}`) ?? [];
+    list.push(b.series);
+    acc.set(`${a}>${z}`, list);
+  }
+  const out = new Map<string, TimeSeries>();
+  for (const [k, list] of acc)
+    out.set(k, sumSeries(list.map((series) => ({ series, sign: 1 as const }))));
+  return out;
+}
+
+function forecastIndex(file: ForecastsFile | null, index: NodeIndex): Map<string, TimeSeries[]> {
+  const byZone = new Map((file?.zones ?? []).map((z) => [z.zone, z.load]));
+  const out = new Map<string, TimeSeries[]>();
+  for (const n of index.nodes) {
+    const list = n.zones.map((z) => byZone.get(z));
+    // A node with one zone left out of the file would give a partial sum: leave it missing.
+    if (list.every((s): s is TimeSeries => s !== undefined)) out.set(n.id, list);
+  }
+  return out;
+}
+
+/** Day-ahead load forecast of a node at one hour (state planned or missing). */
+export function loadForecastAt(m: Model, nodeId: string, hour: number): Point {
+  const list = m.loadForecast.get(nodeId);
+  return list ? combine(list.map((s) => pointAt(s, hour))) : MISSING;
+}
+
+/**
+ * Net position of a node from measured physical flows only (MW). Positive = net importer.
+ * Missing after the latest measured hour, and when any of its borders has no value.
+ */
+export function netPhysicalAt(m: Model, nodeId: string, hour: number): Point {
+  if (hour >= m.measuredEnd) return MISSING;
+  const parts = m.pairs
+    .filter((p) => p.from === nodeId || p.to === nodeId)
+    .map((p) => {
+      const q = p.physical ? pointAt(p.physical.series, hour) : MISSING;
+      return q.value === null || p.to === nodeId ? q : { ...q, value: -q.value };
+    });
+  return combine(parts);
+}
+
+/** How full a border is at one hour: measured flow against the capacity in the same direction. */
+export interface BorderUse {
+  /** Measured (or modelled) flow; positive = from `pair.from` to `pair.to`. */
+  flow: Point;
+  /** Day-ahead capacity offered in the direction of the flow (planned or missing). */
+  capacity: Point;
+  /** 0 or more; can pass 1 (flows can exceed the day-ahead figure). Takes the flow's state. */
+  share: Point;
+}
+
+export function borderUseAt(m: Model, pair: BorderPair, hour: number): BorderUse {
+  const flow =
+    hour < m.measuredEnd && pair.physical ? pointAt(pair.physical.series, hour) : MISSING;
+  const dir =
+    flow.value !== null && flow.value < 0 ? `${pair.to}>${pair.from}` : `${pair.from}>${pair.to}`;
+  const cap = m.capacity.get(dir);
+  const capacity = cap ? pointAt(cap, hour) : MISSING;
+  if (flow.value === null || capacity.value === null || capacity.value <= 0)
+    return { flow, capacity, share: MISSING };
+  return { flow, capacity, share: { ...flow, value: Math.abs(flow.value) / capacity.value } };
+}
+
+/** The border with the highest average share of its offered capacity (measured hours). */
+export function fullestPair(m: Model): BorderPair | undefined {
+  let best: BorderPair | undefined;
+  let bestScore = -1;
+  for (const p of m.pairs) {
+    let sum = 0;
+    let n = 0;
+    for (const h of m.hours) {
+      if (h >= m.measuredEnd) break;
+      const s = borderUseAt(m, p, h).share.value;
+      if (s === null) continue;
+      sum += s;
+      n++;
+    }
+    const score = n ? sum / n : -1;
+    if (score > bestScore) [best, bestScore] = [p, score];
+  }
+  return best ?? m.pairs[0];
 }
 
 export const flowsAt = (m: Model, hour: number): FlowAt[] =>
@@ -56,33 +180,9 @@ export function layerValue(
   flows: FlowAt[],
 ): Point {
   if (layer === "netImport") return netImportAt(nodeId, flows);
+  if (layer === "loadForecast") return loadForecastAt(m, nodeId, hour);
   return generationAt(m.gen, nodeId, hour)?.renewableShare ?? MISSING;
 }
 
 /** Pair key, e.g. "ES>FR". */
 export const pairKey = (p: { from: string; to: string }): string => `${p.from}>${p.to}`;
-
-/**
- * The border where measured flow and planned trade differ most on average (past hours).
- * Used as the default for the "planned vs measured" panel.
- */
-export function mostSurprisingPair(m: Model): BorderPair | undefined {
-  let best: BorderPair | undefined;
-  let bestScore = -1;
-  for (const p of m.pairs) {
-    if (!p.physical || !p.scheduled) continue;
-    let sum = 0;
-    let n = 0;
-    for (const h of m.hours) {
-      if (h >= m.measuredEnd) break;
-      const a = pointAt(p.physical.series, h).value;
-      const s = pointAt(p.scheduled.series, h).value;
-      if (a === null || s === null) continue;
-      sum += Math.abs(a - s);
-      n++;
-    }
-    const score = n ? sum / n : -1;
-    if (score > bestScore) [best, bestScore] = [p, score];
-  }
-  return best ?? m.pairs[0];
-}

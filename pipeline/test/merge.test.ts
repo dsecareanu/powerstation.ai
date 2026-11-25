@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DATA_PATHS, type DataFile, type TimeSeries } from "@powerstation/schema";
+import { DATA_PATHS, SCHEMA_VERSION, type DataFile, type TimeSeries } from "@powerstation/schema";
 import {
   capacityFile,
   flowsFile,
@@ -261,7 +261,10 @@ test("parseExisting: absent, other schema_version, invalid and good files", () =
   const log = (m: string) => logs.push(m);
   const good = JSON.stringify(oldFlows());
   assert.equal(parseExisting(null, "flows", "x", log), null);
-  assert.equal(parseExisting(good.replace(/"1\.1\.0"/, '"0.9.0"'), "flows", "x", log), null);
+  assert.equal(
+    parseExisting(good.replace(`"${SCHEMA_VERSION}"`, '"0.9.0"'), "flows", "x", log),
+    null,
+  );
   assert.ok(logs.some((l) => l.includes("schema_version")));
   assert.equal(parseExisting("{not json", "flows", "x", log), null);
   const broken = JSON.stringify({ ...oldFlows(), borders: "nope" });

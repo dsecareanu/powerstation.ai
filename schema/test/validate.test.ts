@@ -3,7 +3,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import type { CapacityFile, EmissionFactorsFile, FlowsFile, ZonesFile } from "../src/index";
+import type {
+  CapacityFile,
+  EmissionFactorsFile,
+  FlowsFile,
+  NewsFile,
+  ZonesFile,
+} from "../src/index";
 import { checkZoneReferences, validateDataFile } from "../src/validate";
 
 const fixtures = join(import.meta.dirname, "..", "..", "fixtures", "v1");
@@ -163,4 +169,60 @@ test("rejects a direct factor without a value", () => {
   const f = factors();
   f.factors.nuclear.value = null;
   assert.match(firstError(f), /match direct needs value/);
+});
+
+// ---------- news (schema 1.2.0) ----------
+const news = () => load<NewsFile>("meta/news.json");
+
+test("fixture news file is valid", () => {
+  assert.deepEqual(validateDataFile(news()).errors, []);
+});
+
+test("rejects article text in a news item", () => {
+  const f = news() as unknown as { items: Record<string, unknown>[] };
+  f.items[0]!["summary"] = "Article text must never be stored.";
+  assert.match(firstError(f), /must NOT have additional properties/);
+});
+
+test("rejects a news link that is not http(s)", () => {
+  const f = news();
+  f.items[0]!.url = "javascript:alert(1)";
+  assert.match(firstError(f), /url/);
+});
+
+test("rejects duplicate news titles", () => {
+  const f = news();
+  f.items[1]!.title = f.items[0]!.title.toUpperCase();
+  f.items[1]!.source = "Another publisher";
+  assert.match(firstError(f), /duplicate title/);
+});
+
+test("rejects more than 2 news items from one source", () => {
+  const f = news();
+  for (const i of f.items) i.source = "One publisher";
+  assert.match(firstError(f), /more than 2 items from One publisher/);
+});
+
+test("rejects more than 8 news items", () => {
+  const f = news();
+  f.items = Array.from({ length: 9 }, (_, i) => ({
+    title: `Headline ${i}`,
+    url: `https://example.org/${i}`,
+    source: `Publisher ${i}`,
+    published_at: null,
+  }));
+  assert.match(firstError(f), /9 items, at most 8/);
+});
+
+test("rejects news that is not newest first", () => {
+  const f = news();
+  [f.items[0], f.items[1]] = [f.items[1]!, f.items[0]!];
+  assert.match(firstError(f), /not newest first/);
+});
+
+test("rejects a dated news item after an undated one", () => {
+  const f = news();
+  const undated = f.items.pop()!;
+  f.items.unshift(undated);
+  assert.match(firstError(f), /not newest first/);
 });
