@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-11-25T12:00:00Z",
+  "mock": true,
+  "source": "powerstation.ai mock data generator",
+  "license": "AGPL-3.0-only",
+  "attribution": "Mock data for development and tests. This is not real grid data.",
+  "dataset": "zones",
+  "zones": [
+    {
+      "id": "DE-LU",
+      "name": "Germany–Luxembourg",
+      "eic": "10Y1001A1001A82H",
+      "countries": ["DE","LU"],
+      "centroid": {
+        "lat": 51.1,
+        "lon": 10.4
+      },
+      "neighbours": ["FR","NL","BE","PL","CZ","AT"]
+    },
+    {
+      "id": "FR",
+      "name": "France",
+      "eic": "10YFR-RTE------C",
+      "countries": ["FR"],
+      "centroid": {
+        "lat": 46.6,
+        "lon": 2.4
+      },
+      "neighbours": ["DE-LU","BE","ES"]
+    },
+    {
+      "id": "NL",
+      "name": "Netherlands",
+      "eic": "10YNL----------L",
+      "countries": ["NL"],
+      "centroid": {
+        "lat": 52.2,
+        "lon": 5.5
+      },
+      "neighbours": ["DE-LU","BE"]
+    },
+    {
+      "id": "BE",
+      "name": "Belgium",
+      "eic": "10YBE----------2",
+      "countries": ["BE"],
+      "centroid": {
+        "lat": 50.6,
+        "lon": 4.6
+      },
+      "neighbours": ["DE-LU","FR","NL"]
+    },
+    {
+      "id": "PL",
+      "name": "Poland",
+      "eic": "10YPL-AREA-----S",
+      "countries": ["PL"],
+      "centroid": {
+        "lat": 52,
+        "lon": 19.4
+      },
+      "neighbours": ["DE-LU","CZ"]
+    },
+    {
+      "id": "CZ",
+      "name": "Czechia",
+      "eic": "10YCZ-CEPS-----N",
+      "countries": ["CZ"],
+      "centroid": {
+        "lat": 49.8,
+        "lon": 15.5
+      },
+      "neighbours": ["DE-LU","PL","AT"]
+    },
+    {
+      "id": "AT",
+      "name": "Austria",
+      "eic": "10YAT-APG------L",
+      "countries": ["AT"],
+      "centroid": {
+        "lat": 47.6,
+        "lon": 14.1
+      },
+      "neighbours": ["DE-LU","CZ","HU"]
+    },
+    {
+      "id": "HU",
+      "name": "Hungary",
+      "eic": "10YHU-MAVIR----U",
+      "countries": ["HU"],
+      "centroid": {
+        "lat": 47.2,
+        "lon": 19.4
+      },
+      "neighbours": ["AT","RO"]
+    },
+    {
+      "id": "RO",
+      "name": "Romania",
+      "eic": "10YRO-TEL------P",
+      "countries": ["RO"],
+      "centroid": {
+        "lat": 45.9,
+        "lon": 24.9
+      },
+      "neighbours": ["HU"]
+    },
+    {
+      "id": "ES",
+      "name": "Spain",
+      "eic": "10YES-REE------0",
+      "countries": ["ES"],
+      "centroid": {
+        "lat": 40.2,
+        "lon": -3.6
+      },
+      "neighbours": ["FR","PT"]
+    },
+    {
+      "id": "PT",
+      "name": "Portugal",
+      "eic": "10YPT-REN------W",
+      "countries": ["PT"],
+      "centroid": {
+        "lat": 39.6,
+        "lon": -8
+      },
+      "neighbours": ["ES"]
+    }
+  ],
+  "countries": [
+    {
+      "code": "DE",
+      "name": "Germany",
+      "zones": ["DE-LU"]
+    },
+    {
+      "code": "LU",
+      "name": "Luxembourg",
+      "zones": ["DE-LU"]
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "zones": ["FR"]
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "zones": ["NL"]
+    },
+    {
+      "code": "BE",
+      "name": "Belgium",
+      "zones": ["BE"]
+    },
+    {
+      "code": "PL",
+      "name": "Poland",
+      "zones": ["PL"]
+    },
+    {
+      "code": "CZ",
+      "name": "Czechia",
+      "zones": ["CZ"]
+    },
+    {
+      "code": "AT",
+      "name": "Austria",
+      "zones": ["AT"]
+    },
+    {
+      "code": "HU",
+      "name": "Hungary",
+      "zones": ["HU"]
+    },
+    {
+      "code": "RO",
+      "name": "Romania",
+      "zones": ["RO"]
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "zones": ["ES"]
+    },
+    {
+      "code": "PT",
+      "name": "Portugal",
+      "zones": ["PT"]
+    }
+  ]
+}

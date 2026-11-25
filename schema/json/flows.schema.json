@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/flows.schema.json",
+  "title": "FlowsFile",
+  "description": "v1/flows/rolling-7d.json and v1/flows/rolling-30d.json. Hourly cross-border flows per border. Physical (measured) flows and scheduled exchanges (planned trade) are separate series.",
+  "type": "object",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/Envelope" }],
+  "required": ["dataset", "window", "borders"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": { "const": "flows" },
+    "window": { "$ref": "common.schema.json#/$defs/Window" },
+    "borders": { "type": "array", "items": { "$ref": "#/$defs/BorderSeries" } }
+  },
+  "$defs": {
+    "BorderSeries": {
+      "title": "BorderSeries",
+      "description": "One series for one border. Value in MW (hourly average). Positive = net flow from from_zone to to_zone; negative = the other way. Each border appears once per kind, in one direction only.",
+      "type": "object",
+      "required": ["from_zone", "to_zone", "kind", "series"],
+      "additionalProperties": false,
+      "properties": {
+        "from_zone": { "$ref": "common.schema.json#/$defs/ZoneId" },
+        "to_zone": { "$ref": "common.schema.json#/$defs/ZoneId" },
+        "kind": {
+          "description": "physical = measured cross-border physical flow (states measured, modelled or missing). scheduled = day-ahead scheduled commercial exchange, shown as 'planned trade' (states planned or missing).",
+          "enum": ["physical", "scheduled"]
+        },
+        "series": { "$ref": "common.schema.json#/$defs/TimeSeries" }
+      }
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/generation.schema.json",
+  "title": "GenerationFile",
+  "description": "v1/generation/rolling-7d.json and v1/generation/rolling-30d.json. Hourly actual generation by fuel type and actual load, per zone.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/Envelope"
+    }
+  ],
+  "required": ["dataset", "window", "zones"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": {
+      "const": "generation"
+    },
+    "window": {
+      "$ref": "common.schema.json#/$defs/Window"
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ZoneGeneration"
+      }
+    }
+  },
+  "$defs": {
+    "ZoneGeneration": {
+      "title": "ZoneGeneration",
+      "type": "object",
+      "required": ["zone", "load", "generation"],
+      "additionalProperties": false,
+      "properties": {
+        "zone": {
+          "$ref": "common.schema.json#/$defs/ZoneId"
+        },
+        "load": {
+          "$ref": "common.schema.json#/$defs/TimeSeries"
+        },
+        "generation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "biomass": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "lignite": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "hard_coal": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "gas": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "oil": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "nuclear": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "hydro_run_of_river": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "hydro_reservoir": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "hydro_pumped_storage": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "wind_onshore": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "wind_offshore": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "solar": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "geothermal": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "waste": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "other_renewable": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "other": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            }
+          }
+        }
+      },
+      "description": "load = actual total load in MW. generation = one series per fuel type the zone has. A fuel type the zone does not have is left out (that is not a gap). hydro_pumped_storage is net (generation minus pumping) and can be negative."
+    }
+  }
+}

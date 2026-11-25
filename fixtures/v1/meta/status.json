@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-11-25T12:00:00Z",
+  "mock": true,
+  "source": "powerstation.ai mock data generator",
+  "license": "AGPL-3.0-only",
+  "attribution": "Mock data for development and tests. This is not real grid data.",
+  "dataset": "status",
+  "files": [
+    {
+      "path": "v1/meta/zones.json",
+      "dataset": "zones",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": null,
+      "ok": true
+    },
+    {
+      "path": "v1/flows/rolling-7d.json",
+      "dataset": "flows",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": "2026-11-25T12:00:00Z",
+      "ok": true
+    },
+    {
+      "path": "v1/flows/rolling-30d.json",
+      "dataset": "flows",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": "2026-11-25T12:00:00Z",
+      "ok": true
+    },
+    {
+      "path": "v1/generation/rolling-7d.json",
+      "dataset": "generation",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": "2026-11-25T12:00:00Z",
+      "ok": true
+    },
+    {
+      "path": "v1/generation/rolling-30d.json",
+      "dataset": "generation",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": "2026-11-25T12:00:00Z",
+      "ok": true
+    },
+    {
+      "path": "v1/forecasts/next-24h.json",
+      "dataset": "forecasts",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": null,
+      "ok": true
+    },
+    {
+      "path": "v1/datacenters/datacenters.json",
+      "dataset": "datacenters",
+      "updated_at": "2026-11-25T12:00:00Z",
+      "newest_measured_at": null,
+      "ok": true
+    }
+  ],
+  "sources": [
+    {
+      "id": "entsoe",
+      "name": "ENTSO-E Transparency Platform",
+      "last_success_at": "2026-11-25T12:00:00Z",
+      "last_attempt_at": "2026-11-25T12:00:00Z",
+      "ok": true
+    },
+    {
+      "id": "mock-datacenters",
+      "name": "Mock data centers",
+      "last_success_at": "2026-11-25T12:00:00Z",
+      "last_attempt_at": "2026-11-25T12:00:00Z",
+      "ok": true
+    }
+  ]
+}

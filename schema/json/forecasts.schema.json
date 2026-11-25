@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/forecasts.schema.json",
+  "title": "ForecastsFile",
+  "description": "v1/forecasts/next-24h.json. Day-ahead wind and solar generation forecasts and load forecast, per zone. All values have state planned or missing.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/Envelope"
+    }
+  ],
+  "required": ["dataset", "window", "zones"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": {
+      "const": "forecasts"
+    },
+    "window": {
+      "$ref": "common.schema.json#/$defs/Window"
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ZoneForecast"
+      }
+    }
+  },
+  "$defs": {
+    "ZoneForecast": {
+      "title": "ZoneForecast",
+      "type": "object",
+      "required": ["zone", "load", "generation"],
+      "additionalProperties": false,
+      "properties": {
+        "zone": {
+          "$ref": "common.schema.json#/$defs/ZoneId"
+        },
+        "load": {
+          "$ref": "common.schema.json#/$defs/TimeSeries"
+        },
+        "generation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "wind_onshore": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "wind_offshore": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            },
+            "solar": {
+              "$ref": "common.schema.json#/$defs/TimeSeries"
+            }
+          }
+        }
+      },
+      "description": "load = day-ahead total load forecast in MW. generation = day-ahead wind and solar forecasts; a type the zone does not have is left out."
+    }
+  }
+}

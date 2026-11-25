@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://powerstation.ai/schema/v1/datacenters.schema.json",
+  "title": "DatacentersFile",
+  "description": "v1/datacenters/datacenters.json. Data center points. Each record names its own source and license, because records can come from different sources (e.g. Epoch AI, OSM).",
+  "type": "object",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/Envelope" }],
+  "required": ["dataset", "datacenters"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "dataset": { "const": "datacenters" },
+    "datacenters": { "type": "array", "items": { "$ref": "#/$defs/Datacenter" } }
+  },
+  "$defs": {
+    "Datacenter": {
+      "title": "Datacenter",
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "operator",
+        "lat",
+        "lon",
+        "zone",
+        "country",
+        "power_mw",
+        "power_state",
+        "status",
+        "source",
+        "license",
+        "as_of"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "operator": { "type": ["string", "null"] },
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "zone": { "$ref": "common.schema.json#/$defs/ZoneId" },
+        "country": { "$ref": "common.schema.json#/$defs/CountryCode" },
+        "power_mw": {
+          "description": "Power demand or grid connection in MW, as the source gives it. null if unknown.",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "power_state": {
+          "description": "measured = published by the source. modelled = estimated by powerstation.ai. missing = power_mw is null.",
+          "enum": ["measured", "modelled", "missing"]
+        },
+        "status": {
+          "enum": ["operating", "under_construction", "planned", "cancelled", "unknown"]
+        },
+        "source": { "type": "string", "minLength": 1 },
+        "source_url": { "type": "string", "format": "uri" },
+        "license": { "type": "string", "minLength": 1 },
+        "as_of": {
+          "description": "Date the source data refers to (YYYY-MM-DD).",
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  }
+}
