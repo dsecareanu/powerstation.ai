@@ -25,7 +25,6 @@ Every data file names its source and license. The site shows them in an attribut
 | `packages/ui/`     | Shared UI components                                                  |
 | `apps/map/`        | Step 1: map with timeline                                             |
 | `apps/calculator/` | Step 2: data center calculator                                        |
-| `n8n/`             | Exported n8n workflow templates (MIT)                                 |
 | `briefs/`          | One brief per build session                                           |
 
 ## Run it
@@ -57,5 +56,4 @@ The data contract is described in [`schema/README.md`](schema/README.md).
 ## License
 
 - Code: [AGPL-3.0](LICENSE).
-- `n8n/` workflow templates: [MIT](n8n/LICENSE).
 - Data keeps the license of its source (see `DATA_SOURCES.md`).
