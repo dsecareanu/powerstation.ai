@@ -35,7 +35,6 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 /apps/map        Step 1 — map with timeline
 /apps/calculator Step 2 — data center calculator
 /pipeline        Scripts: backfill, validation, back-tests
-/n8n             Not used in v1 (kept for possible later templates)
 /briefs          One brief per Claude Code session
 /workers         Small Cloudflare Workers outside the site (data-cron: starts the hourly data run)
 ```
@@ -92,7 +91,6 @@ Do not add features outside your session brief. Write ideas in `IDEAS.md` instea
 - No API keys or tokens in the repo. The ENTSO-E token and the R2 API token live in GitHub Actions secrets only (repository environment `data-publish`). Never print them in logs.
 - Repo: https://github.com/dsecareanu/powerstation.ai (default branch `main`). The root `LICENSE` (AGPL-3.0) already exists. Do not replace it.
 - Code license: AGPL-3.0.
-- Exception: the `/n8n` folder is MIT, with its own `LICENSE` file in that folder. It is not used in v1. Never copy AGPL code into `/n8n`.
 - Data from OSM-derived sources stays ODbL. Keep `DATA_SOURCES.md` up to date (source, license, attribution text, date pulled).
 - Do not use: WRI Global Power Plant Database (unmaintained), PeeringDB, Electricity Maps API, any paid dataset.
 
